@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: linear-gradient(to bottom right, hsl(210 100% 97%), hsl(0 0% 100%));
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -30,8 +30,9 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
+    --background: linear-gradient(to bottom right, hsl(0 0% 6%), hsl(0 0% 3.9%));
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -57,12 +58,15 @@
     --chart-5: 340 75% 55%;
   }
 }
-
+html {
+  scroll-behavior: smooth;
+}
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--background);
+    @apply text-foreground;
   }
 }

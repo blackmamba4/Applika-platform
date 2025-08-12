@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import SocialButtons from "./SocialButtons";
 
 export function LoginForm({
   className,
@@ -39,7 +40,7 @@ export function LoginForm({
       });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      router.push("/Dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -102,6 +103,10 @@ export function LoginForm({
                 Sign up
               </Link>
             </div>
+            <div className="my-2 text-center text-xs uppercase tracking-wider text-muted-foreground">
+              or continue with
+            </div>
+            <SocialButtons />
           </form>
         </CardContent>
       </Card>

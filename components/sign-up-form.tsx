@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import SocialButtons from "./SocialButtons";
 
 export function SignUpForm({
   className,
@@ -44,7 +45,7 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/Dashboard`,
         },
       });
       if (error) throw error;
@@ -112,6 +113,10 @@ export function SignUpForm({
                 Login
               </Link>
             </div>
+            <div className="my-2 text-center text-xs uppercase tracking-wider text-muted-foreground">
+              or sign up with
+            </div>
+            <SocialButtons />
           </form>
         </CardContent>
       </Card>
