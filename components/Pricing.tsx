@@ -71,12 +71,13 @@ export default function Pricing() {
       button: (
         <Link
           href="/auth/login?redirect=/pricing"
-          className="inline-flex items-center justify-center w-full rounded-full px-5 py-2.5 border text-sm hover:bg-white"
+          className="inline-flex items-center justify-center w-full rounded-xl px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
         >
           Start free
         </Link>
       ),
       highlighted: false,
+      color: "from-gray-500 to-gray-600",
     },
     {
       name: "Regular",
@@ -96,6 +97,7 @@ export default function Pricing() {
         />
       ),
       highlighted: false,
+      color: "from-emerald-500 to-teal-500",
     },
     {
       name: "Pro",
@@ -115,6 +117,7 @@ export default function Pricing() {
         />
       ),
       highlighted: true,
+      color: "from-violet-500 to-purple-500",
     },
   ];
 
@@ -146,59 +149,92 @@ export default function Pricing() {
   ];
 
   return (
-    <section className="relative w-full">
-      <div className="mx-auto max-w-6xl px-5 text-center">
-        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Pricing</h2>
-        <p className="mt-4 text-foreground/70 max-w-2xl mx-auto">
-          Simple tokens. Clear limits. No surprises.
-        </p>
+    <section id="pricing" className="relative w-full py-16">
+      <div className="mx-auto max-w-6xl px-6">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-sm font-medium text-purple-700 mb-6">
+            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+            Simple, transparent pricing
+          </div>
+          
+          <h2 className="text-3xl md:text-5xl font-black leading-[0.9] tracking-tight mb-6">
+            <span className="block text-gray-900">Fair</span>
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-violet-600 to-purple-600">
+              Pricing
+            </span>
+          </h2>
+          
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            No hidden fees, no surprises. Pay for what you use, when you need it. 
+            Start free and upgrade when you're ready to land that dream job.
+          </p>
+        </div>
 
         {/* Plans */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-3xl border bg-white shadow-sm p-6 flex flex-col ${
-                plan.highlighted ? "border-emerald-400 shadow-md scale-[1.02]" : ""
+              className={`relative rounded-2xl border-2 bg-white shadow-md p-6 flex flex-col transition-all duration-300 hover:shadow-lg ${
+                plan.highlighted 
+                  ? "border-violet-500 scale-105 shadow-lg" 
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
-              <h3 className="text-xl font-semibold">{plan.name}</h3>
+              {/* Gradient accent */}
+              <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${plan.color}`}></div>
+              
+              {/* Popular badge */}
+              {plan.highlighted && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-violet-500 to-purple-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    Most Popular
+                  </div>
+                </div>
+              )}
 
-              <div className="mt-4 flex items-baseline justify-center md:justify-start">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="ml-1 text-sm text-foreground/60">{plan.period}</span>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                
+                <div className="mb-3">
+                  <span className="text-4xl font-black text-gray-900">{plan.price}</span>
+                  <span className="text-base text-gray-600 ml-1">{plan.period}</span>
+                </div>
+                
+                <p className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full inline-block">
+                  {plan.tokens}
+                </p>
               </div>
-
-              <p className="mt-1 text-sm font-medium text-foreground/80">
-                {plan.tokens}
-              </p>
 
               <ul className="mt-6 space-y-3 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-foreground/70">
-                    <span className="mt-[5px] inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {f}
+                  <li key={f} className="flex items-start gap-2 text-gray-700">
+                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${plan.color} flex items-center justify-center mt-0.5 flex-shrink-0`}>
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </div>
+                    <span className="text-sm">{f}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8">{plan.button}</div>
+              <div className="mt-6">{plan.button}</div>
             </div>
           ))}
         </div>
 
-        {/* Packs */}
-        <div className="mt-12">
-          <h3 className="text-xl font-semibold">Need extra tokens?</h3>
-          <p className="text-foreground/70 text-sm mt-1">Buy one-time top-ups that don’t change your plan.</p>
+        {/* Token Packs */}
+        <div className="text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">Need extra tokens?</h3>
+          <p className="text-gray-600 mb-6">Buy one-time top-ups that don't change your plan.</p>
 
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {packs.map((p) => (
-              <div key={p.name} className="rounded-2xl border bg-white p-6 shadow-sm text-left">
+              <div key={p.name} className="rounded-xl border-2 border-gray-200 bg-white p-4 shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-base font-semibold">{p.name}</div>
-                    <div className="text-sm text-foreground/70">{p.blurb}</div>
+                  <div className="text-left">
+                    <div className="text-base font-bold text-gray-900">{p.name}</div>
+                    <div className="text-xs text-gray-600">{p.blurb}</div>
                   </div>
                   <div>{p.button}</div>
                 </div>
@@ -207,10 +243,13 @@ export default function Pricing() {
           </div>
         </div>
 
-        <p className="text-center text-sm text-foreground/60 mt-8">
-          1 token = 1 cover letter. Unused plan tokens reset monthly. Top-up tokens do not roll over between months,
-          but remain available until used. Prices shown are examples; final amount is shown at checkout.
-        </p>
+        {/* Footer note */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-gray-500 max-w-xl mx-auto">
+            1 token = 1 cover letter. Unused plan tokens reset monthly. Top-up tokens remain available until used. 
+            Prices shown are examples; final amount is shown at checkout.
+          </p>
+        </div>
       </div>
     </section>
   );

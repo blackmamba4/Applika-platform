@@ -49,7 +49,8 @@ type ProfileRow = {
   first_name: string | null; 
   last_name: string | null; 
   full_name: string | null; 
-  desired_role: string | null 
+  desired_role: string | null;
+  tone_default: string | null;
 };
 
 const FALLBACK_NAME = "Friend";
@@ -148,7 +149,7 @@ export default function CoverLetterWizard() {
 
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, last_name, full_name, desired_role")
+          .select("first_name, last_name, full_name, desired_role, tone_default")
           .eq("id", user.id)
           .single<ProfileRow>();
 
@@ -158,10 +159,21 @@ export default function CoverLetterWizard() {
                      [data?.first_name?.trim(), data?.last_name?.trim()].filter(Boolean).join(' ') || 
                      FALLBACK_NAME;
         const roleVal = data?.desired_role?.trim() || FALLBACK_ROLE;
+        // Map profile tone to wizard tone (case-insensitive)
+        const profileTone = data?.tone_default?.trim()?.toLowerCase();
+        const defaultTone = profileTone || "professional";
+
+        console.log("Profile data loaded:", { 
+          tone_default: data?.tone_default, 
+          profileTone,
+          defaultTone, 
+          selectedTone: selectedTone 
+        });
 
         setUserName(name);
         setDefaultRole(roleVal);
         if (!roleEdited) setRole(roleVal);
+        setSelectedTone(defaultTone);
       } catch (e: any) {
         setProfileError(e?.message || "Could not load profile");
       } finally {
@@ -459,49 +471,166 @@ export default function CoverLetterWizard() {
 
       {/* Step content */}
       {step === 1 ? (
-        <div className="mt-6 space-y-4">
-          {/* JOB */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Job</label>
-            <div className="flex items-center gap-6 text-sm mb-2">
-              <button type="button" onClick={() => setJobMode("auto")} className={`pb-1 transition ${jobMode === "auto" ? "text-foreground font-semibold border-b-2 border-emerald-500" : "text-foreground/60 hover:text-foreground"}`}>Auto</button>
-              <button type="button" onClick={() => setJobMode("manual")} className={`pb-1 transition ${jobMode === "manual" ? "text-foreground font-semibold border-b-2 border-emerald-500" : "text-foreground/60 hover:text-foreground"}`}>Manual</button>
-            </div>
-            {jobMode === "auto" ? (
-              <input placeholder="https://" value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} className="w-full rounded-2xl border px-4 py-3 text-sm shadow-sm" />
-            ) : (
-              <div className="space-y-2">
-                <input placeholder="Job title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" />
-                <textarea rows={6} placeholder="Paste job description (HTML or plain text)" value={jobDescHtml} onChange={(e) => setJobDescHtml(e.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" />
+        <div className="mt-8 space-y-8">
+          {/* Job Section - More conversational */}
+          <div className="bg-gradient-to-r from-emerald-50 to-violet-50 rounded-2xl p-6 border border-emerald-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">1</span>
               </div>
-            )}
-            {fetchError && <div className="mt-1 text-xs text-red-600">{fetchError}</div>}
-            <div className="mt-2 flex justify-end">
-              {fetching ? (
-                <ButtonSkeleton />
-              ) : (
-                <button onClick={handleFetch} disabled={fetching} className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm hover:shadow-lg hover:shadow-indigo-500/25 hover:border-indigo-500/50 transition-all duration-200 disabled:opacity-50">
-                  <Sparkles className="h-4 w-4" />
-                  Fetch details
+              <h3 className="text-lg font-semibold text-gray-900">Tell us about the job</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-4">
+                {jobMode === "auto" 
+                  ? "Paste the job posting URL and we'll extract everything automatically" 
+                  : "Or tell us about the role manually"
+                }
+              </p>
+              
+              {/* Mode toggle - more elegant */}
+              <div className="flex bg-white rounded-xl p-1 border border-gray-200">
+                <button 
+                  type="button" 
+                  onClick={() => setJobMode("auto")} 
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    jobMode === "auto" 
+                      ? "bg-emerald-500 text-white shadow-sm" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Auto Extract
                 </button>
+                <button 
+                  type="button" 
+                  onClick={() => setJobMode("manual")} 
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    jobMode === "manual" 
+                      ? "bg-emerald-500 text-white shadow-sm" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Manual Entry
+                </button>
+              </div>
+
+              {/* Input area */}
+              {jobMode === "auto" ? (
+                <div className="space-y-3">
+                  <input 
+                    placeholder="https://company.com/jobs/software-engineer" 
+                    value={jobUrl} 
+                    onChange={(e) => setJobUrl(e.target.value)} 
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                  />
+                  {fetchError && <div className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{fetchError}</div>}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <input 
+                    placeholder="e.g. Senior Software Engineer" 
+                    value={jobTitle} 
+                    onChange={(e) => setJobTitle(e.target.value)} 
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                  />
+                  <textarea 
+                    rows={4} 
+                    placeholder="Paste the job description here..." 
+                    value={jobDescHtml} 
+                    onChange={(e) => setJobDescHtml(e.target.value)} 
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none" 
+                  />
+                </div>
+              )}
+
+              {/* Action button */}
+              <div className="flex justify-end">
+                {fetching ? (
+                  <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-full text-sm text-gray-600">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Extracting details...
+                  </div>
+                ) : (
+                  <button 
+                    onClick={handleFetch} 
+                    disabled={fetching || (jobMode === "auto" ? !jobUrl.trim() : !jobTitle.trim())} 
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-full text-sm font-medium hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {jobMode === "auto" ? "Extract Job Details" : "Continue"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* CV Section - More conversational */}
+          <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl p-6 border border-violet-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">2</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Your background</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-4">
+                {cvMode === "auto" 
+                  ? "We'll use your uploaded CV to personalize the cover letter" 
+                  : "Or paste your CV content directly"
+                }
+              </p>
+              
+              {/* Mode toggle */}
+              <div className="flex bg-white rounded-xl p-1 border border-gray-200">
+                <button 
+                  type="button" 
+                  onClick={() => setCvMode("auto")} 
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    cvMode === "auto" 
+                      ? "bg-violet-500 text-white shadow-sm" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Use Uploaded CV
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setCvMode("manual")} 
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    cvMode === "manual" 
+                      ? "bg-violet-500 text-white shadow-sm" 
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Paste CV Content
+                </button>
+              </div>
+
+              {/* CV content */}
+              {cvMode === "auto" ? (
+                <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Using your uploaded CV from profile</span>
+                </div>
+              ) : (
+                <textarea 
+                  rows={4} 
+                  placeholder="Paste your CV content here..." 
+                  value={cvText} 
+                  onChange={(e) => setCvText(e.target.value)} 
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all resize-none" 
+                />
               )}
             </div>
           </div>
 
-          {/* CV */}
-          <div>
-            <label className="block text-sm font-medium mb-2">CV</label>
-            <div className="flex items-center gap-6 text-sm mb-2">
-              <button type="button" onClick={() => setCvMode("auto")} className={`pb-1 transition ${cvMode === "auto" ? "text-foreground font-semibold border-b-2 border-emerald-500" : "text-foreground/60 hover:text-foreground"}`}>Auto</button>
-              <button type="button" onClick={() => setCvMode("manual")} className={`pb-1 transition ${cvMode === "manual" ? "text-foreground font-semibold border-b-2 border-emerald-500" : "text-foreground/60 hover:text-foreground"}`}>Manual</button>
-            </div>
-            {cvMode === "auto" ? (
-              <div className="rounded-xl border px-3 py-2 text-sm bg-gray-50 text-gray-600">
-                Using your uploaded CV from profile
-              </div>
-            ) : (
-              <textarea rows={4} placeholder="Paste your CV content here..." value={cvText} onChange={(e) => setCvText(e.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" />
-            )}
+          {/* Next step hint */}
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-500">
+              Once you've added the job details, we'll help you review and customize everything ✨
+            </p>
           </div>
         </div>
       ) : step === 2 ? (
@@ -581,7 +710,13 @@ export default function CoverLetterWizard() {
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold mb-4">Choose Your Tone & Style</h3>
-              <p className="text-sm text-gray-600 mb-6">Select the tone that best matches your personality and the company culture.</p>
+              <p className="text-sm text-gray-600 mb-2">Select the tone that best matches your personality and the company culture.</p>
+              {selectedTone && (
+                <div className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full inline-flex items-center gap-1 mb-6">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                  Using your default tone: <span className="font-medium capitalize">{selectedTone}</span>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

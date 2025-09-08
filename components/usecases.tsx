@@ -1,4 +1,3 @@
-// components/sections/UseCases.tsx
 "use client";
 import { useState } from "react";
 import {
@@ -8,93 +7,101 @@ import {
   Globe2,
   Target,
   Briefcase,
+  ArrowRight,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 
 const CASES = [
   {
     key: "students",
-    title: "Students & recent grads",
-    desc:
-      "Turn projects and coursework into achievement-driven bullets that feel real, not fluffy.",
+    title: "Students & Recent Grads",
+    desc: "Turn your projects and coursework into compelling achievements that feel real, not fluffy.",
     points: [
       "Translate coursework to impact statements",
-      "Frame internships & clubs as quantifiable wins",
-      "Tone: confident, concise, friendly",
+      "Frame internships & clubs as quantifiable wins", 
+      "Confident, concise, friendly tone"
     ],
     Icon: GraduationCap,
-    accent: "from-indigo-500 to-sky-400",
-    cta: { label: "See sample for grads", href: "/samples/students" },
+    accent: "from-blue-500 to-cyan-500",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    example: "As a Computer Science student, I developed a mobile app that helped 200+ students track their study habits, resulting in a 30% improvement in exam scores."
   },
   {
-    key: "switchers",
-    title: "Career switchers",
-    desc:
-      "Bridge your past roles to a new domain with crisp, JD-aligned language.",
+    key: "switchers", 
+    title: "Career Switchers",
+    desc: "Bridge your past experience to a new domain with crisp, job-aligned language.",
     points: [
-      "Map transferable skills to the job",
+      "Map transferable skills to the role",
       "Mirror keywords without buzzword stuffing",
-      "Tone: credible, focused, optimistic",
+      "Credible, focused, optimistic tone"
     ],
     Icon: Repeat,
-    accent: "from-violet-500 to-fuchsia-400",
-    cta: { label: "Switch career now", href: "/samples/switchers" },
+    accent: "from-violet-500 to-purple-500",
+    bgColor: "bg-violet-50",
+    borderColor: "border-violet-200",
+    example: "My 5 years in marketing taught me data-driven decision making—skills I'm excited to apply to your product management role."
   },
   {
     key: "busy",
-    title: "Busy professionals",
-    desc:
-      "Batch-generate tailored letters for multiple roles in minutes.",
+    title: "Busy Professionals", 
+    desc: "Generate tailored letters for multiple roles in minutes, not hours.",
     points: [
       "Reusable intros & closers",
       "Company hooks pulled from URLs",
-      "Tone: direct, senior, succinct",
+      "Direct, senior, succinct tone"
     ],
     Icon: Clock,
-    accent: "from-emerald-500 to-teal-400",
-    cta: { label: "Generate faster", href: "/generate" },
+    accent: "from-emerald-500 to-teal-500",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    example: "I've led teams that delivered 40% faster project completion. I'd bring that same efficiency to your engineering organization."
   },
   {
     key: "international",
-    title: "International applicants",
-    desc:
-      "Concise English with the right tone for each market and industry.",
+    title: "International Applicants",
+    desc: "Clear English with the right cultural tone for each market and industry.",
     points: [
       "Cultural tone presets",
-      "Clear, idiomatic phrasing",
-      "Tone: polite, confident, natural",
+      "Clear, idiomatic phrasing", 
+      "Polite, confident, natural tone"
     ],
     Icon: Globe2,
-    accent: "from-blue-500 to-cyan-400",
-    cta: { label: "See tone presets", href: "/presets" },
+    accent: "from-orange-500 to-red-500",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
+    example: "Having worked across three continents, I understand diverse business cultures and can adapt quickly to your team's dynamics."
   },
   {
     key: "technical",
-    title: "Niche & technical roles",
-    desc:
-      "Use domain-specific language without sounding like a jargon bot.",
+    title: "Technical & Niche Roles",
+    desc: "Use domain-specific language without sounding like a jargon bot.",
     points: [
       "Context-aware terminology",
       "ATS-friendly structure",
-      "Tone: expert, human, precise",
+      "Expert, human, precise tone"
     ],
     Icon: Target,
-    accent: "from-amber-500 to-orange-400",
-    cta: { label: "View tech sample", href: "/samples/technical" },
+    accent: "from-pink-500 to-rose-500",
+    bgColor: "bg-pink-50",
+    borderColor: "border-pink-200",
+    example: "My experience with microservices architecture and Kubernetes would directly contribute to your platform's scalability goals."
   },
   {
     key: "top",
-    title: "Top-tier applications",
-    desc:
-      "Stand out with company-specific hooks from their site and recent news.",
+    title: "Top-Tier Applications",
+    desc: "Stand out with company-specific insights from their site and recent news.",
     points: [
       "Pull initiatives, values, and products",
       "Personalized openers that land",
-      "Tone: sharp, bespoke, memorable",
+      "Sharp, bespoke, memorable tone"
     ],
     Icon: Briefcase,
-    accent: "from-pink-500 to-rose-400",
-    cta: { label: "Make it bespoke", href: "/generate" },
+    accent: "from-indigo-500 to-blue-500",
+    bgColor: "bg-indigo-50",
+    borderColor: "border-indigo-200",
+    example: "Your recent expansion into AI-powered analytics aligns perfectly with my machine learning background and passion for data-driven innovation."
   },
 ];
 
@@ -103,123 +110,104 @@ export default function UseCases() {
   const A = CASES[active];
 
   return (
-    <section className="relative w-full">
-      <div className="mx-auto max-w-6xl px-5 ">
-        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-          Perfect for{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-violet-400">
-            every
-          </span>{" "}
-          application
-        </h2>
-        <p className="mt-3 text-foreground/70 max-w-2xl">
-          Pick your situation to see how Applika adapts tone, structure, and keywords.
-        </p>
+    <section id="usecases" className="relative w-full py-16">
+      <div className="mx-auto max-w-6xl px-6">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-200 text-sm font-medium text-violet-700 mb-6">
+            <div className="w-1.5 h-1.5 bg-violet-500 rounded-full"></div>
+            Perfect for every situation
+          </div>
+          
+          <h2 className="text-3xl md:text-5xl font-black leading-[0.9] tracking-tight mb-6">
+            <span className="block text-gray-900">Built for</span>
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-violet-600 to-purple-600">
+              Your Situation
+            </span>
+          </h2>
+          
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Pick your situation to see how Applika adapts tone, structure, and keywords 
+            to match exactly what employers in your field are looking for.
+          </p>
+        </div>
 
-        <div className="mt-8 grid md:grid-cols-[320px,1fr] gap-6 md:gap-10">
-          {/* Tabs */}
-          <div className="md:sticky md:top-20">
-            <div
-              role="tablist"
-              aria-label="Use case tabs"
-              className="flex md:flex-col gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {CASES.map(({ title, Icon, accent }, i) => {
-                const selected = i === active;
-                return (
-                  <button
-                    key={title}
-                    role="tab"
-                    aria-selected={selected}
-                    onClick={() => setActive(i)}
-                    className={[
-                      "group min-w-max md:w-full rounded-2xl border px-4 py-3 text-left transition",
-                      selected
-                        ? "bg-white shadow-md"
-                        : "bg-white/70 hover:bg-white",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={[
-                          "h-8 w-8 rounded-lg bg-gradient-to-r",
-                          selected ? accent : "from-zinc-200 to-zinc-100",
-                        ].join(" ")}
-                      />
-                      <div>
-                        <div className="font-semibold leading-tight">{title}</div>
-                        {!selected && (
-                          <div className="text-xs text-foreground/60">Tap to preview</div>
-                        )}
-                      </div>
-                      <Icon className="ml-auto h-4 w-4 text-foreground/60" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left: Use case selector */}
+          <div className="space-y-3">
+            {CASES.map((case_, index) => (
+              <button
+                key={case_.key}
+                onClick={() => setActive(index)}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 ${
+                  active === index
+                    ? `${case_.bgColor} ${case_.borderColor} shadow-md scale-105`
+                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${case_.accent} flex items-center justify-center`}>
+                    <case_.Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-bold text-gray-900 mb-1">{case_.title}</h3>
+                    <p className="text-xs text-gray-600">{case_.desc}</p>
+                  </div>
+                  {active === index && (
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {/* Panel */}
-          <div
-            role="tabpanel"
-            className="relative rounded-3xl border bg-white p-6 md:p-8 shadow-sm"
-          >
-            {/* Accent header */}
-            <div
-              className={`absolute -top-1 left-0 right-0 h-1 rounded-t-3xl bg-gradient-to-r ${A.accent}`}
-              aria-hidden
-            />
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-              {/* Copy */}
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2">
-                  <div className={`h-6 w-6 rounded-md bg-gradient-to-r ${A.accent}`} />
-                  <span className="text-sm uppercase tracking-wide text-foreground/60">
-                    Use case
-                  </span>
+          {/* Right: Active case details */}
+          <div className={`relative p-6 rounded-2xl border-2 ${A.bgColor} ${A.borderColor} shadow-lg`}>
+            {/* Gradient accent */}
+            <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${A.accent}`}></div>
+            
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${A.accent} flex items-center justify-center`}>
+                  <A.Icon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="mt-2 text-2xl md:text-3xl font-bold">{A.title}</h3>
-                <p className="mt-2 text-foreground/70">{A.desc}</p>
-                <ul className="mt-4 space-y-2">
-                  {A.points.map((p) => (
-                    <li key={p} className="flex items-start gap-2">
-                      <span className="mt-[7px] inline-block h-1.5 w-1.5 rounded-full bg-foreground/40" />
-                      <span className="text-sm text-foreground/80">{p}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-6">
-                  <Link
-                    href={A.cta.href}
-                    className="inline-flex items-center rounded-full px-5 py-2.5 bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 transition"
-                  >
-                    {A.cta.label}
-                  </Link>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">{A.title}</h3>
+                  <p className="text-sm text-gray-600">{A.desc}</p>
                 </div>
               </div>
 
-              {/* Preview mock */}
-              <div className="lg:w-[44%]">
-                <div className="relative rounded-2xl border p-5 shadow-md bg-white">
-                  <div className={`absolute -left-3 top-8 bottom-8 w-1.5 rounded-full bg-gradient-to-b ${A.accent}`} />
-                  <p className="font-semibold mb-3">Dear Hiring Manager,</p>
-                  <p className="text-sm text-foreground/80">
-                    I’m excited to apply for the role at <span className="font-medium">ACME</span>.
-                    My background aligns well with your goals, and I’d love to contribute to
-                    your work on <span className="italic">product growth and customer experience</span>.
-                  </p>
-                  <p className="mt-3 text-sm text-foreground/80">
-                    Recently I led initiatives that improved outcomes by 23%—I’d bring the same
-                    focus and energy to your team.
-                  </p>
-                  <div className="mt-5 h-2 w-40 rounded-full bg-foreground/10" />
-                </div>
+              {/* Points */}
+              <div className="space-y-2">
+                {A.points.map((point, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${A.accent} flex items-center justify-center mt-0.5`}>
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-700">{point}</span>
+                  </div>
+                ))}
               </div>
+
+              {/* Example */}
+              <div className="p-3 bg-white/80 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-600 mb-1 font-medium">Example output:</p>
+                <p className="text-xs text-gray-800 italic">"{A.example}"</p>
+              </div>
+
+              {/* CTA */}
+              <Link
+                href="/Dashboard"
+                className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${A.accent} text-white font-semibold rounded-lg hover:shadow-md transition-all duration-300 transform hover:scale-105`}
+              >
+                <span className="text-sm">Try this approach</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
           </div>
         </div>
-      </div>  
+      </div>
     </section>
   );
 }
