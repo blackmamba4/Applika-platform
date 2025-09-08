@@ -50,29 +50,52 @@ export default function DashboardClient({
           <CoverLetterWizard />
         </main>
 
-        {/* Right rail (sticky + scroll) */}
+        {/* Right rail (compact summary) */}
         <aside
           className="
-            w-full lg:w-[360px] shrink-0 self-start
+            w-full lg:w-[320px] shrink-0 self-start
             lg:sticky lg:top-20
-            lg:max-h-[calc(100dvh-5rem)]
-            lg:overflow-y-auto lg:pr-1
-            space-y-4
+            space-y-3
           "
           aria-label="Sidebar"
         >
-          <ProfileSection user={user} />
+          {/* Compact Profile Summary */}
+          <div className="rounded-lg border bg-white p-4 hover-lift">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-violet-500 text-white text-sm font-semibold">
+                {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate">
+                  {user?.name || "Your Name"}
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {user?.email}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Profile</span>
+              <a href="/Dashboard/profile" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                Manage →
+              </a>
+            </div>
+          </div>
+
+          {/* Tokens Card */}
           <TokensCard 
             plan={plan}
             planQuotaRemaining={planQuotaRemaining || 0}
             topupRemaining={topupRemaining || 0}
             planQuota={planQuota || 0}
           />
+
+          {/* Recent Card */}
           <RecentCard />
 
-          {/* Plan tag */}
-          <div className="rounded-full border text-xs px-3 py-1 w-fit text-foreground/70">
-            Plan: {plan}
+          {/* Plan Badge */}
+          <div className="rounded-full border text-xs px-3 py-1 w-fit text-foreground/70 bg-gray-50">
+            {plan} Plan
           </div>
         </aside>
       </div>
