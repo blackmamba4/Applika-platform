@@ -15,16 +15,17 @@ interface RecentCoverLetter {
 
 export default function RecentCard() {
   const [recentLetters, setRecentLetters] = useState<RecentCoverLetter[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    fetchRecentLetters();
-  }, []);
-
+  // Only fetch when expanded (lazy loading)
   const fetchRecentLetters = async () => {
+    if (hasFetched) return; // Don't fetch again if already loaded
+    
     try {
       setLoading(true);
       setError(null);
@@ -38,12 +39,21 @@ export default function RecentCard() {
         return;
       }
       
+      // Get total count first
+      const { count } = await supabase
+        .from('cover_letters')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', auth.user.id);
+      
+      setTotalCount(count || 0);
+      
+      // Only fetch recent 5 letters for performance
       const { data, error } = await supabase
         .from('cover_letters')
         .select('id, title, company, created_at, updated_at')
         .eq('user_id', auth.user.id)
         .order('updated_at', { ascending: false })
-        .limit(10);
+        .limit(5);
 
       if (error) {
         console.error('Error fetching cover letters:', error);
@@ -52,11 +62,20 @@ export default function RecentCard() {
       }
 
       setRecentLetters(data || []);
+      setHasFetched(true);
     } catch (err) {
       console.error('Error fetching cover letters:', err);
       setError('Failed to load recent cover letters');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExpand = () => {
+    const newCollapsed = !isCollapsed;
+    setIsCollapsed(newCollapsed);
+    if (!newCollapsed) {
+      fetchRecentLetters();
     }
   };
 
@@ -117,12 +136,19 @@ export default function RecentCard() {
   return (
     <div className="rounded-lg border bg-white p-4 hover-lift">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Recent Cover Letters
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Recent Cover Letters
+          </h3>
+          {totalCount > 0 && (
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+              {totalCount} total
+            </span>
+          )}
+        </div>
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={handleExpand}
           className="p-1 rounded hover:bg-gray-100 transition-colors"
           title={isCollapsed ? "Expand" : "Collapse"}
         >
@@ -198,6 +224,19 @@ export default function RecentCard() {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+          
+          {/* View All Link */}
+          {totalCount > 5 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <Link 
+                href="/Dashboard/Coverletters" 
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+              >
+                View all {totalCount} cover letters
+                <ChevronRight className="h-3 w-3" />
+              </Link>
             </div>
           )}
         </>

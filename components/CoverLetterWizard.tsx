@@ -11,11 +11,29 @@ import { CoverLetterTemplate, TemplateData } from "@/lib/templates/coverLetterTe
 // Inline skeleton components to avoid import issues
 function WizardStepSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-      <div className="h-10 w-full bg-gray-200 rounded-xl animate-pulse" />
-      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-      <div className="h-20 w-full bg-gray-200 rounded-xl animate-pulse" />
+    <div className="mt-6 space-y-4">
+      {/* Job Section */}
+      <div>
+        <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="flex gap-6 mb-2">
+          <div className="h-4 w-12 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="h-10 w-full bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="mt-2 flex justify-end">
+          <div className="h-10 w-32 bg-gray-200 rounded-full animate-pulse" />
+        </div>
+      </div>
+
+      {/* CV Section */}
+      <div>
+        <div className="h-4 w-12 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="flex gap-6 mb-2">
+          <div className="h-4 w-12 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="h-20 w-full bg-gray-200 rounded-xl animate-pulse" />
+      </div>
     </div>
   );
 }
