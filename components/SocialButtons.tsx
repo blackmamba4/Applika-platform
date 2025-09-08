@@ -4,12 +4,19 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SocialButtons() {
+  const supabase = createClient();
+  const redirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : undefined;
+
   async function signIn(provider: "google" | "linkedin_oidc") {
-    const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/Dashboard`, // after Supabase callback
+        redirectTo, // IMPORTANT: goes to /auth/callback, not /Dashboard
+        // LinkedIn tip:
+        // scopes: provider === "linkedin_oidc" ? "openid profile email" : undefined,
       },
     });
   }
@@ -19,11 +26,7 @@ export default function SocialButtons() {
       <Button type="button" variant="outline" onClick={() => signIn("google")}>
         Continue with Google
       </Button>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => signIn("linkedin_oidc")}
-      >
+      <Button type="button" variant="outline" onClick={() => signIn("linkedin_oidc")}>
         Continue with LinkedIn
       </Button>
     </div>

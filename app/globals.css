@@ -4,7 +4,12 @@
 
 @layer base {
   :root {
-    --background: linear-gradient(to bottom right, hsl(210 100% 97%), hsl(0 0% 100%));
+    /* Mostly-white background with gentle color hints */
+    --background:
+      radial-gradient(820px 540px at 12% 10%, rgba(16,185,129,0.10), rgba(16,185,129,0) 55%),
+      radial-gradient(940px 640px at 88% 86%, rgba(99,102,241,0.09), rgba(99,102,241,0) 58%),
+      radial-gradient(780px 540px at 75% 12%, rgba(244,114,182,0.07), rgba(244,114,182,0) 58%),
+      linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -32,7 +37,12 @@
   }
 
   .dark {
-    --background: linear-gradient(to bottom right, hsl(0 0% 6%), hsl(0 0% 3.9%));
+    /* Dark: near-black with gentle color hints */
+    --background:
+      radial-gradient(920px 640px at 12% 10%, rgba(16,185,129,0.20), rgba(16,185,129,0) 56%),
+      radial-gradient(1040px 740px at 88% 86%, rgba(99,102,241,0.20), rgba(99,102,241,0) 58%),
+      radial-gradient(800px 560px at 72% 12%, rgba(244,114,182,0.16), rgba(244,114,182,0) 56%),
+      linear-gradient(180deg, #0b0c10 0%, #0a0b10 50%, #090a0f 100%);
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -68,5 +78,56 @@ html {
   body {
     background: var(--background);
     @apply text-foreground;
+  }
+}
+
+/* --- Visual polish helpers --- */
+@layer components {
+  .hover-lift {
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
+  }
+}
+
+/* Rotating aurora overlay (slow + subtle) */
+@keyframes bg-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@layer base {
+  body::before {
+    content: "";
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 180vmax;
+    height: 180vmax;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: 50%;
+    background:
+      conic-gradient(
+        from 0deg,
+        rgba(16,185,129,0.10),
+        rgba(99,102,241,0.10),
+        rgba(244,114,182,0.10),
+        rgba(16,185,129,0.10)
+      );
+    filter: blur(70px);
+    opacity: 0.14;
+    transform: translate(-50%, -50%) rotate(0deg);
+    animation: bg-rotate 110s linear infinite;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 28%, transparent 70%);
+            mask-image: radial-gradient(ellipse at center, black 28%, transparent 70%);
+  }
+
+  .dark body::before { opacity: 0.12; }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
   }
 }

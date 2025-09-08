@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import NewLetterForm from "./NewLetterForm";
+import CoverLetterWizard from "@/components/CoverLetterWizard"; // fixed import path
 
 export default async function Page() {
   const supabase = await createClient();
@@ -31,7 +31,7 @@ export default async function Page() {
           </p>
 
           <div className="mt-6">
-            <NewLetterForm />
+            <CoverLetterWizard /> {/* Multi-step form */}
           </div>
         </div>
       </div>
