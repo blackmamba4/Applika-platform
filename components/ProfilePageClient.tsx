@@ -9,7 +9,6 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
   User as UserIcon,
   Mail,
-  Settings,
   FileText,
   Upload,
   Trash2,
@@ -17,12 +16,8 @@ import {
   Edit3,
   Save,
   X,
-  Calendar,
-  MapPin,
   Briefcase,
-  Palette,
   Globe,
-  Shield,
   CheckCircle,
   AlertCircle,
   ArrowLeft,
@@ -71,7 +66,6 @@ export default function ProfilePageClient({
   const [cvLoading, setCvLoading] = useState(false);
   const [cvRemoveOpen, setCvRemoveOpen] = useState(false);
   const [removingCv, setRemovingCv] = useState(false);
-  const [cvFetched, setCvFetched] = useState(false);
 
   // UI state
   const [saving, setSaving] = useState(false);
@@ -83,13 +77,9 @@ export default function ProfilePageClient({
   const [deleting, setDeleting] = useState(false);
   const canDelete = confirmText.trim().toUpperCase() === "DELETE";
 
-  // Only fetch CV when needed (lazy loading)
-  const fetchCvIfNeeded = () => {
-    if (!cvFetched) {
-      refreshCv();
-      setCvFetched(true);
-    }
-  };
+  useEffect(() => {
+    refreshCv();
+  }, []);
 
   async function refreshCv() {
     setCvLoading(true);
@@ -202,258 +192,217 @@ export default function ProfilePageClient({
   const initials = fullNameDisplay.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-6xl mx-auto px-4 pt-0 pb-2">
-        {/* Back Button */}
-        <div className="mb-2">
-          <Button
-            variant="outline"
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* Back Button */}
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Profile Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your personal information and preferences</p>
         </div>
-        {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 via-violet-500 to-purple-600 p-8 text-white mb-8">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative flex items-center gap-6">
-            {/* Avatar */}
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-2xl font-bold shadow-lg">
-              {initials}
+        <Button
+          onClick={() => setIsEditing(!isEditing)}
+          variant={isEditing ? "outline" : "default"}
+          className="flex items-center gap-2"
+        >
+          {isEditing ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+          {isEditing ? "Cancel" : "Edit Profile"}
+        </Button>
+      </div>
+
+      {/* Profile Completion */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile Completion</span>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{profilePct}%</span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-emerald-500 to-violet-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${profilePct}%` }}
+            ></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Personal Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserIcon className="h-5 w-5" />
+              Personal Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label>First Name</Label>
+                {isEditing ? (
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Enter your first name"
+                    className="mt-1"
+                  />
+                ) : (
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{firstName || "Not set"}</div>
+                )}
+              </div>
+              <div>
+                <Label>Last Name</Label>
+                {isEditing ? (
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Enter your last name"
+                    className="mt-1"
+                  />
+                ) : (
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{lastName || "Not set"}</div>
+                )}
+              </div>
             </div>
             
-            {/* User Info */}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{fullNameDisplay}</h1>
-              <div className="flex items-center gap-2 text-white/80 mb-3">
+            <div>
+              <Label>Email Address</Label>
+              <div className="mt-1 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Mail className="h-4 w-4" />
                 <span>{user?.email}</span>
-              </div>
-              
-              {/* Stats */}
-              <div className="flex gap-6">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="text-sm">{coverLetterCount} Cover Letters</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm">{profilePct}% Complete</span>
-                </div>
+                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">Verified</span>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Edit Button */}
-            <Button
-              onClick={() => setIsEditing(!isEditing)}
-              variant="secondary"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              {isEditing ? <X className="h-4 w-4 mr-2" /> : <Edit3 className="h-4 w-4 mr-2" />}
-              {isEditing ? "Cancel" : "Edit Profile"}
-            </Button>
-          </div>
-        </div>
+        {/* Professional Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Professional Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Desired Role</Label>
+              {isEditing ? (
+                <Input
+                  value={desiredRole}
+                  onChange={(e) => setDesiredRole(e.target.value)}
+                  placeholder="e.g. Marketing Manager, React Engineer"
+                  className="mt-1"
+                />
+              ) : (
+                <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{desiredRole || "Not specified"}</div>
+              )}
+            </div>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left Column - Personal Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Personal Information */}
-            <Card className="hover-lift">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>First Name</Label>
-                    {isEditing ? (
-                      <Input
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="Enter your first name"
-                        className="mt-1"
-                      />
-                    ) : (
-                      <div className="mt-1 text-sm text-gray-600">{firstName || "Not set"}</div>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    {isEditing ? (
-                      <Input
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Enter your last name"
-                        className="mt-1"
-                      />
-                    ) : (
-                      <div className="mt-1 text-sm text-gray-600">{lastName || "Not set"}</div>
-                    )}
-                  </div>
+            <div>
+              <Label>Writing Tone</Label>
+              {isEditing ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(["Professional", "Modern", "Creative", "Direct"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTone(t)}
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                        tone === t
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                          : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
                 </div>
-                
-                <div>
-                  <Label>Email Address</Label>
-                  <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
-                    <Mail className="h-4 w-4" />
-                    <span>{user?.email}</span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">Verified</span>
-                  </div>
+              ) : (
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{tone}</span>
+                  <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs rounded-full">
+                    Default
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
 
-            {/* Professional Preferences */}
-            <Card className="hover-lift">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Professional Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Desired Role</Label>
-                  {isEditing ? (
-                    <Input
-                      value={desiredRole}
-                      onChange={(e) => setDesiredRole(e.target.value)}
-                      placeholder="e.g. Marketing Manager, React Engineer"
-                      className="mt-1"
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm text-gray-600">{desiredRole || "Not specified"}</div>
-                  )}
+            <div>
+              <Label>Locale</Label>
+              {isEditing ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(["UK", "US", "EU"] as const).map((loc) => (
+                    <button
+                      key={loc}
+                      type="button"
+                      onClick={() => setLocale(loc)}
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                        locale === loc
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                          : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                      }`}
+                    >
+                      {loc}
+                    </button>
+                  ))}
                 </div>
-
-                <div>
-                  <Label>Writing Tone</Label>
-                  {isEditing ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(["Professional", "Modern", "Creative", "Direct"] as const).map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setTone(t)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                            tone === t
-                              ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="text-sm text-gray-600">{tone}</span>
-                      <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full">
-                        Default
-                      </span>
-                    </div>
-                  )}
+              ) : (
+                <div className="mt-1 flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{locale}</span>
                 </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-                <div>
-                  <Label>Locale</Label>
-                  {isEditing ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(["UK", "US", "EU"] as const).map((loc) => (
-                        <button
-                          key={loc}
-                          type="button"
-                          onClick={() => setLocale(loc)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                            locale === loc
-                              ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
-                          }`}
-                        >
-                          {loc}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-1 flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{locale}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* CV Management */}
-            <Card className="hover-lift" onMouseEnter={fetchCvIfNeeded}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  CV Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {cvLoading ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading CV...</span>
-                  </div>
-                ) : cv.filename ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <div>
-                          <div className="font-medium text-green-800">{cv.filename}</div>
-                          <div className="text-sm text-green-600">CV uploaded successfully</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <a
-                          href={cv.signedUrl ?? "#"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                        >
-                          View
-                        </a>
-                        <label className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors cursor-pointer">
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.doc,.docx,.odt,.txt,.md,.rtf"
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) void uploadCv(f);
-                            }}
-                          />
-                          Replace
-                        </label>
-                        <button
-                          onClick={() => setCvRemoveOpen(true)}
-                          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </div>
+        {/* CV Management */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              CV Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {cvLoading ? (
+              <div className="flex items-center gap-2 text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading CV...</span>
+              </div>
+            ) : cv.filename ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <div>
+                      <div className="font-medium text-green-800 dark:text-green-200">{cv.filename}</div>
+                      <div className="text-sm text-green-600 dark:text-green-400">CV uploaded successfully</div>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-medium text-gray-900 mb-2">No CV uploaded</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Upload your CV to help generate better cover letters
-                    </p>
-                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors cursor-pointer">
-                      <Upload className="h-4 w-4" />
+                  <div className="flex gap-2">
+                    <a
+                      href={cv.signedUrl ?? "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1 text-sm bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 rounded-full hover:bg-green-200 dark:hover:bg-green-700 transition-colors"
+                    >
+                      View
+                    </a>
+                    <label className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors cursor-pointer">
                       <input
                         type="file"
                         className="hidden"
@@ -463,118 +412,92 @@ export default function ProfilePageClient({
                           if (f) void uploadCv(f);
                         }}
                       />
-                      Upload CV
+                      Replace
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Accepted: PDF, DOCX, ODT, TXT, MD, RTF
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Stats & Actions */}
-          <div className="space-y-6">
-            {/* Profile Completion */}
-            <Card className="hover-lift">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Profile Completion
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-emerald-600 mb-2">{profilePct}%</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-emerald-500 to-violet-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${profilePct}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    {[
-                      { label: "Name", completed: !!(firstName && lastName) },
-                      { label: "Desired Role", completed: !!desiredRole },
-                      { label: "Writing Tone", completed: !!tone },
-                      { label: "Locale", completed: !!locale },
-                      { label: "CV Upload", completed: !!cv.filename },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center gap-2">
-                        {item.completed ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-gray-400" />
-                        )}
-                        <span className={item.completed ? "text-gray-700" : "text-gray-500"}>
-                          {item.label}
-                        </span>
-                      </div>
-                    ))}
+                    <button
+                      onClick={() => setCvRemoveOpen(true)}
+                      className="px-3 py-1 text-sm bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 rounded-full hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Account Actions */}
-            <Card className="hover-lift">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Account Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {isEditing && (
-                  <Button onClick={onSave} disabled={saving} className="w-full">
-                    {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </Button>
-                )}
-                
-                <details className="group">
-                  <summary className="cursor-pointer text-sm font-medium text-red-600 hover:text-red-700 flex items-center gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Danger Zone
-                  </summary>
-                  <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div className="text-sm text-red-700 mb-3">
-                      Permanently delete your account and all associated data.
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setConfirmOpen(true)}
-                      className="w-full"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Account
-                    </Button>
-                  </div>
-                </details>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">No CV uploaded</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Upload your CV to help generate better cover letters
+                </p>
+                <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors cursor-pointer">
+                  <Upload className="h-4 w-4" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.odt,.txt,.md,.rtf"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadCv(f);
+                    }}
+                  />
+                  Upload CV
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Accepted: PDF, DOCX, ODT, TXT, MD, RTF
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Actions */}
+      {isEditing && (
+        <div className="mt-6 flex justify-end gap-3">
+          <Button onClick={onSave} disabled={saving} className="flex items-center gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Save className="h-4 w-4" />
+            Save Changes
+          </Button>
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      <Card className="mt-6 border-red-200 dark:border-red-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+            <Trash2 className="h-5 w-5" />
+            Danger Zone
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-red-700 dark:text-red-300 mb-3">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </div>
+          <Button
+            variant="destructive"
+            onClick={() => setConfirmOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete Account
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 bg-black/50" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-white p-6 shadow-xl focus:outline-none">
-            <AlertDialog.Title className="text-lg font-semibold text-red-600 mb-2">
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-white dark:bg-gray-800 p-6 shadow-xl focus:outline-none">
+            <AlertDialog.Title className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
               Delete Account?
             </AlertDialog.Title>
-            <AlertDialog.Description className="text-sm text-gray-600 mb-4">
+            <AlertDialog.Description className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               This action cannot be undone. All your cover letters, profile data, and account information will be permanently deleted.
             </AlertDialog.Description>
-            <AlertDialog.Description className="text-sm text-gray-600 mb-4">
+            <AlertDialog.Description className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Type <strong>DELETE</strong> to confirm:
             </AlertDialog.Description>
 
@@ -611,11 +534,11 @@ export default function ProfilePageClient({
       <AlertDialog.Root open={cvRemoveOpen} onOpenChange={setCvRemoveOpen}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 bg-black/50" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-white p-6 shadow-xl focus:outline-none">
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-white dark:bg-gray-800 p-6 shadow-xl focus:outline-none">
             <AlertDialog.Title className="text-lg font-semibold mb-2">
               Remove CV?
             </AlertDialog.Title>
-            <AlertDialog.Description className="text-sm text-gray-600 mb-4">
+            <AlertDialog.Description className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               This will remove your uploaded CV from your profile. You can upload a new one anytime.
             </AlertDialog.Description>
             <div className="flex justify-end gap-3">

@@ -29,30 +29,30 @@ export default function PricingPage() {
         <div className="flex justify-between items-center mb-4">
           <Link
             href="/Dashboard"
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm border hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
           >
             ← Back to Dashboard
           </Link>
-          <h1 className="text-3xl md:text-4xl font-bold flex-1 text-center">Pricing</h1>
+          <h1 className="text-3xl md:text-4xl font-bold flex-1 text-center text-gray-900 dark:text-gray-100">Pricing</h1>
           <div className="w-[140px]" /> {/* Spacer to balance layout */}
         </div>
-        <p className="text-foreground/70">Choose a plan or buy one-time token top-ups.</p>
+        <p className="text-gray-600 dark:text-gray-400">Choose a plan or buy one-time token top-ups.</p>
       </header>
 
       {/* PLANS */}
       <section>
-        <h2 className="text-xl font-semibold mb-3">Subscriptions</h2>
+        <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">Subscriptions</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {plans.map((plan) => (
-            <div key={plan.code} className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div key={plan.code} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-lg font-semibold">{plan.name}</div>
-                  <div className="text-sm text-foreground/60">{plan.quota} tokens / month</div>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{plan.name}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{plan.quota} tokens / month</div>
                 </div>
               </div>
 
-              <ul className="mt-4 text-sm list-disc pl-5 space-y-1 text-foreground/80">
+              <ul className="mt-4 text-sm list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
                 <li>Monthly allowance resets automatically</li>
                 <li>Buy top-ups any time</li>
               </ul>
@@ -67,7 +67,7 @@ export default function PricingPage() {
                     setLoadingKey(null);
                   }
                 }}
-                className="mt-5 w-full rounded-full bg-emerald-500 text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-emerald-500 to-violet-500 hover:from-emerald-600 hover:to-violet-600 text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50 transition-all duration-200"
               >
                 {loadingKey === plan.code ? "Redirecting…" : `Choose ${plan.name}`}
               </button>
@@ -78,18 +78,18 @@ export default function PricingPage() {
 
       {/* PACKS */}
       <section>
-        <h2 className="text-xl font-semibold mb-3">Top-up tokens</h2>
+        <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">Top-up tokens</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {packs.map((pack) => (
-            <div key={pack.code} className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div key={pack.code} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-lg font-semibold">{pack.name}</div>
-                  <div className="text-sm text-foreground/60">{pack.amount} tokens (one-time)</div>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{pack.name}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{pack.amount} tokens (one-time)</div>
                 </div>
               </div>
 
-              <ul className="mt-4 text-sm list-disc pl-5 space-y-1 text-foreground/80">
+              <ul className="mt-4 text-sm list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
                 <li>Never expires</li>
                 <li>Used after your monthly allowance runs out</li>
               </ul>
@@ -104,7 +104,7 @@ export default function PricingPage() {
                     setLoadingKey(null);
                   }
                 }}
-                className="mt-5 w-full rounded-full border px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+                className="mt-5 w-full rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2.5 text-sm font-semibold disabled:opacity-50 transition-all duration-200"
               >
                 {loadingKey === pack.code ? "Redirecting…" : `Buy ${pack.amount} tokens`}
               </button>
@@ -113,7 +113,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="text-center text-xs text-foreground/60">
+      <footer className="text-center text-xs text-gray-500 dark:text-gray-400">
         Test card: 4242 4242 4242 4242 · any future date · any CVC
       </footer>
     </div>

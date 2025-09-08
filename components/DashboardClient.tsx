@@ -69,25 +69,25 @@ export default function DashboardClient({
           aria-label="Sidebar"
         >
           {/* Compact Profile Summary */}
-          <div className="rounded-lg border bg-white p-4 hover-lift">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover-lift">
             <div className="flex items-center gap-3 mb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-violet-500 text-white text-sm font-semibold">
                 {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate">
+                <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
                   {user?.name || "Your Name"}
                 </div>
-                <div className="text-xs text-gray-500 truncate">
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.email}
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Profile</span>
-              <a href="/Dashboard/profile" className="text-emerald-600 hover:text-emerald-700 font-medium">
+              <span className="text-gray-500 dark:text-gray-400">Profile</span>
+              <Link href="/Dashboard/profile" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
                 Manage →
-              </a>
+              </Link>
             </div>
           </div>
 

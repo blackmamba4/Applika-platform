@@ -17,14 +17,42 @@ export default function DashboardLayout({
       <div className="flex-1 w-full flex flex-col gap-10 items-center">
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
           <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-2 items-center font-semibold text-xl">
-              <Image
-                                src="/favicon.ico" // replace with your icon path
-                                alt="Applika logo"
-                                width={28}
-                                height={28}
-                              />
-              <Link href={"/"}>Applika</Link>
+            <div className="flex gap-8 items-center">
+              {/* Logo */}
+              <Link href={"/"} className="flex items-center gap-2 group">
+                <Image
+                  src="/favicon.ico"
+                  alt="Applika logo"
+                  width={28}
+                  height={28}
+                  className="group-hover:opacity-80 transition-opacity duration-200"
+                />
+                <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-violet-600 bg-clip-text text-transparent tracking-tight">
+                  Applika
+                </span>
+              </Link>
+              
+              {/* Navigation Links */}
+              <div className="hidden md:flex gap-6 text-sm font-medium">
+                <Link 
+                  href="/Dashboard" 
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                >
+                  Home
+                </Link>
+                <Link 
+                  href="/Dashboard/Coverletters" 
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                >
+                  Cover Letters
+                </Link>
+                <Link 
+                  href="/pricing" 
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                >
+                  Pricing
+                </Link>
+              </div>
             </div>
             {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
           </div>

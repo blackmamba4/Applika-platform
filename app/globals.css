@@ -112,20 +112,20 @@ html {
     background:
       conic-gradient(
         from 0deg,
-        rgba(16,185,129,0.10),
-        rgba(99,102,241,0.10),
-        rgba(244,114,182,0.10),
-        rgba(16,185,129,0.10)
+        rgba(16,185,129,0.06),
+        rgba(99,102,241,0.06),
+        rgba(244,114,182,0.06),
+        rgba(16,185,129,0.06)
       );
-    filter: blur(70px);
-    opacity: 0.14;
+    filter: blur(90px);
+    opacity: 0.06;
     transform: translate(-50%, -50%) rotate(0deg);
-    animation: bg-rotate 110s linear infinite;
-    -webkit-mask-image: radial-gradient(ellipse at center, black 28%, transparent 70%);
-            mask-image: radial-gradient(ellipse at center, black 28%, transparent 70%);
+    animation: bg-rotate 150s linear infinite;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
+            mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
   }
 
-  .dark body::before { opacity: 0.12; }
+  .dark body::before { opacity: 0.04; }
 
   @media (prefers-reduced-motion: reduce) {
     body::before { animation: none; }

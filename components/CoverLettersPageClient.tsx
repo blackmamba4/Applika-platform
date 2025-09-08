@@ -210,7 +210,7 @@ export default function CoverLettersPageClient({
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Header */}
         <div className="mb-6">
@@ -225,14 +225,14 @@ export default function CoverLettersPageClient({
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Cover Letters</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Cover Letters</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 {totalCount} cover letter{totalCount !== 1 ? 's' : ''} total
               </p>
             </div>
             
             <Link href="/Dashboard/Coverletters/new">
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-violet-500 hover:from-emerald-600 hover:to-violet-600 text-white border-0">
                 <FileText className="h-4 w-4" />
                 New Cover Letter
               </Button>
@@ -241,7 +241,7 @@ export default function CoverLettersPageClient({
         </div>
 
         {/* Filters and Search */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row gap-4">
               {/* Search */}
@@ -356,7 +356,7 @@ export default function CoverLettersPageClient({
               </p>
               {!searchTerm && (
                 <Link href="/Dashboard/Coverletters/new">
-                  <Button>
+                  <Button className="bg-gradient-to-r from-emerald-500 to-violet-500 hover:from-emerald-600 hover:to-violet-600 text-white border-0">
                     <FileText className="h-4 w-4 mr-2" />
                     Create Cover Letter
                   </Button>
@@ -370,7 +370,7 @@ export default function CoverLettersPageClient({
             {viewMode === "grid" ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredLetters.map((letter) => (
-                  <Card key={letter.id} className="hover-lift group h-full">
+                  <Card key={letter.id} className="hover-lift group h-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <CardContent className="p-4 h-full flex flex-col">
                       {/* Header with checkbox and delete */}
                       <div className="flex items-start justify-between mb-3">
@@ -394,10 +394,10 @@ export default function CoverLettersPageClient({
                       
                       {/* Title and Company */}
                       <div className="flex-1 mb-3">
-                        <h3 className="font-medium text-gray-900 text-sm leading-tight mb-2 line-clamp-2">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm leading-tight mb-2 line-clamp-2">
                           {letter.title || 'Untitled Cover Letter'}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                           <Building className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{letter.company || 'Unknown Company'}</span>
                         </div>
@@ -405,28 +405,22 @@ export default function CoverLettersPageClient({
                       
                       {/* Dates */}
                       <div className="space-y-1 mb-4">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
                           <span>Created {formatDate(letter.created_at)}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
                           <span>Modified {formatDate(letter.updated_at)}</span>
                         </div>
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex gap-2 mt-auto">
-                        <Link href={`/Dashboard/Coverletters/${letter.id}`} className="flex-1">
+                      <div className="mt-auto">
+                        <Link href={`/Dashboard/Coverletters/${letter.id}`} className="block">
                           <Button variant="outline" size="sm" className="w-full text-xs">
-                            <Eye className="h-3 w-3 mr-1" />
-                            View
-                          </Button>
-                        </Link>
-                        <Link href={`/Dashboard/Coverletters/${letter.id}`} className="flex-1">
-                          <Button size="sm" className="w-full text-xs">
                             <Edit className="h-3 w-3 mr-1" />
-                            Edit
+                            Edit Cover Letter
                           </Button>
                         </Link>
                       </div>
@@ -436,11 +430,11 @@ export default function CoverLettersPageClient({
               </div>
             ) : (
               /* List View */
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <CardContent className="p-0">
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredLetters.map((letter) => (
-                      <div key={letter.id} className="p-4 hover:bg-gray-50 group">
+                      <div key={letter.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 group">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <input
@@ -451,10 +445,10 @@ export default function CoverLettersPageClient({
                             />
                             
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 truncate">
+                              <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
                                 {letter.title || 'Untitled Cover Letter'}
                               </h3>
-                              <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 <div className="flex items-center gap-1">
                                   <Building className="h-3 w-3" />
                                   <span>{letter.company || 'Unknown Company'}</span>
@@ -474,12 +468,6 @@ export default function CoverLettersPageClient({
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Link href={`/Dashboard/Coverletters/${letter.id}`}>
                               <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                            </Link>
-                            <Link href={`/Dashboard/Coverletters/${letter.id}`}>
-                              <Button size="sm">
                                 <Edit className="h-4 w-4 mr-1" />
                                 Edit
                               </Button>
