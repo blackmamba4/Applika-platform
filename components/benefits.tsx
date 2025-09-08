@@ -55,19 +55,19 @@ export default function Benefits() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-sm font-medium text-emerald-700 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-6">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
             Why thousands trust us
           </div>
           
           <h2 className="text-3xl md:text-5xl font-black leading-[0.9] tracking-tight mb-6">
-            <span className="block text-gray-900">Built for</span>
+            <span className="block text-gray-900 dark:text-gray-100">Built for</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-violet-600 to-purple-600">
               Real Results
             </span>
           </h2>
           
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             We don't just generate text—we create cover letters that actually get you noticed 
             by matching your experience to what employers are looking for.
           </p>
@@ -78,7 +78,7 @@ export default function Benefits() {
           {items.map((item, index) => (
             <div
               key={item.title}
-              className="group relative p-6 rounded-2xl border border-gray-200 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              className="group relative p-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
@@ -93,18 +93,18 @@ export default function Benefits() {
               {/* Content */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
-                  <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.title}</h3>
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
                     {item.stat}
                   </span>
                 </div>
                 
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                   {item.desc}
                 </p>
                 
                 {/* Hover arrow */}
-                <div className={`flex items-center text-emerald-600 font-medium transition-all duration-300 ${
+                <div className={`flex items-center text-emerald-600 dark:text-emerald-400 font-medium transition-all duration-300 ${
                   hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
                 }`}>
                   <span className="text-xs">Learn more</span>

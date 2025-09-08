@@ -114,19 +114,19 @@ export default function UseCases() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-200 text-sm font-medium text-violet-700 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 text-sm font-medium text-violet-700 dark:text-violet-300 mb-6">
             <div className="w-1.5 h-1.5 bg-violet-500 rounded-full"></div>
             Perfect for every situation
           </div>
           
           <h2 className="text-3xl md:text-5xl font-black leading-[0.9] tracking-tight mb-6">
-            <span className="block text-gray-900">Built for</span>
+            <span className="block text-gray-900 dark:text-gray-100">Built for</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-violet-600 to-purple-600">
               Your Situation
             </span>
           </h2>
           
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Pick your situation to see how Applika adapts tone, structure, and keywords 
             to match exactly what employers in your field are looking for.
           </p>
@@ -142,7 +142,7 @@ export default function UseCases() {
                 className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 ${
                   active === index
                     ? `${case_.bgColor} ${case_.borderColor} shadow-md scale-105`
-                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -150,8 +150,8 @@ export default function UseCases() {
                     <case_.Icon className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-900 mb-1">{case_.title}</h3>
-                    <p className="text-xs text-gray-600">{case_.desc}</p>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-1">{case_.title}</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">{case_.desc}</p>
                   </div>
                   {active === index && (
                     <CheckCircle className="w-5 h-5 text-emerald-500" />
@@ -173,8 +173,8 @@ export default function UseCases() {
                   <A.Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">{A.title}</h3>
-                  <p className="text-sm text-gray-600">{A.desc}</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{A.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{A.desc}</p>
                 </div>
               </div>
 
@@ -185,15 +185,15 @@ export default function UseCases() {
                     <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${A.accent} flex items-center justify-center mt-0.5`}>
                       <CheckCircle className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-sm text-gray-700">{point}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{point}</span>
                   </div>
                 ))}
               </div>
 
               {/* Example */}
-              <div className="p-3 bg-white/80 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-600 mb-1 font-medium">Example output:</p>
-                <p className="text-xs text-gray-800 italic">"{A.example}"</p>
+              <div className="p-3 bg-white/80 dark:bg-gray-700/80 rounded-lg border border-gray-200 dark:border-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Example output:</p>
+                <p className="text-xs text-gray-800 dark:text-gray-200 italic">"{A.example}"</p>
               </div>
 
               {/* CTA */}

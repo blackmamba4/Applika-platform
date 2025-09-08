@@ -16,7 +16,7 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col items-center">
         {/* NAVBAR */}
-        <nav className="w-full flex justify-center border-b border-gray-200/60 h-16">
+        <nav className="w-full flex justify-center border-b border-gray-200/60 dark:border-gray-800/60 h-16">
           <div className="w-full max-w-6xl flex justify-between items-center p-3 px-6 text-sm">
             <div className="flex gap-5 items-center">
               {/* Logo */}
@@ -34,16 +34,16 @@ export default function Home() {
               </Link>
               {/* Page links */}
               <div className="hidden md:flex gap-8 text-sm font-medium">
-                <a href="#benefits" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                <a href="#benefits" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200">
                   Benefits
                 </a>
-                <a href="#usecases" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                <a href="#usecases" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200">
                   Use Cases
                 </a>
-                <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                <a href="#pricing" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200">
                   Pricing
                 </a>
-                <a href="#cta" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                <a href="#cta" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200">
                   Get Started
                 </a>
               </div>
@@ -70,20 +70,20 @@ export default function Home() {
         </div>
 
         {/* FOOTER */}
-        <footer className="w-full flex items-center justify-center border-t border-gray-200/50 mx-auto text-center text-xs gap-8 py-16">
+        <footer className="w-full flex items-center justify-center border-t border-gray-200/50 dark:border-gray-800/50 mx-auto text-center text-xs gap-8 py-16">
           <div className="flex items-center gap-8">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Powered by{" "}
               <a
                 href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
                 target="_blank"
-                className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors duration-200"
+                className="font-semibold text-gray-900 dark:text-gray-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200"
                 rel="noreferrer"
               >
                 Supabase
               </a>
             </p>
-            <div className="w-px h-4 bg-gray-300"></div>
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
             <ThemeSwitcher />
           </div>
         </footer>

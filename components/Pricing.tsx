@@ -153,19 +153,19 @@ export default function Pricing() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-sm font-medium text-purple-700 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 text-sm font-medium text-purple-700 dark:text-purple-300 mb-6">
             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
             Simple, transparent pricing
           </div>
           
           <h2 className="text-3xl md:text-5xl font-black leading-[0.9] tracking-tight mb-6">
-            <span className="block text-gray-900">Fair</span>
+            <span className="block text-gray-900 dark:text-gray-100">Fair</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-violet-600 to-purple-600">
               Pricing
             </span>
           </h2>
           
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             No hidden fees, no surprises. Pay for what you use, when you need it. 
             Start free and upgrade when you're ready to land that dream job.
           </p>
@@ -176,10 +176,10 @@ export default function Pricing() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border-2 bg-white shadow-md p-6 flex flex-col transition-all duration-300 hover:shadow-lg ${
+              className={`relative rounded-2xl border-2 bg-white dark:bg-gray-800 shadow-md p-6 flex flex-col transition-all duration-300 hover:shadow-lg ${
                 plan.highlighted 
-                  ? "border-violet-500 scale-105 shadow-lg" 
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-violet-500 dark:border-violet-400 scale-105 shadow-lg" 
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
               }`}
             >
               {/* Gradient accent */}
@@ -195,21 +195,21 @@ export default function Pricing() {
               )}
 
               <div className="text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{plan.name}</h3>
                 
                 <div className="mb-3">
-                  <span className="text-4xl font-black text-gray-900">{plan.price}</span>
-                  <span className="text-base text-gray-600 ml-1">{plan.period}</span>
+                  <span className="text-4xl font-black text-gray-900 dark:text-gray-100">{plan.price}</span>
+                  <span className="text-base text-gray-600 dark:text-gray-300 ml-1">{plan.period}</span>
                 </div>
                 
-                <p className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full inline-block">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full inline-block">
                   {plan.tokens}
                 </p>
               </div>
 
               <ul className="mt-6 space-y-3 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-gray-700">
+                  <li key={f} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
                     <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${plan.color} flex items-center justify-center mt-0.5 flex-shrink-0`}>
                       <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                     </div>
@@ -225,16 +225,16 @@ export default function Pricing() {
 
         {/* Token Packs */}
         <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Need extra tokens?</h3>
-          <p className="text-gray-600 mb-6">Buy one-time top-ups that don't change your plan.</p>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Need extra tokens?</h3>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">Buy one-time top-ups that don't change your plan.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {packs.map((p) => (
-              <div key={p.name} className="rounded-xl border-2 border-gray-200 bg-white p-4 shadow-md hover:shadow-lg transition-all duration-300">
+              <div key={p.name} className="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="text-left">
-                    <div className="text-base font-bold text-gray-900">{p.name}</div>
-                    <div className="text-xs text-gray-600">{p.blurb}</div>
+                    <div className="text-base font-bold text-gray-900 dark:text-gray-100">{p.name}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">{p.blurb}</div>
                   </div>
                   <div>{p.button}</div>
                 </div>
@@ -245,7 +245,7 @@ export default function Pricing() {
 
         {/* Footer note */}
         <div className="text-center mt-8">
-          <p className="text-xs text-gray-500 max-w-xl mx-auto">
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
             1 token = 1 cover letter. Unused plan tokens reset monthly. Top-up tokens remain available until used. 
             Prices shown are examples; final amount is shown at checkout.
           </p>
