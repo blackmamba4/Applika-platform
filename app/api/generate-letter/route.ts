@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import OpenAI from "openai";
+import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
+import { withErrorHandler, errors, RateLimiter } from "@/lib/error-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -370,13 +372,46 @@ async function buildDefaultMeta(opts: {
 }
 
 /* ---------------- route ---------------- */
-export async function POST(req: NextRequest) {
+// Rate limiter for AI generation (expensive operation)
+const generationRateLimiter = new RateLimiter(5, 60000); // 5 requests per minute
+
+async function POSTHandler(req: NextRequest) {
   const supabase = await createClient();
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   if (authErr || !auth?.user) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
   const user = auth.user;
+
+  // Rate limiting check
+  const userIdentifier = user.id;
+  if (!generationRateLimiter.isAllowed(userIdentifier)) {
+    const resetTime = generationRateLimiter.getResetTime(userIdentifier);
+    return NextResponse.json(
+      {
+        error: "Rate limit exceeded. Please wait before generating another cover letter.",
+        code: "RATE_LIMITED",
+        retryAfter: Math.ceil((resetTime - Date.now()) / 1000),
+      },
+      { 
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil((resetTime - Date.now()) / 1000).toString(),
+        }
+      }
+    );
+  }
+
+  // Validate request body
+  const validation = await validateRequest(req, schemas.generateLetter);
+  if (!validation.isValid) {
+    return NextResponse.json(
+      createValidationErrorResponse(validation.errors),
+      { status: 400 }
+    );
+  }
+
+  const body = validation.data as Payload;
 
   // Optional streaming (SSE) to provide progress updates
   const url = new URL(req.url);
@@ -392,7 +427,6 @@ export async function POST(req: NextRequest) {
         const send = (name: string, data: any) => controller.enqueue(ev(name, data));
         try {
           send("start", { ok: true });
-          const body = (await req.json()) as Payload;
 
           const jobTitle = collapse(body?.jobTitle);
           const companyName = collapse(body?.companyName);
@@ -595,3 +629,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const POST = withErrorHandler(POSTHandler);

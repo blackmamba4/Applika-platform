@@ -45,35 +45,44 @@ function ButtonSkeleton() {
 }
 
 type Mode = "auto" | "manual";
-type ProfileRow = { 
-  first_name: string | null; 
-  last_name: string | null; 
-  full_name: string | null; 
-  desired_role: string | null;
-  tone_default: string | null;
+type ProfileData = {
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  desiredRole: string | null;
+  toneDefault: string | null;
 };
 
 const FALLBACK_NAME = "Friend";
 const FALLBACK_ROLE = "this role";
 const SAVE_ROLE_ON_EDIT = true;
 
-export default function CoverLetterWizard() {
+export default function CoverLetterWizard({ profile }: { profile: ProfileData }) {
   const router = useRouter();
   const supabase = createClient();
   const toast = useToast();
 
-  // Profile
-  const [profileLoading, setProfileLoading] = useState(true);
+  // Profile - initialize from props immediately
+  const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [userName, setUserName] = useState(FALLBACK_NAME);
-  const [defaultRole, setDefaultRole] = useState(FALLBACK_ROLE);
+  const [userName, setUserName] = useState(() => {
+    const name = profile?.fullName?.trim() || 
+                 [profile?.firstName?.trim(), profile?.lastName?.trim()].filter(Boolean).join(' ') || 
+                 FALLBACK_NAME;
+    return name;
+  });
+  const [defaultRole, setDefaultRole] = useState(() => {
+    return profile?.desiredRole?.trim() || FALLBACK_ROLE;
+  });
   const [letterLength, setLetterLength] = useState<"short" | "medium" | "long">("medium");
   
-  // Progressive loading states
-  const [wizardLoading, setWizardLoading] = useState(true);
+  // No more wizard loading - instant initialization
+  const [wizardLoading, setWizardLoading] = useState(false);
 
   // Editable role
-  const [role, setRole] = useState(FALLBACK_ROLE);
+  const [role, setRole] = useState(() => {
+    return profile?.desiredRole?.trim() || FALLBACK_ROLE;
+  });
   const [roleEdited, setRoleEdited] = useState(false);
 
   // UI / steps
@@ -84,7 +93,10 @@ export default function CoverLetterWizard() {
   
   // Template system
   const [selectedTemplate, setSelectedTemplate] = useState<CoverLetterTemplate | undefined>();
-  const [selectedTone, setSelectedTone] = useState<string>("professional");
+  const [selectedTone, setSelectedTone] = useState<string>(() => {
+    const profileTone = profile?.toneDefault?.trim()?.toLowerCase();
+    return profileTone || "professional";
+  });
 
   // Inputs
   const [jobMode, setJobMode] = useState<Mode>("auto");
@@ -132,57 +144,6 @@ export default function CoverLetterWizard() {
   useEffect(() => {
     const t = setTimeout(() => setGlow(false), 800);
     return () => clearTimeout(t);
-  }, []);
-
-  // load profile
-  useEffect(() => {
-    (async () => {
-      setProfileLoading(true);
-      setProfileError(null);
-      try {
-        const { data: auth } = await supabase.auth.getUser();
-        const user = auth?.user;
-        if (!user) {
-          router.push("/login");
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("first_name, last_name, full_name, desired_role, tone_default")
-          .eq("id", user.id)
-          .single<ProfileRow>();
-
-        if (error) setProfileError(error.message);
-
-        const name = data?.full_name?.trim() || 
-                     [data?.first_name?.trim(), data?.last_name?.trim()].filter(Boolean).join(' ') || 
-                     FALLBACK_NAME;
-        const roleVal = data?.desired_role?.trim() || FALLBACK_ROLE;
-        // Map profile tone to wizard tone (case-insensitive)
-        const profileTone = data?.tone_default?.trim()?.toLowerCase();
-        const defaultTone = profileTone || "professional";
-
-        console.log("Profile data loaded:", { 
-          tone_default: data?.tone_default, 
-          profileTone,
-          defaultTone, 
-          selectedTone: selectedTone 
-        });
-
-        setUserName(name);
-        setDefaultRole(roleVal);
-        if (!roleEdited) setRole(roleVal);
-        setSelectedTone(defaultTone);
-      } catch (e: any) {
-        setProfileError(e?.message || "Could not load profile");
-      } finally {
-        setProfileLoading(false);
-        // Delay wizard loading to show progressive loading
-        setTimeout(() => setWizardLoading(false), 300);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // optional: persist role edits

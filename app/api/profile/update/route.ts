@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,9 +13,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse the request body
-    const body = await request.json();
-    const { first_name, last_name, tone_default, locale, desired_role } = body;
+    // Validate request body
+    const validation = await validateRequest(request, schemas.profileUpdate);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        createValidationErrorResponse(validation.errors),
+        { status: 400 }
+      );
+    }
+
+    const { first_name, last_name, tone_default, locale, desired_role } = validation.data;
 
     // Update the profile
     const { error: updateError } = await supabase

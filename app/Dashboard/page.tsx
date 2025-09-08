@@ -10,38 +10,39 @@ export default async function Page() {
   if (userErr || !userRes?.user) redirect("/auth/login");
   const user = userRes.user;
 
+  // Ensure profile exists
   await supabase
     .from("profiles")
     .upsert({ id: user.id, email: user.email ?? "" }, { onConflict: "id" });
 
-  // ✅ Correct: no .catch after await
-  {
-    const { error } = await supabase.rpc("ensure_plan_cycle", {
-      p_user_id: user.id,
-    });
-    // ignore or log
-    if (error) console.warn("ensure_plan_cycle failed:", error.message);
+  // Run ensure_plan_cycle and profile fetch in parallel for better performance
+  const [planCycleResult, profileResult] = await Promise.allSettled([
+    supabase.rpc("ensure_plan_cycle", { p_user_id: user.id }),
+    supabase
+      .from("profiles")
+      .select("plan, plan_quota_remaining, tokens_remaining, plan_quota, first_name, last_name, full_name, desired_role, tone_default")
+      .eq("id", user.id)
+      .single()
+  ]);
+
+  // Handle plan cycle errors (non-critical)
+  if (planCycleResult.status === "rejected") {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("ensure_plan_cycle failed:", planCycleResult.reason?.message);
+    }
   }
 
-  const { data: prof } = await supabase
-    .from("profiles")
-    .select("plan, plan_quota_remaining, tokens_remaining, plan_quota")
-    .eq("id", user.id)
-    .single();
+  // Handle profile fetch errors (critical)
+  if (profileResult.status === "rejected") {
+    console.error("Profile query failed:", profileResult.reason?.message);
+    redirect("/auth/login");
+  }
 
+  const prof = profileResult.value.data;
   const plan = prof?.plan ?? "Free";
   const planQuotaRemaining = prof?.plan_quota_remaining ?? 0;
   const topupRemaining = prof?.tokens_remaining ?? 0;
   const planQuota = prof?.plan_quota ?? 0;
-
-  // Debug logging
-  console.log('Dashboard page token data:', { 
-    plan, 
-    planQuotaRemaining, 
-    topupRemaining, 
-    planQuota,
-    prof: prof 
-  });
 
   return (
     <DashboardClient
@@ -49,6 +50,13 @@ export default async function Page() {
         email: user.email ?? null,
         name: (user.user_metadata as any)?.full_name ?? null,
         avatarUrl: (user.user_metadata as any)?.avatar_url ?? null,
+      }}
+      profile={{
+        firstName: prof?.first_name,
+        lastName: prof?.last_name,
+        fullName: prof?.full_name,
+        desiredRole: prof?.desired_role,
+        toneDefault: prof?.tone_default,
       }}
       plan={plan}
       planQuotaRemaining={planQuotaRemaining}

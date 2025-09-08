@@ -1,7 +1,6 @@
 "use client";
 
 import CoverLetterWizard from "./CoverLetterWizard";
-import ProfileSection from "../app/Dashboard/ProfileSection";
 import RecentCard from "./RecentCard";
 import TokensCard from "./TokensCard";
 import Link from "next/link";
@@ -13,14 +12,24 @@ type UserLite = {
   avatarUrl: string | null;
 };
 
+type ProfileData = {
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  desiredRole: string | null;
+  toneDefault: string | null;
+};
+
 export default function DashboardClient({
   user,
+  profile,
   plan,
   planQuotaRemaining,
   topupRemaining,
   planQuota,
 }: {
   user: UserLite;
+  profile: ProfileData;
   plan: string;
   planQuotaRemaining?: number;
   topupRemaining?: number;
@@ -47,7 +56,7 @@ export default function DashboardClient({
       <div className="grid gap-4 items-start lg:[grid-template-columns:minmax(0,1fr)_360px]">
         {/* Main Apply Card */}
         <main className="min-w-0 lg:pr-2">
-          <CoverLetterWizard />
+          <CoverLetterWizard profile={profile} />
         </main>
 
         {/* Right rail (compact summary) */}

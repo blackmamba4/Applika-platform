@@ -4,6 +4,8 @@ import { resolveCompanyHomepage } from "@/lib/extractors/resolveCompanyHomepage"
 import { sanitizeToText } from "@/lib/html/sanitize"; // <-- use this
 import { fetchCompanyAbout } from "@/lib/extractors/fetchCompanyAbout";
 import { summarizeCompanyAbout } from "@/lib/extractors/summarizeCompanyAbout";
+import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
+import { RateLimiter } from "@/lib/error-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,6 +49,9 @@ const DAILY_CAP = Number(process.env.INGEST_DAILY_CAP || 300);
 const COOLDOWN_STREAK = Number(process.env.INGEST_COOLDOWN_STREAK || 3);
 const COOLDOWN_WINDOW_MS = Number(process.env.INGEST_COOLDOWN_WINDOW_MS || 60_000);
 const usage = new Map<string, { date: string; count: number; streak: number; lastAt: number }>();
+
+// Additional rate limiter for job ingestion (web scraping is expensive)
+const ingestionRateLimiter = new RateLimiter(10, 60000); // 10 requests per minute
 
 /* ---------------- utils ---------------- */
 
@@ -207,7 +212,35 @@ function checkAndBumpUsage(req: NextRequest): { ok: boolean; reason?: string } {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as Body;
+    // Validate request body
+    const validation = await validateRequest(req, schemas.ingestJob);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        createValidationErrorResponse(validation.errors),
+        { status: 400 }
+      );
+    }
+
+    const body = validation.data as Body;
+
+    // Rate limiting check (in addition to existing usage tracking)
+    const clientIP = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    if (!ingestionRateLimiter.isAllowed(clientIP)) {
+      const resetTime = ingestionRateLimiter.getResetTime(clientIP);
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded. Please wait before making another request.",
+          code: "RATE_LIMITED",
+          retryAfter: Math.ceil((resetTime - Date.now()) / 1000),
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": Math.ceil((resetTime - Date.now()) / 1000).toString(),
+          }
+        }
+      );
+    }
 
     const gate = checkAndBumpUsage(req);
     if (!gate.ok) {
