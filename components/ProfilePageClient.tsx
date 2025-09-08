@@ -71,6 +71,7 @@ export default function ProfilePageClient({
   const [cvLoading, setCvLoading] = useState(false);
   const [cvRemoveOpen, setCvRemoveOpen] = useState(false);
   const [removingCv, setRemovingCv] = useState(false);
+  const [cvFetched, setCvFetched] = useState(false);
 
   // UI state
   const [saving, setSaving] = useState(false);
@@ -82,9 +83,13 @@ export default function ProfilePageClient({
   const [deleting, setDeleting] = useState(false);
   const canDelete = confirmText.trim().toUpperCase() === "DELETE";
 
-  useEffect(() => {
-    refreshCv();
-  }, []);
+  // Only fetch CV when needed (lazy loading)
+  const fetchCvIfNeeded = () => {
+    if (!cvFetched) {
+      refreshCv();
+      setCvFetched(true);
+    }
+  };
 
   async function refreshCv() {
     setCvLoading(true);
@@ -387,7 +392,7 @@ export default function ProfilePageClient({
             </Card>
 
             {/* CV Management */}
-            <Card className="hover-lift">
+            <Card className="hover-lift" onMouseEnter={fetchCvIfNeeded}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
