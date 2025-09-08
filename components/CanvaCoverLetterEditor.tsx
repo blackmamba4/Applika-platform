@@ -333,43 +333,81 @@ export default function CanvaCoverLetterEditor({
     const densityStyles = getDensityStyles();
     const fontFamily = getFontFamily();
     
+    // Use the same template rendering as the visual editor, but with print-friendly styles
+    if (meta.template === 'modernGradient') {
+      return `
+        <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; max-height: 297mm; background: white; padding: 0; margin: 0;">
+          <!-- Gradient Header -->
+          <div style="height: 130px; display: flex; flex-direction: column; align-items: center; color: white; background: linear-gradient(135deg, ${meta.accent} 0%, ${meta.gradientColor || '#f97316'} 100%); padding-top: 20px;">
+            <div style="font-size: 24px; font-weight: bold; margin-bottom: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${meta.yourName}</div>
+            <div style="width: 64px; height: 1px; background: rgba(255,255,255,0.3); margin-bottom: 16px;"></div>
+            <div style="display: flex; gap: 24px; font-size: 14px;">
+              <div style="text-align: center;">
+                <div style="font-weight: bold; margin-bottom: 8px;">PHONE</div>
+                <div>${meta.contactLine?.split('\n')[0] || '(555) 123-4567'}</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; margin-bottom: 8px;">EMAIL</div>
+                <div>${meta.contactLine?.split('\n')[1] || 'your@email.com'}</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; margin-bottom: 8px;">ADDRESS</div>
+                <div>${meta.contactLine?.split('\n')[2] || 'City, State'}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Content Area -->
+          <div style="padding: 24px;">
+            <!-- Date and Recipient -->
+            <div style="margin-bottom: 24px;">
+              <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${meta.dateLine}</div>
+              <div style="font-weight: 500; margin-bottom: 4px;">${meta.recipient}</div>
+              <div style="font-weight: 500; margin-bottom: 4px;">${meta.company}</div>
+              ${meta.companyAddress ? `<div style="font-size: 14px; color: #666;">${meta.companyAddress}</div>` : ''}
+            </div>
+            
+            <!-- Greeting -->
+            <div style="margin-bottom: 16px; font-weight: 500;">${meta.greeting || `Dear ${meta.company} Team,`}</div>
+            
+            <!-- Main Content -->
+            <div style="white-space: pre-wrap; margin-bottom: 24px; line-height: 1.6;">${content}</div>
+            
+            <!-- Closing -->
+            <div style="margin-bottom: 8px;">${meta.closing || 'Warm regards,'}</div>
+            <div style="font-weight: bold;">${meta.signatureName || meta.yourName}</div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Fallback for other templates - use the same structure as modernGradient
     return `
-      <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333;">
-        ${meta.headerStyle === 'centered' && `
-          <div style="text-align: center; margin-bottom: ${densityStyles.headerSpacing};">
-            <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; color: ${meta.accent};">
-              ${meta.yourName}
-            </h1>
-            ${meta.contactLine && `<p style="margin: 0; font-size: 0.9rem;">${meta.contactLine}</p>`}
-          </div>
-        `}
-        
-        ${meta.showRecipientBlock && `
-          <div style="margin-bottom: ${densityStyles.paragraphSpacing};">
-            <p style="margin: 0;">${meta.dateLine}</p>
-            <p style="margin: 0.5rem 0;">${meta.recipient}</p>
-            <p style="margin: 0;">${meta.company}</p>
-            ${meta.companyAddress && `<p style="margin: 0;">${meta.companyAddress}</p>`}
-          </div>
-        `}
-        
-        ${meta.showDivider && `<hr style="border: none; border-top: 1px solid #e5e7eb; margin: ${densityStyles.paragraphSpacing} 0;">`}
-        
-        <div style="white-space: pre-wrap; margin-bottom: ${densityStyles.paragraphSpacing};">
-          ${content}
+      <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; max-height: 297mm; background: white; padding: 24px; margin: 0;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 32px;">
+          <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 8px; color: ${meta.accent};">${meta.yourName}</h1>
+          <div style="width: 96px; height: 2px; background: ${meta.accent}; margin: 0 auto 24px;"></div>
+          <div style="color: #666; font-size: 16px;">${meta.contactLine?.split('\n')[3] || 'Professional Title'}</div>
         </div>
         
-        ${meta.showSignature && meta.signatureUrl && `
-          <div style="margin-top: 2rem;">
-            <img src="${meta.signatureUrl}" alt="Signature" style="max-width: 200px; height: auto;" />
-          </div>
-        `}
+        <!-- Date and Recipient -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${meta.dateLine}</div>
+          <div style="font-weight: 500; margin-bottom: 4px;">${meta.recipient}</div>
+          <div style="font-weight: 500; margin-bottom: 4px;">${meta.company}</div>
+          ${meta.companyAddress ? `<div style="font-size: 14px; color: #666;">${meta.companyAddress}</div>` : ''}
+        </div>
         
-        ${meta.footerStyle === 'initials' && meta.yourInitials && `
-          <div style="margin-top: 2rem; text-align: right;">
-            <p style="margin: 0; font-style: italic;">${meta.yourInitials}</p>
-          </div>
-        `}
+        <!-- Greeting -->
+        <div style="margin-bottom: 16px; font-weight: 500;">${meta.greeting || `Dear ${meta.company} Team,`}</div>
+        
+        <!-- Main Content -->
+        <div style="white-space: pre-wrap; margin-bottom: 24px; line-height: 1.6;">${content}</div>
+        
+        <!-- Closing -->
+        <div style="margin-bottom: 8px;">${meta.closing || 'Sincerely,'}</div>
+        <div style="font-weight: bold;">${meta.signatureName || meta.yourName}</div>
       </div>
     `;
   };
@@ -397,7 +435,7 @@ export default function CanvaCoverLetterEditor({
           <>
             {/* Gradient Header */}
             <div 
-              className="relative h-32 flex flex-col justify-center items-center text-white"
+              className="relative h-40 flex flex-col justify-center items-center text-white pt-6"
               style={{
                 background: `linear-gradient(135deg, ${meta.accent} 0%, ${meta.gradientColor || '#f97316'} 100%)`
               }}
@@ -406,14 +444,14 @@ export default function CanvaCoverLetterEditor({
                 type="text"
                 value={meta.yourName}
                 onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                className="text-2xl font-bold mb-1 tracking-wide bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
+                className="text-2xl font-bold mb-2 tracking-wide bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                 placeholder="Your Name"
               />
-              <div className="w-16 h-px bg-white/30 mb-3"></div>
+              <div className="w-16 h-px bg-white/30 mb-4"></div>
               <div className="flex gap-6 text-sm">
                 <div className="text-center">
-                  <div className="font-semibold">PHONE</div>
+                  <div className="font-semibold mb-2">PHONE</div>
                   <input
                     type="text"
                     value={meta.contactLine?.split('\n')[0] || '(555) 123-4567'}
@@ -428,7 +466,7 @@ export default function CanvaCoverLetterEditor({
                   />
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold">EMAIL</div>
+                  <div className="font-semibold mb-2">EMAIL</div>
                   <input
                     type="text"
                     value={meta.contactLine?.split('\n')[1] || 'your@email.com'}
@@ -443,7 +481,7 @@ export default function CanvaCoverLetterEditor({
                   />
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold">ADDRESS</div>
+                  <div className="font-semibold mb-2">ADDRESS</div>
                   <input
                     type="text"
                     value={meta.contactLine?.split('\n')[2] || 'City, State'}
@@ -1001,19 +1039,31 @@ export default function CanvaCoverLetterEditor({
                         <head>
                           <title>${initialTitle}</title>
                           <style>
-                            @page { size: A4; margin: 1in; }
+                            @page { 
+                              size: A4; 
+                              margin: 0; 
+                            }
                             body { 
                               font-family: ${fontFamily}; 
                               line-height: ${densityStyles.lineHeight}; 
                               color: #333;
                               margin: 0;
                               padding: 0;
+                              background: white;
                             }
                             .cover-letter { 
-                              max-width: 8.5in; 
-                              margin: 0 auto; 
-                              padding: 1in;
+                              width: 210mm;
+                              min-height: 297mm;
+                              margin: 0;
+                              padding: 0;
                               background: white;
+                              box-sizing: border-box;
+                            }
+                            /* Ensure gradients and colors print properly */
+                            * {
+                              -webkit-print-color-adjust: exact !important;
+                              color-adjust: exact !important;
+                              print-color-adjust: exact !important;
                             }
                           </style>
                         </head>

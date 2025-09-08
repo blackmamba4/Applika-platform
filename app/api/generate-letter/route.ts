@@ -26,9 +26,9 @@ type Payload = {
 };
 
 type Meta = {
-  template: "letterhead" | "sidebar" | "minimalPro" | "creative";
+  template: "letterhead" | "sidebar" | "minimalPro" | "creative" | "modernGradient" | "professionalAccent" | "sidebarProfile" | "minimalElegant";
   accent: string;
-  font: "inter" | "georgia" | "serif" | "system";
+  font: "inter" | "georgia" | "serif" | "system" | "poppins" | "montserrat" | "playfair";
   density: "compact" | "normal" | "roomy";
   headerStyle: "nameBlock" | "centered" | "compact";
   footerStyle: "none" | "page" | "initials";
