@@ -1,7 +1,7 @@
 // app/Dashboard/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import DashboardClient from "../../components/DashboardClient";
+import DashboardClient from "@/components/DashboardClient";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -30,8 +30,18 @@ export default async function Page() {
     .single();
 
   const plan = prof?.plan ?? "Free";
-  const tokensLeft =
-    (prof?.plan_quota_remaining ?? 0) + (prof?.tokens_remaining ?? 0);
+  const planQuotaRemaining = prof?.plan_quota_remaining ?? 0;
+  const topupRemaining = prof?.tokens_remaining ?? 0;
+  const planQuota = prof?.plan_quota ?? 0;
+
+  // Debug logging
+  console.log('Dashboard page token data:', { 
+    plan, 
+    planQuotaRemaining, 
+    topupRemaining, 
+    planQuota,
+    prof: prof 
+  });
 
   return (
     <DashboardClient
@@ -40,8 +50,10 @@ export default async function Page() {
         name: (user.user_metadata as any)?.full_name ?? null,
         avatarUrl: (user.user_metadata as any)?.avatar_url ?? null,
       }}
-      tokensLeft={tokensLeft}
       plan={plan}
+      planQuotaRemaining={planQuotaRemaining}
+      topupRemaining={topupRemaining}
+      planQuota={planQuota}
     />
   );
 }

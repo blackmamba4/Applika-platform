@@ -2,6 +2,8 @@
 
 import CoverLetterWizard from "./CoverLetterWizard";
 import ProfileSection from "../app/Dashboard/ProfileSection";
+import RecentCard from "./RecentCard";
+import TokensCard from "./TokensCard";
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
@@ -14,11 +16,15 @@ type UserLite = {
 export default function DashboardClient({
   user,
   plan,
-  tokensLeft,
+  planQuotaRemaining,
+  topupRemaining,
+  planQuota,
 }: {
   user: UserLite;
   plan: string;
-  tokensLeft?: number;
+  planQuotaRemaining?: number;
+  topupRemaining?: number;
+  planQuota?: number;
 }) {
   return (
     <div className="flex-1 w-full flex flex-col gap-6 md:gap-8">
@@ -30,7 +36,7 @@ export default function DashboardClient({
         <div className="hidden md:flex gap-3">
           <Link
             href="/pricing"
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 border text-sm hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-violet-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 hover:from-emerald-600 hover:to-violet-600"
           >
             <Zap className="h-4 w-4" /> Upgrade
           </Link>
@@ -56,6 +62,13 @@ export default function DashboardClient({
           aria-label="Sidebar"
         >
           <ProfileSection user={user} />
+          <TokensCard 
+            plan={plan}
+            planQuotaRemaining={planQuotaRemaining || 0}
+            topupRemaining={topupRemaining || 0}
+            planQuota={planQuota || 0}
+          />
+          <RecentCard />
 
           {/* Plan tag */}
           <div className="rounded-full border text-xs px-3 py-1 w-fit text-foreground/70">
