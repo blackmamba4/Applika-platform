@@ -27,7 +27,12 @@ function ButtonSkeleton() {
 }
 
 type Mode = "auto" | "manual";
-type ProfileRow = { first_name: string | null; desired_role: string | null };
+type ProfileRow = { 
+  first_name: string | null; 
+  last_name: string | null; 
+  full_name: string | null; 
+  desired_role: string | null 
+};
 
 const FALLBACK_NAME = "Friend";
 const FALLBACK_ROLE = "this role";
@@ -60,6 +65,7 @@ export default function CoverLetterWizard() {
   
   // Template system
   const [selectedTemplate, setSelectedTemplate] = useState<CoverLetterTemplate | undefined>();
+  const [selectedTone, setSelectedTone] = useState<string>("professional");
 
   // Inputs
   const [jobMode, setJobMode] = useState<Mode>("auto");
@@ -124,13 +130,15 @@ export default function CoverLetterWizard() {
 
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, desired_role")
+          .select("first_name, last_name, full_name, desired_role")
           .eq("id", user.id)
           .single<ProfileRow>();
 
         if (error) setProfileError(error.message);
 
-        const name = data?.first_name?.trim() || FALLBACK_NAME;
+        const name = data?.full_name?.trim() || 
+                     [data?.first_name?.trim(), data?.last_name?.trim()].filter(Boolean).join(' ') || 
+                     FALLBACK_NAME;
         const roleVal = data?.desired_role?.trim() || FALLBACK_ROLE;
 
         setUserName(name);
@@ -255,6 +263,58 @@ export default function CoverLetterWizard() {
     letterLength
   };
 
+  // Generate cover letter directly
+  async function handleGenerate() {
+    if (generating) return;
+    
+    setGenerating(true);
+    setGenerateError(null);
+    setGenerateStage("Generating cover letter...");
+
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) {
+        throw new Error("Not authenticated");
+      }
+
+      const payload = {
+        jobTitle: jobTitle.trim(),
+        companyName: companyName.trim(),
+        companyHomepage: companyHomepage.trim() || undefined,
+        companyAbout: companyAbout.trim(),
+        jobDescHtml: jobDescHtml.trim(),
+        cvText: cvText.trim() || undefined,
+        userName: userName,
+        length: letterLength,
+        tone: selectedTone
+      };
+
+      const res = await fetch("/api/generate-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || `Failed with status ${res.status}`);
+
+      toast.show({
+        message: "Cover letter generated successfully!",
+        confetti: true
+      });
+
+      // Navigate to the editor
+      router.push(`/Dashboard/Coverletters/${data.id}`);
+      
+    } catch (error: any) {
+      console.error("Generation error:", error);
+      setGenerateError(error?.message || "Failed to generate cover letter");
+    } finally {
+      setGenerating(false);
+      setGenerateStage(null);
+    }
+  }
+
   // Template generation handler
   async function handleTemplateGenerate(template: CoverLetterTemplate, data: TemplateData) {
     if (generating) return;
@@ -374,7 +434,7 @@ export default function CoverLetterWizard() {
             <div className="h-1 bg-emerald-500 rounded-full" style={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }} />
           </div>
           <div className="mt-1 text-[11px] text-gray-500">
-            {step === 1 ? "Next: Details" : step === 2 ? "Next: Templates" : "Ready to Generate"}
+            {step === 1 ? "Next: Review" : step === 2 ? "Next: Tone" : "Ready to Generate"}
           </div>
         </div>
       </div>
@@ -485,9 +545,9 @@ export default function CoverLetterWizard() {
                   {generateError} {generateError.toLowerCase().includes("credit") && (<a className="underline" href="/pricing">Buy more</a>)}
                 </div>
               )}
-              <button onClick={() => setStep(3)} disabled={missingRequired} className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white shadow hover:scale-[1.02] transition disabled:opacity-50 ${missingRequired ? "bg-gray-400" : "bg-gradient-to-r from-emerald-500 to-violet-500"}`} title={missingRequired ? "Fill Job Title, Job Description (HTML), and Company About first" : "Next: Choose Template"}>
+              <button onClick={() => setStep(3)} disabled={missingRequired} className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white shadow hover:scale-[1.02] transition disabled:opacity-50 ${missingRequired ? "bg-gray-400" : "bg-gradient-to-r from-emerald-500 to-violet-500"}`} title={missingRequired ? "Fill Job Title, Job Description (HTML), and Company About first" : "Next: Choose Tone"}>
                 <Sparkles className="h-4 w-4" />
-                Next: Choose Template
+                Next: Choose Tone
               </button>
             </div>
           </div>
@@ -499,18 +559,82 @@ export default function CoverLetterWizard() {
               Back
             </button>
           </div>
-          <TemplateSelector
-            onTemplateSelect={setSelectedTemplate}
-            onGenerate={handleTemplateGenerate}
-            templateData={templateData}
-            selectedTemplate={selectedTemplate}
-            isGenerating={generating}
-          />
-          {generateError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {generateError}
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Choose Your Tone & Style</h3>
+              <p className="text-sm text-gray-600 mb-6">Select the tone that best matches your personality and the company culture.</p>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                {
+                  id: "professional",
+                  name: "Professional",
+                  description: "Formal, polished, and traditional",
+                  icon: "👔",
+                  example: "I am writing to express my strong interest in the position..."
+                },
+                {
+                  id: "modern",
+                  name: "Modern",
+                  description: "Contemporary, confident, and dynamic",
+                  icon: "🚀",
+                  example: "I'm excited about the opportunity to join your team..."
+                },
+                {
+                  id: "creative",
+                  name: "Creative",
+                  description: "Innovative, passionate, and expressive",
+                  icon: "🎨",
+                  example: "Your innovative approach to [industry] resonates with my creative vision..."
+                },
+                {
+                  id: "direct",
+                  name: "Direct",
+                  description: "Straightforward, concise, and impactful",
+                  icon: "⚡",
+                  example: "I want to contribute to [Company]'s success in [role]..."
+                }
+              ].map((tone) => (
+                <button
+                  key={tone.id}
+                  onClick={() => setSelectedTone(tone.id)}
+                  className={`p-4 rounded-xl border text-left transition-all hover:shadow-md ${
+                    selectedTone === tone.id
+                      ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">{tone.icon}</div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900">{tone.name}</div>
+                      <div className="text-sm text-gray-600 mb-2">{tone.description}</div>
+                      <div className="text-xs text-gray-500 italic">"{tone.example}"</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8 flex items-center justify-between">
+              <button onClick={() => setStep(2)} className="px-4 py-2 rounded-full border text-sm bg-white hover:shadow">
+                Back
+              </button>
+              <div className="flex items-center gap-3">
+                {generateError && (
+                  <div className="text-xs text-red-600">
+                    {generateError} {generateError.toLowerCase().includes("credit") && (<a className="underline" href="/pricing">Buy more</a>)}
+                  </div>
+                )}
+                <button onClick={handleGenerate} disabled={generating} className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white shadow hover:scale-[1.02] transition disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-violet-500`}>
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {generating ? "Generating..." : "Generate Cover Letter"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

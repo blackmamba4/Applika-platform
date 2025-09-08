@@ -22,6 +22,11 @@ interface CoverLetterMeta {
   yourInitials: string;
   showSignature: boolean;
   companyAddress: string;
+  // Parsed content components
+  greeting?: string; // "Dear Red Sift Hiring Team,"
+  closing?: string; // "Warm regards,"
+  signatureName?: string; // "James"
+  gradientColor?: string; // Custom gradient color
   showRecipientBlock: boolean;
 }
 
@@ -65,6 +70,58 @@ const ACCENT_COLORS = [
   { id: "purple-500", name: "Purple", value: "#a855f7" },
   { id: "pink-500", name: "Pink", value: "#ec4899" },
 ];
+
+// Custom Color Wheel Component
+const ColorWheel = ({ value, onChange, label }: { value: string; onChange: (color: string) => void; label: string }) => {
+  const [showPicker, setShowPicker] = useState(false);
+  
+  return (
+    <div className="space-y-2 relative">
+      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <div className="flex items-center gap-3">
+        <div 
+          className="w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+          style={{ backgroundColor: value }}
+          onClick={() => setShowPicker(!showPicker)}
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="#000000"
+        />
+      </div>
+      
+      {showPicker && (
+        <div className="absolute z-50 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="grid grid-cols-8 gap-2">
+            {ACCENT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => {
+                  onChange(color.value);
+                  setShowPicker(false);
+                }}
+                className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors"
+                style={{ backgroundColor: color.value }}
+                title={color.name}
+              />
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <input
+              type="color"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full h-8 rounded border border-gray-300"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const HEADER_STYLES = [
   { id: "centered", name: "Centered", description: "Name centered at top" },
@@ -110,6 +167,72 @@ export default function CanvaCoverLetterEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "design" | "details">("content");
+
+  // Parse content to extract structured components
+  const parseContent = (content: string): { greeting: string; closing: string; signatureName: string } => {
+    // Extract greeting (Dear...)
+    const greetingMatch = content.match(/Dear\s+([^,\n]+),?\s*/i);
+    const greeting = greetingMatch ? greetingMatch[0].trim() : '';
+    
+    // Extract closing (Warm regards, Best regards, etc.) - more flexible matching
+    const closingPatterns = [
+      /(Warm regards),?\s*$/im,
+      /(Best regards),?\s*$/im,
+      /(Sincerely),?\s*$/im,
+      /(Kind regards),?\s*$/im,
+      /(Yours truly),?\s*$/im,
+      /(Thank you),?\s*$/im,
+      /(Respectfully),?\s*$/im
+    ];
+    
+    let closing = '';
+    for (const pattern of closingPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        closing = match[1] + ',';
+        break;
+      }
+    }
+    
+    // Extract signature name (last non-empty line)
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+    let signatureName = '';
+    
+    if (lines.length > 0) {
+      const lastLine = lines[lines.length - 1];
+      // If last line doesn't contain common closing words, it's likely the signature
+      if (!lastLine.match(/^(Warm regards|Best regards|Sincerely|Kind regards|Yours truly|Thank you|Respectfully),?\s*$/i)) {
+        signatureName = lastLine;
+      }
+    }
+    
+    // Fallback: try to extract from pattern after closing
+    if (!signatureName && closing) {
+      const signatureMatch = content.match(new RegExp(`${closing.replace(',', '')}\\s*\\n\\s*([A-Za-z\\s]+)\\s*$`, 'im'));
+      if (signatureMatch) {
+        signatureName = signatureMatch[1].trim();
+      }
+    }
+    
+    return { 
+      greeting: greeting || `Dear ${content.match(/Dear\s+([^,\n]+)/i)?.[1] || 'Hiring Manager'},`,
+      closing: closing || 'Sincerely,',
+      signatureName: signatureName || 'Your Name'
+    };
+  };
+
+  // Auto-parse content when it changes
+  useEffect(() => {
+    const parsed = parseContent(content);
+    if (parsed.greeting || parsed.closing || parsed.signatureName) {
+      setMeta(prev => ({
+        ...prev,
+        greeting: parsed.greeting,
+        closing: parsed.closing,
+        signatureName: parsed.signatureName
+      }));
+    }
+  }, [content]);
   const toast = useToast();
 
   const getFontFamily = () => {
@@ -258,12 +381,15 @@ export default function CanvaCoverLetterEditor({
     
     return (
       <div 
-        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden min-h-[800px] relative"
+        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
         style={{ 
-          aspectRatio: '8.5/11',
+          width: '210mm',
+          minHeight: '297mm',
+          maxHeight: '297mm',
           fontFamily,
           lineHeight: densityStyles.lineHeight,
-          color: '#333'
+          color: '#333',
+          pageBreakAfter: 'always'
         }}
       >
         {/* Modern Gradient Template */}
@@ -273,7 +399,7 @@ export default function CanvaCoverLetterEditor({
             <div 
               className="relative h-32 flex flex-col justify-center items-center text-white"
               style={{
-                background: `linear-gradient(135deg, ${meta.accent} 0%, #f97316 100%)`
+                background: `linear-gradient(135deg, ${meta.accent} 0%, ${meta.gradientColor || '#f97316'} 100%)`
               }}
             >
               <input
@@ -369,19 +495,31 @@ export default function CanvaCoverLetterEditor({
               </div>
 
               {/* Salutation */}
-              <p className="mb-4">Dear {meta.recipient || 'Hiring Manager'},</p>
+              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
 
               {/* Content */}
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="whitespace-pre-wrap mb-6 w-full h-64 bg-transparent border-none outline-none resize-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Write your cover letter here..."
-              />
+              <div className="relative">
+                <div
+                  contentEditable
+                  suppressContentEditableWarning={true}
+                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
+                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    minHeight: '24rem'
+                  }}
+                  data-placeholder="Write your cover letter here..."
+                >
+                  {content}
+                </div>
+                {/* Page break indicator */}
+                {content.length > 1000 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                )}
+              </div>
 
               {/* Closing */}
-              <p className="mb-4">Sincerely,</p>
-              <p className="font-bold">{meta.yourName || 'Your Name'}</p>
+              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
+              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
         )}
@@ -485,19 +623,31 @@ export default function CanvaCoverLetterEditor({
               </div>
 
               {/* Salutation */}
-              <p className="mb-4">Dear {meta.recipient || 'Hiring Manager'},</p>
+              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
 
               {/* Content */}
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="whitespace-pre-wrap mb-6 w-full h-64 bg-transparent border-none outline-none resize-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Write your cover letter here..."
-              />
+              <div className="relative">
+                <div
+                  contentEditable
+                  suppressContentEditableWarning={true}
+                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
+                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    minHeight: '24rem'
+                  }}
+                  data-placeholder="Write your cover letter here..."
+                >
+                  {content}
+                </div>
+                {/* Page break indicator */}
+                {content.length > 1000 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                )}
+              </div>
 
               {/* Closing */}
-              <p className="mb-4">Sincerely,</p>
-              <p className="font-bold">{meta.yourName || 'Your Name'}</p>
+              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
+              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
         )}
@@ -618,19 +768,31 @@ export default function CanvaCoverLetterEditor({
               </div>
 
               {/* Salutation */}
-              <p className="mb-4">Dear {meta.recipient || 'Hiring Manager'},</p>
+              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
 
               {/* Content */}
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="whitespace-pre-wrap mb-6 w-full h-64 bg-transparent border-none outline-none resize-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Write your cover letter here..."
-              />
+              <div className="relative">
+                <div
+                  contentEditable
+                  suppressContentEditableWarning={true}
+                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
+                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    minHeight: '24rem'
+                  }}
+                  data-placeholder="Write your cover letter here..."
+                >
+                  {content}
+                </div>
+                {/* Page break indicator */}
+                {content.length > 1000 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                )}
+              </div>
 
               {/* Closing */}
-              <p className="mb-4">Sincerely,</p>
-              <p className="font-bold">{meta.yourName || 'Your Name'}</p>
+              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
+              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </div>
         )}
@@ -707,7 +869,7 @@ export default function CanvaCoverLetterEditor({
 
             {/* Closing */}
             <p className="mb-4">Sincerely,</p>
-            <p className="font-medium">{meta.yourName || 'Your Name'}</p>
+            <p className="font-bold">{meta.yourName || 'Your Name'}</p>
           </div>
         )}
 
@@ -879,6 +1041,38 @@ export default function CanvaCoverLetterEditor({
         <div className="flex-1 p-6 overflow-auto">
           <div className="max-w-4xl mx-auto">
             {renderCoverLetter()}
+            {/* Additional page if content is very long */}
+            {content.length > 2000 && (
+              <div className="mt-8">
+                <div className="text-center text-sm text-gray-500 mb-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    Page 2
+                  </div>
+                </div>
+                <div 
+                  className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
+                  style={{ 
+                    minHeight: '800px',
+                    fontFamily: getFontFamily(),
+                    lineHeight: getDensityStyles().lineHeight,
+                    color: '#333'
+                  }}
+                >
+                  <div className="p-8">
+                    <div className="text-center text-sm text-gray-400 mb-6">
+                      Continuation of cover letter...
+                    </div>
+                    <div className="h-96 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                      <div className="text-center text-gray-500">
+                        <div className="text-lg font-medium mb-2">Additional Content</div>
+                        <div className="text-sm">This space is available for longer cover letters</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1031,28 +1225,18 @@ export default function CanvaCoverLetterEditor({
                   </div>
 
                   {/* Accent Color */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {ACCENT_COLORS.map((color) => (
-                        <button
-                          key={color.id}
-                          onClick={() => setMeta(prev => ({ ...prev, accent: color.value }))}
-                          className={`p-3 rounded-lg border transition-colors ${
-                            meta.accent === color.value
-                              ? 'border-emerald-500 ring-2 ring-emerald-200'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div 
-                            className="w-full h-4 rounded mb-1"
-                            style={{ backgroundColor: color.value }}
-                          ></div>
-                          <div className="text-xs text-gray-600">{color.name}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <ColorWheel 
+                    value={meta.accent} 
+                    onChange={(color) => setMeta(prev => ({ ...prev, accent: color }))}
+                    label="Accent Color"
+                  />
+
+                  {/* Gradient Color */}
+                  <ColorWheel 
+                    value={meta.gradientColor || meta.accent} 
+                    onChange={(color) => setMeta(prev => ({ ...prev, gradientColor: color }))}
+                    label="Gradient Color"
+                  />
 
                   {/* Density */}
                   <div>

@@ -22,6 +22,7 @@ type Payload = {
   contactCity?: string;      // for contactLine
 
   length?: LengthChoice;     // "short" | "medium" | "long"
+  tone?: string;            // "professional" | "modern" | "creative" | "direct"
 };
 
 type Meta = {
@@ -43,6 +44,11 @@ type Meta = {
   company: string;
   companyAddress: string;
   dateLine: string;
+  // Parsed content components
+  greeting?: string; // "Dear Red Sift Hiring Team,"
+  closing?: string; // "Warm regards,"
+  signatureName?: string; // "James"
+  gradientColor?: string; // Custom gradient color
 };
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -103,6 +109,59 @@ function normalizeLetter(s?: string) {
   return t;
 }
 
+/* ---------------- content parsing ---------------- */
+function parseGeneratedContent(content: string): { greeting: string; closing: string; signatureName: string } {
+  // Extract greeting (Dear...)
+  const greetingMatch = content.match(/Dear\s+([^,\n]+),?\s*/i);
+  const greeting = greetingMatch ? greetingMatch[0].trim() : '';
+  
+  // Extract closing (Warm regards, Best regards, etc.) - more flexible matching
+  const closingPatterns = [
+    /(Warm regards),?\s*$/im,
+    /(Best regards),?\s*$/im,
+    /(Sincerely),?\s*$/im,
+    /(Kind regards),?\s*$/im,
+    /(Yours truly),?\s*$/im,
+    /(Thank you),?\s*$/im,
+    /(Respectfully),?\s*$/im
+  ];
+  
+  let closing = '';
+  for (const pattern of closingPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      closing = match[1] + ',';
+      break;
+    }
+  }
+  
+  // Extract signature name (last non-empty line)
+  const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+  let signatureName = '';
+  
+  if (lines.length > 0) {
+    const lastLine = lines[lines.length - 1];
+    // If last line doesn't contain common closing words, it's likely the signature
+    if (!lastLine.match(/^(Warm regards|Best regards|Sincerely|Kind regards|Yours truly|Thank you|Respectfully),?\s*$/i)) {
+      signatureName = lastLine;
+    }
+  }
+  
+  // Fallback: try to extract from pattern after closing
+  if (!signatureName && closing) {
+    const signatureMatch = content.match(new RegExp(`${closing.replace(',', '')}\\s*\\n\\s*([A-Za-z\\s]+)\\s*$`, 'im'));
+    if (signatureMatch) {
+      signatureName = signatureMatch[1].trim();
+    }
+  }
+  
+  return { 
+    greeting: greeting || `Dear ${content.match(/Dear\s+([^,\n]+)/i)?.[1] || 'Hiring Manager'},`,
+    closing: closing || 'Sincerely,',
+    signatureName: signatureName || 'Your Name'
+  };
+}
+
 /* ---------------- LLM prompt ---------------- */
 function buildMessages(args: {
   userName: string;
@@ -114,10 +173,21 @@ function buildMessages(args: {
   cvText?: string;
   wordsMin: number;
   wordsMax: number;
+  tone?: string;
 }) {
+  const toneInstructions = {
+    professional: "Use formal, polished language. Start with 'I am writing to express my strong interest in...' or 'I would like to apply for...'. Be respectful and traditional.",
+    modern: "Use contemporary, confident language. Start with 'I'm excited about the opportunity to...' or 'I'm thrilled to join...'. Be dynamic and forward-thinking.",
+    creative: "Use innovative, passionate language. Start with 'Your innovative approach to [industry] resonates with my creative vision...' or 'I'm passionate about contributing to...'. Be expressive and visionary.",
+    direct: "Use straightforward, concise language. Start with 'I want to contribute to [Company]'s success in [role]...' or 'I'm applying because...'. Be impactful and to the point."
+  };
+
+  const toneInstruction = args.tone ? toneInstructions[args.tone as keyof typeof toneInstructions] || toneInstructions.professional : toneInstructions.professional;
+
   const system = [
     "You are an expert cover-letter writer.",
     "Write in first person, tailored and specific.",
+    `Tone: ${toneInstruction}`,
     "Output rules:",
     `- Aim for ${args.wordsMin}–${args.wordsMax} words.`,
     "- Plain text only.",
@@ -126,6 +196,19 @@ function buildMessages(args: {
     "- Tie claims to the job description and CV; do not fabricate.",
     "- Professional, warm tone.",
     "- End with a concise call-to-action.",
+    "",
+    "CRITICAL FORMAT REQUIREMENTS:",
+    "- Generate ONLY the main body content (no greeting, no closing, no signature)",
+    "- Do NOT include 'Dear [Company]' or any greeting",
+    "- Do NOT include 'Warm regards' or any closing",
+    "- Do NOT include your name at the end",
+    "- Start directly with your opening paragraph about the role",
+    "- End with your call-to-action paragraph",
+    "",
+    "IMPORTANT: The greeting 'Dear [Company] Team,' will be added separately, so:",
+    "- Do NOT start with phrases like 'I'm thrilled to apply' or 'I'm excited about'",
+    "- Start with content that flows naturally AFTER the greeting",
+    "- Use phrases like 'I am writing to express my interest...' or 'Your company's mission...'",
   ].join("\n");
 
   const user = [
@@ -155,6 +238,7 @@ async function generateLetterLLM(payload: {
   jobDescHtml?: string;
   cvText?: string;
   length: LengthChoice;
+  tone?: string;
 }) {
   const hasKey = Boolean(process.env.OPENAI_API_KEY);
   const jobDescCompact = htmlToCompactText(payload.jobDescHtml);
@@ -185,6 +269,7 @@ async function generateLetterLLM(payload: {
     cvText: payload.cvText,
     wordsMin,
     wordsMax,
+    tone: payload.tone,
   });
 
   const res = await client.chat.completions.create({
@@ -216,8 +301,9 @@ async function buildDefaultMeta(opts: {
   userEmail?: string | null;
   userNameFromPayload?: string;
   payload: Payload;
+  generatedContent?: string; // Add this parameter
 }) : Promise<Meta> {
-  const { supabase, userId, userEmail, userNameFromPayload, payload } = opts;
+  const { supabase, userId, userEmail, userNameFromPayload, payload, generatedContent } = opts;
 
   // Try to enrich from profiles (email/full_name if you store them there)
   let profileEmail: string | null | undefined = undefined;
@@ -242,7 +328,6 @@ async function buildDefaultMeta(opts: {
   const yourName =
     collapse(userNameFromPayload) ||
     collapse(profileFullName || "") ||
-    (userEmail ? userEmail.split("@")[0] : "") ||
     "Your Name";
 
   const yourInitials = initialsFromName(yourName);
@@ -254,12 +339,12 @@ async function buildDefaultMeta(opts: {
 
   return {
     // tasteful defaults for the UI look & feel
-    template: "letterhead",
+    template: "modernGradient",
     accent: "#10B981",
     font: "inter",
     density: "normal",
-    headerStyle: "nameBlock",
-    footerStyle: "page",
+    headerStyle: "centered",
+    footerStyle: "none",
     showDivider: true,
     showRecipientBlock: true,
     showSignature: false,
@@ -267,7 +352,7 @@ async function buildDefaultMeta(opts: {
     logoUrl: "",
     signatureUrl: "",
 
-    // letter “chrome”
+    // letter "chrome"
     yourName,
     yourInitials,
     contactLine,
@@ -275,6 +360,12 @@ async function buildDefaultMeta(opts: {
     company: collapse(payload.companyName),
     companyAddress: "",
     dateLine: new Date().toLocaleDateString(),
+
+    // Parsed content components - set clean defaults since we generate only body content
+    greeting: `Dear ${collapse(payload.companyName) || 'Company'} Team,`,
+    closing: "Warm regards,",
+    signatureName: yourName,
+    gradientColor: "#10B981", // Default gradient color
   };
 }
 
@@ -345,6 +436,7 @@ export async function POST(req: NextRequest) {
               jobDescHtml,
               cvText: body.cvText,
               length,
+              tone: body.tone,
             });
             letter = normalizeLetter(letterRaw) || "(No content)";
           } catch (e: any) {
@@ -361,6 +453,7 @@ export async function POST(req: NextRequest) {
             userEmail: user.email,
             userNameFromPayload: body.userName,
             payload: body,
+            generatedContent: letter, // Pass the generated content
           });
 
           const title = `${companyName} — ${jobTitle}`;
@@ -443,6 +536,7 @@ export async function POST(req: NextRequest) {
         jobDescHtml,
         cvText: body.cvText,
         length,
+        tone: body.tone,
       });
       letter = normalizeLetter(letterRaw) || "(No content)";
     } catch (llmErr) {
@@ -457,6 +551,7 @@ export async function POST(req: NextRequest) {
       userEmail: user.email,
       userNameFromPayload: body.userName,
       payload: body,
+      generatedContent: letter, // Pass the generated content
     });
 
     // Title used in dashboard/editor
