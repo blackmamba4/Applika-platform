@@ -59,16 +59,18 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+      <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
+            Get started with Applika today
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -76,11 +78,12 @@ export function SignUpForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">Password</Label>
                 </div>
                 <Input
                   id="password"
@@ -88,11 +91,12 @@ export function SignUpForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password" className="text-gray-700 dark:text-gray-300">Repeat Password</Label>
                 </div>
                 <Input
                   id="repeat-password"
@@ -100,21 +104,31 @@ export function SignUpForm({
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
+                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+              {error && <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">{error}</p>}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-emerald-500 to-violet-500 hover:from-emerald-600 hover:to-violet-600 text-white border-0" 
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account..." : "Sign up"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link 
+                href="/auth/login" 
+                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium underline underline-offset-4"
+              >
                 Login
               </Link>
             </div>
-            <div className="my-2 text-center text-xs uppercase tracking-wider text-muted-foreground">
-              or sign up with
+            <div className="my-6 flex items-center">
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+              <span className="px-3 text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">or sign up with</span>
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <SocialButtons />
           </form>
