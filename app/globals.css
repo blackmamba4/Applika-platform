@@ -150,3 +150,13 @@ html {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Hide scrollbar for template carousel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

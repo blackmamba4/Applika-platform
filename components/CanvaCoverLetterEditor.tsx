@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ArrowLeft, Save, Download, Type, Palette, Layout, Plus, Trash2, Copy, Move, GripVertical, Settings, Eye, EyeOff, Upload, Image, Calendar, User, Building, Mail, Phone, MapPin, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ToastGlobal";
 
@@ -162,6 +162,25 @@ export default function CanvaCoverLetterEditor({
   onBackToStep1,
 }: CoverLetterEditorProps) {
   const [content, setContent] = useState(initialBody || "Dear Hiring Manager,\n\nI am writing to express my strong interest in the position at your company. With my background and skills, I believe I would be a valuable addition to your team.\n\nIn my previous roles, I have demonstrated strong problem-solving abilities, excellent communication skills, and a passion for delivering high-quality results. I am excited about the opportunity to contribute to your organization's success.\n\nThank you for considering my application. I look forward to hearing from you.\n\nSincerely,\n[Your Name]");
+  const [selectedCategory, setSelectedCategory] = useState("Modern");
+  
+  // Content sections management
+  const [contentSections, setContentSections] = useState([
+    { id: 'greeting', label: 'Greeting', visible: true, order: 0 },
+    { id: 'body', label: 'Body Content', visible: true, order: 1 },
+    { id: 'closing', label: 'Closing', visible: true, order: 2 },
+    { id: 'signature', label: 'Signature', visible: true, order: 3 }
+  ]);
+
+  // Header elements management
+  const [headerElements, setHeaderElements] = useState([
+    { id: 'name', label: 'Your Name', visible: true, order: 0 },
+    { id: 'contact', label: 'Contact Info', visible: true, order: 1 },
+    { id: 'recipient', label: 'Recipient', visible: true, order: 2 },
+    { id: 'company', label: 'Company Info', visible: true, order: 3 },
+    { id: 'date', label: 'Date', visible: true, order: 4 }
+  ]);
+  
   const [meta, setMeta] = useState<CoverLetterMeta>({
     font: "inter",
     accent: "#f43f5e",
@@ -185,9 +204,238 @@ export default function CanvaCoverLetterEditor({
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeTab, setActiveTab] = useState<"content" | "design" | "details">("content");
+  const [activeTab, setActiveTab] = useState<"content" | "structure" | "design" | "details">("content");
 
   // Parse content to extract structured components
+  // Content management functions
+  const toggleSectionVisibility = (sectionId: string) => {
+    setContentSections(prev => 
+      prev.map(section => 
+        section.id === sectionId 
+          ? { ...section, visible: !section.visible }
+          : section
+      )
+    );
+  };
+
+  const reorderSections = (fromIndex: number, toIndex: number) => {
+    setContentSections(prev => {
+      const newSections = [...prev];
+      const [movedSection] = newSections.splice(fromIndex, 1);
+      newSections.splice(toIndex, 0, movedSection);
+      
+      // Update order numbers
+      return newSections.map((section, index) => ({
+        ...section,
+        order: index
+      }));
+    });
+  };
+
+  const getSortedSections = () => {
+    return [...contentSections].sort((a, b) => a.order - b.order);
+  };
+
+  // Calculate where the A4 page break should be positioned
+  const getA4PageBreakPosition = () => {
+    const charactersPerPage = 800;
+    if (content.length <= charactersPerPage) {
+      return null; // No page break needed
+    }
+    
+    // Find a good break point (end of sentence or paragraph)
+    const firstPageContent = content.substring(0, charactersPerPage);
+    const lastSentenceEnd = Math.max(
+      firstPageContent.lastIndexOf('.'),
+      firstPageContent.lastIndexOf('!'),
+      firstPageContent.lastIndexOf('?')
+    );
+    
+    const breakPoint = lastSentenceEnd > charactersPerPage * 0.8 ? lastSentenceEnd + 1 : charactersPerPage;
+    
+    return {
+      firstPageContent: content.substring(0, breakPoint),
+      secondPageContent: content.substring(breakPoint),
+      breakPoint
+    };
+  };
+
+  const pageBreakData = getA4PageBreakPosition();
+
+  const toggleHeaderElementVisibility = (elementId: string) => {
+    setHeaderElements(prev => 
+      prev.map(element => 
+        element.id === elementId 
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    );
+  };
+
+  const reorderHeaderElements = (fromIndex: number, toIndex: number) => {
+    setHeaderElements(prev => {
+      const newElements = [...prev];
+      const [movedElement] = newElements.splice(fromIndex, 1);
+      newElements.splice(toIndex, 0, movedElement);
+      
+      // Update order numbers
+      return newElements.map((element, index) => ({
+        ...element,
+        order: index
+      }));
+    });
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, elementId: string, type: 'content' | 'header') => {
+    e.dataTransfer.setData('text/plain', `${type}:${elementId}`);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetElementId: string, type: 'content' | 'header') => {
+    e.preventDefault();
+    const draggedData = e.dataTransfer.getData('text/plain');
+    const [draggedType, draggedElementId] = draggedData.split(':');
+    
+    if (draggedType === type && draggedElementId !== targetElementId) {
+      if (type === 'content') {
+        const draggedIndex = contentSections.findIndex(s => s.id === draggedElementId);
+        const targetIndex = contentSections.findIndex(s => s.id === targetElementId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          reorderSections(draggedIndex, targetIndex);
+        }
+      } else if (type === 'header') {
+        const draggedIndex = headerElements.findIndex(s => s.id === draggedElementId);
+        const targetIndex = headerElements.findIndex(s => s.id === targetElementId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          reorderHeaderElements(draggedIndex, targetIndex);
+        }
+      }
+    }
+  };
+
+  // Render content based on section visibility and order - memoized
+  const renderStructuredContent = useMemo(() => {
+    const sortedSections = getSortedSections();
+    const visibleSections = sortedSections.filter(section => section.visible);
+    
+    const elements: React.ReactNode[] = [];
+    
+    visibleSections.forEach(section => {
+      switch (section.id) {
+        case 'greeting':
+          if (meta.greeting) {
+            elements.push(
+              <div 
+                key="greeting" 
+                draggable
+                onDragStart={(e) => handleDragStart(e, 'greeting', 'content')}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'greeting', 'content')}
+                className="mb-4 font-medium cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex-1">{meta.greeting}</div>
+                </div>
+              </div>
+            );
+          }
+          break;
+        case 'body':
+          if (content.trim()) {
+            // Show full content as one big editable text block
+            elements.push(
+              <div 
+                key="body" 
+                draggable
+                onDragStart={(e) => handleDragStart(e, 'body', 'content')}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'body', 'content')}
+                className="mb-6 whitespace-pre-wrap leading-relaxed cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+              >
+                <div className="flex items-start gap-2">
+                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex-shrink-0" />
+                  <div className="flex-1">{content}</div>
+                </div>
+              </div>
+            );
+          }
+          break;
+        case 'closing':
+          if (meta.closing) {
+            elements.push(
+              <div 
+                key="closing" 
+                draggable
+                onDragStart={(e) => handleDragStart(e, 'closing', 'content')}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'closing', 'content')}
+                className="mb-2 cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex-1">{meta.closing}</div>
+                </div>
+              </div>
+            );
+          }
+          break;
+        case 'signature':
+          if (meta.signatureName) {
+            elements.push(
+              <div 
+                key="signature" 
+                draggable
+                onDragStart={(e) => handleDragStart(e, 'signature', 'content')}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'signature', 'content')}
+                className="font-bold cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex-1">{meta.signatureName}</div>
+                </div>
+              </div>
+            );
+          }
+          break;
+      }
+    });
+    
+    return elements;
+  }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, pageBreakData]);
+
+
+  // Render draggable header elements
+  const renderDraggableHeaderElement = (elementId: string, children: React.ReactNode, className: string = "") => {
+    const element = headerElements.find(e => e.id === elementId);
+    if (!element || !element.visible) return null;
+
+    return (
+      <div
+        key={elementId}
+        draggable
+        onDragStart={(e) => handleDragStart(e, elementId, 'header')}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, elementId, 'header')}
+        className={`cursor-move hover:bg-gray-50 rounded border-2 border-transparent hover:border-gray-200 transition-all group ${className}`}
+      >
+        <div className="flex items-center gap-2">
+          <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex-1">{children}</div>
+        </div>
+      </div>
+    );
+  };
+
   const parseContent = (content: string): { greeting: string; closing: string; signatureName: string } => {
     // Extract greeting (Dear...)
     const greetingMatch = content.match(/Dear\s+([^,\n]+),?\s*/i);
@@ -494,7 +742,7 @@ export default function CanvaCoverLetterEditor({
     // Use the same template rendering as the visual editor, but with print-friendly styles
     if (meta.template === 'modernGradient') {
       return `
-        <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; max-height: 297mm; background: white; padding: 0; margin: 0;">
+        <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; background: white; padding: 0; margin: 0;">
           <!-- Gradient Header -->
           <div style="height: 130px; display: flex; flex-direction: column; align-items: center; color: white; background: linear-gradient(135deg, ${meta.accent} 0%, ${meta.gradientColor || '#f97316'} 100%); padding-top: 20px;">
             <div style="font-size: 24px; font-weight: bold; margin-bottom: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${meta.yourName}</div>
@@ -541,7 +789,7 @@ export default function CanvaCoverLetterEditor({
     
     // Fallback for other templates - use the same structure as modernGradient
     return `
-      <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; max-height: 297mm; background: white; padding: 24px; margin: 0;">
+      <div style="font-family: ${fontFamily}; line-height: ${densityStyles.lineHeight}; color: #333; width: 210mm; min-height: 297mm; background: white; padding: 24px; margin: 0;">
         <!-- Header -->
         <div style="text-align: center; margin-bottom: 32px;">
           <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 8px; color: ${meta.accent};">${meta.yourName}</h1>
@@ -577,18 +825,17 @@ export default function CanvaCoverLetterEditor({
     
     return (
       <div 
-        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
+        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative mx-auto"
         style={{ 
           width: '210mm',
           minHeight: '297mm',
-          maxHeight: '297mm',
           fontFamily,
           lineHeight: densityStyles.lineHeight,
           color: '#333',
-          pageBreakAfter: 'always'
+          margin: '0 auto'
         }}
       >
-        {/* Modern Gradient Template */}
+        {/* Template Rendering */}
         {meta.template === 'modernGradient' && (
           <>
             {/* Gradient Header */}
@@ -598,123 +845,121 @@ export default function CanvaCoverLetterEditor({
                 background: `linear-gradient(135deg, ${meta.accent} 0%, ${meta.gradientColor || '#f97316'} 100%)`
               }}
             >
-              <input
-                type="text"
-                value={meta.yourName}
-                onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                className="text-2xl font-bold mb-2 tracking-wide bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-                placeholder="Your Name"
-              />
+              {/* Draggable Name */}
+              {renderDraggableHeaderElement('name', 
+                <input
+                  type="text"
+                  value={meta.yourName}
+                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
+                  className="text-2xl font-bold mb-2 tracking-wide bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word'
+                  }}
+                  placeholder="Your Name"
+                />
+              )}
               <div className="w-16 h-px bg-white/30 mb-4"></div>
-              <div className="flex gap-6 text-sm">
-                <div className="text-center">
-                  <div className="font-semibold mb-2">PHONE</div>
-                  <input
-                    type="text"
-                    value={meta.contactLine?.split('\n')[0] || '(555) 123-4567'}
-                    onChange={(e) => {
-                      const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
-                      lines[0] = e.target.value;
-                      setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
-                    }}
-                    className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
-                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-                    placeholder="Phone"
-                  />
+              {/* Draggable Contact Info */}
+              {renderDraggableHeaderElement('contact',
+                <div className="flex gap-6 text-sm">
+                  <div className="text-center">
+                    <div className="font-semibold mb-2">PHONE</div>
+                    <input
+                      type="text"
+                      value={meta.contactLine?.split('\n')[0] || '(555) 123-4567'}
+                      onChange={(e) => {
+                        const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
+                        lines[0] = e.target.value;
+                        setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
+                      }}
+                      className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                      placeholder="Phone"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold mb-2">EMAIL</div>
+                    <input
+                      type="text"
+                      value={meta.contactLine?.split('\n')[1] || 'your@email.com'}
+                      onChange={(e) => {
+                        const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
+                        lines[1] = e.target.value;
+                        setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
+                      }}
+                      className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                      placeholder="Email"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold mb-2">ADDRESS</div>
+                    <input
+                      type="text"
+                      value={meta.contactLine?.split('\n')[2] || 'City, State'}
+                      onChange={(e) => {
+                        const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
+                        lines[2] = e.target.value;
+                        setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
+                      }}
+                      className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                      placeholder="Address"
+                    />
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold mb-2">EMAIL</div>
-                  <input
-                    type="text"
-                    value={meta.contactLine?.split('\n')[1] || 'your@email.com'}
-                    onChange={(e) => {
-                      const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
-                      lines[1] = e.target.value;
-                      setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
-                    }}
-                    className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
-                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-                    placeholder="Email"
-                  />
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold mb-2">ADDRESS</div>
-                  <input
-                    type="text"
-                    value={meta.contactLine?.split('\n')[2] || 'City, State'}
-                    onChange={(e) => {
-                      const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
-                      lines[2] = e.target.value;
-                      setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
-                    }}
-                    className="text-xs opacity-90 bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
-                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-                    placeholder="Address"
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Content */}
             <div className="p-8">
               {/* Recipient */}
               <div className="mb-6 space-y-2">
-                <input
-                  type="text"
-                  value={meta.dateLine}
-                  onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Date"
-                />
-                <input
-                  type="text"
-                  value={meta.recipient}
-                  onChange={(e) => setMeta(prev => ({ ...prev, recipient: e.target.value }))}
-                  className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Recipient"
-                />
-                <input
-                  type="text"
-                  value={meta.company}
-                  onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
-                  className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company"
-                />
-                <input
-                  type="text"
-                  value={meta.companyAddress}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company Address (optional)"
-                />
-              </div>
-
-              {/* Salutation */}
-              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
-
-              {/* Content */}
-              <div className="relative">
-                <div
-                  contentEditable
-                  suppressContentEditableWarning={true}
-                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
-                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={{ 
-                    minHeight: '24rem'
-                  }}
-                  data-placeholder="Write your cover letter here..."
-                >
-                  {content}
-                </div>
-                {/* Page break indicator */}
-                {content.length > 1000 && (
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                {renderDraggableHeaderElement('date',
+                  <input
+                    type="text"
+                    value={meta.dateLine}
+                    onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
+                    className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Date"
+                  />
+                )}
+                {renderDraggableHeaderElement('recipient',
+                  <input
+                    type="text"
+                    value={meta.recipient}
+                    onChange={(e) => setMeta(prev => ({ ...prev, recipient: e.target.value }))}
+                    className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Recipient"
+                  />
+                )}
+                {renderDraggableHeaderElement('company',
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={meta.company}
+                      onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
+                      className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                      placeholder="Company"
+                    />
+                    <input
+                      type="text"
+                      value={meta.companyAddress}
+                      onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                      className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                      placeholder="Company Address (optional)"
+                    />
+                  </div>
                 )}
               </div>
 
-              {/* Closing */}
-              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
+              {/* Structured Content */}
+              <div className="mb-6 w-full min-h-96">
+                {renderStructuredContent}
+              </div>
               <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
@@ -726,14 +971,21 @@ export default function CanvaCoverLetterEditor({
             {/* Header with Accent Block */}
             <div className="flex">
               <div className="flex-1 p-8">
-                <input
-                  type="text"
-                  value={meta.yourName}
-                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                  className="text-3xl font-bold mb-2 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={{ color: meta.accent }}
-                  placeholder="Your Name"
-                />
+                {renderDraggableHeaderElement('name',
+                  <input
+                    type="text"
+                    value={meta.yourName}
+                    onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
+                    className="text-3xl font-bold mb-2 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    style={{ 
+                      color: meta.accent,
+                      maxWidth: '100%',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
+                    placeholder="Your Name"
+                  />
+                )}
                 <input
                   type="text"
                   value={meta.contactLine?.split('\n')[3] || 'Professional Title'}
@@ -746,39 +998,41 @@ export default function CanvaCoverLetterEditor({
                   placeholder="Professional Title"
                 />
               </div>
-              <div 
-                className="w-24 flex flex-col justify-center items-center text-white p-4"
-                style={{ backgroundColor: meta.accent }}
-              >
-                <div className="text-center">
-                  <div className="text-xs font-semibold mb-1">PHONE</div>
-                  <input
-                    type="text"
-                    value={meta.contactLine?.split('\n')[0] || '(555) 123-4567'}
-                    onChange={(e) => {
-                      const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
-                      lines[0] = e.target.value;
-                      setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
-                    }}
-                    className="text-xs bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
-                    placeholder="Phone"
-                  />
+              {renderDraggableHeaderElement('contact',
+                <div 
+                  className="w-24 flex flex-col justify-center items-center text-white p-4"
+                  style={{ backgroundColor: meta.accent }}
+                >
+                  <div className="text-center">
+                    <div className="text-xs font-semibold mb-1">PHONE</div>
+                    <input
+                      type="text"
+                      value={meta.contactLine?.split('\n')[0] || '(555) 123-4567'}
+                      onChange={(e) => {
+                        const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
+                        lines[0] = e.target.value;
+                        setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
+                      }}
+                      className="text-xs bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
+                      placeholder="Phone"
+                    />
+                  </div>
+                  <div className="text-center mt-3">
+                    <div className="text-xs font-semibold mb-1">EMAIL</div>
+                    <input
+                      type="text"
+                      value={meta.contactLine?.split('\n')[1] || 'your@email.com'}
+                      onChange={(e) => {
+                        const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
+                        lines[1] = e.target.value;
+                        setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
+                      }}
+                      className="text-xs bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
+                      placeholder="Email"
+                    />
+                  </div>
                 </div>
-                <div className="text-center mt-3">
-                  <div className="text-xs font-semibold mb-1">EMAIL</div>
-                  <input
-                    type="text"
-                    value={meta.contactLine?.split('\n')[1] || 'your@email.com'}
-                    onChange={(e) => {
-                      const lines = meta.contactLine?.split('\n') || ['', '', '', '', ''];
-                      lines[1] = e.target.value;
-                      setMeta(prev => ({ ...prev, contactLine: lines.join('\n') }));
-                    }}
-                    className="text-xs bg-transparent text-white text-center border-none outline-none w-full cursor-text hover:bg-white/10 rounded px-1 py-1 transition-colors"
-                    placeholder="Email"
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -788,61 +1042,48 @@ export default function CanvaCoverLetterEditor({
             <div className="p-8">
               {/* Recipient */}
               <div className="mb-6 space-y-2">
-                <input
-                  type="text"
-                  value={meta.dateLine}
-                  onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Date"
-                />
-                <input
-                  type="text"
-                  value={meta.recipient}
-                  onChange={(e) => setMeta(prev => ({ ...prev, recipient: e.target.value }))}
-                  className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Recipient"
-                />
-                <input
-                  type="text"
-                  value={meta.company}
-                  onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
-                  className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company"
-                />
-                <input
-                  type="text"
-                  value={meta.companyAddress}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company Address (optional)"
-                />
-              </div>
-
-              {/* Salutation */}
-              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
-
-              {/* Content */}
-              <div className="relative">
-                <div
-                  contentEditable
-                  suppressContentEditableWarning={true}
-                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
-                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={{ 
-                    minHeight: '24rem'
-                  }}
-                  data-placeholder="Write your cover letter here..."
-                >
-                  {content}
-                </div>
-                {/* Page break indicator */}
-                {content.length > 1000 && (
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                {renderDraggableHeaderElement('date',
+                  <input
+                    type="text"
+                    value={meta.dateLine}
+                    onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
+                    className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Date"
+                  />
+                )}
+                {renderDraggableHeaderElement('recipient',
+                  <input
+                    type="text"
+                    value={meta.recipient}
+                    onChange={(e) => setMeta(prev => ({ ...prev, recipient: e.target.value }))}
+                    className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Recipient"
+                  />
+                )}
+                {renderDraggableHeaderElement('company',
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={meta.company}
+                      onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
+                      className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                      placeholder="Company"
+                    />
+                    <input
+                      type="text"
+                      value={meta.companyAddress}
+                      onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                      className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                      placeholder="Company Address (optional)"
+                    />
+                  </div>
                 )}
               </div>
 
-              {/* Closing */}
-              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
+              {/* Structured Content */}
+              <div className="mb-6 w-full min-h-96">
+                {renderStructuredContent}
+              </div>
               <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
@@ -930,13 +1171,20 @@ export default function CanvaCoverLetterEditor({
             <div className="flex-1 p-8">
               {/* Header */}
               <div className="mb-6">
-                <input
-                  type="text"
-                  value={meta.yourName}
-                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                  className="text-2xl font-bold mb-2 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors uppercase"
-                  placeholder="YOUR NAME"
-                />
+                {renderDraggableHeaderElement('name',
+                  <input
+                    type="text"
+                    value={meta.yourName}
+                    onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
+                    className="text-2xl font-bold mb-2 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors uppercase"
+                    style={{ 
+                      maxWidth: '100%',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
+                    placeholder="YOUR NAME"
+                  />
+                )}
                 <input
                   type="text"
                   value={meta.contactLine?.split('\n')[3] || 'PROFESSIONAL TITLE'}
@@ -953,41 +1201,22 @@ export default function CanvaCoverLetterEditor({
 
               {/* Date */}
               <div className="mb-6">
-                <input
-                  type="text"
-                  value={meta.dateLine}
-                  onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
-                  className="text-sm font-bold bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors uppercase"
-                  placeholder="DATE"
-                />
+                {renderDraggableHeaderElement('date',
+                  <input
+                    type="text"
+                    value={meta.dateLine}
+                    onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
+                    className="text-sm font-bold bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors uppercase"
+                    placeholder="DATE"
+                  />
+                )}
                 <div className="h-px bg-gray-200 mt-2"></div>
               </div>
 
-              {/* Salutation */}
-              <p className="mb-4">{meta.greeting || `Dear ${meta.recipient || 'Hiring Manager'},`}</p>
-
-              {/* Content */}
-              <div className="relative">
-                <div
-                  contentEditable
-                  suppressContentEditableWarning={true}
-                  onInput={(e) => setContent(e.currentTarget.textContent || '')}
-                  className="whitespace-pre-wrap mb-6 w-full min-h-96 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={{ 
-                    minHeight: '24rem'
-                  }}
-                  data-placeholder="Write your cover letter here..."
-                >
-                  {content}
-                </div>
-                {/* Page break indicator */}
-                {content.length > 1000 && (
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-                )}
+              {/* Structured Content */}
+              <div className="mb-6 w-full min-h-96">
+                {renderStructuredContent}
               </div>
-
-              {/* Closing */}
-              <p className="mb-4">{meta.closing || 'Sincerely,'}</p>
               <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </div>
@@ -998,14 +1227,21 @@ export default function CanvaCoverLetterEditor({
           <div className="p-12">
             {/* Header */}
             <div className="text-center mb-12">
-              <input
-                type="text"
-                value={meta.yourName}
-                onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                className="text-4xl font-light mb-4 tracking-wide bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                style={{ color: meta.accent }}
-                placeholder="Your Name"
-              />
+              {renderDraggableHeaderElement('name',
+                <input
+                  type="text"
+                  value={meta.yourName}
+                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
+                  className="text-4xl font-light mb-4 tracking-wide bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    color: meta.accent,
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word'
+                  }}
+                  placeholder="Your Name"
+                />
+              )}
               <div className="w-24 h-px mx-auto mb-6" style={{ backgroundColor: meta.accent }}></div>
               <input
                 type="text"
@@ -1022,13 +1258,15 @@ export default function CanvaCoverLetterEditor({
 
             {/* Recipient */}
             <div className="mb-8 space-y-2">
-              <input
-                type="text"
-                value={meta.dateLine}
-                onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
-                className="text-sm text-gray-500 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Date"
-              />
+              {renderDraggableHeaderElement('date',
+                <input
+                  type="text"
+                  value={meta.dateLine}
+                  onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
+                  className="text-sm text-gray-500 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  placeholder="Date"
+                />
+              )}
               <input
                 type="text"
                 value={meta.recipient}
@@ -1036,20 +1274,24 @@ export default function CanvaCoverLetterEditor({
                 className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
                 placeholder="Recipient"
               />
-              <input
-                type="text"
-                value={meta.company}
-                onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
-                className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Company"
-              />
-              <input
-                type="text"
-                value={meta.companyAddress}
-                onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                className="text-sm text-gray-500 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Company Address (optional)"
-              />
+              {renderDraggableHeaderElement('company',
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={meta.company}
+                    onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
+                    className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Company"
+                  />
+                  <input
+                    type="text"
+                    value={meta.companyAddress}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                    className="text-sm text-gray-500 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Company Address (optional)"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Salutation */}
@@ -1074,32 +1316,43 @@ export default function CanvaCoverLetterEditor({
           <div className="p-8">
             {/* Simple Header */}
             <div className="text-center mb-8">
-              <input
-                type="text"
-                value={meta.yourName}
-                onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                className="text-3xl font-bold mb-2 bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                style={{ color: meta.accent }}
-                placeholder="Your Name"
-              />
-              <textarea
-                value={meta.contactLine}
-                onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
-                className="text-gray-600 bg-transparent border-none outline-none text-center w-full resize-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                rows={3}
-                placeholder="Contact information..."
-              />
+              {renderDraggableHeaderElement('name',
+                <input
+                  type="text"
+                  value={meta.yourName}
+                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
+                  className="text-3xl font-bold mb-2 bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={{ 
+                    color: meta.accent,
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word'
+                  }}
+                  placeholder="Your Name"
+                />
+              )}
+              {renderDraggableHeaderElement('contact',
+                <textarea
+                  value={meta.contactLine}
+                  onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
+                  className="text-gray-600 bg-transparent border-none outline-none text-center w-full resize-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  rows={3}
+                  placeholder="Contact information..."
+                />
+              )}
             </div>
 
             {/* Recipient */}
             <div className="mb-6 space-y-2">
-              <input
-                type="text"
-                value={meta.dateLine}
-                onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
-                className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Date"
-              />
+              {renderDraggableHeaderElement('date',
+                <input
+                  type="text"
+                  value={meta.dateLine}
+                  onChange={(e) => setMeta(prev => ({ ...prev, dateLine: e.target.value }))}
+                  className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  placeholder="Date"
+                />
+              )}
               <input
                 type="text"
                 value={meta.recipient}
@@ -1107,20 +1360,24 @@ export default function CanvaCoverLetterEditor({
                 className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
                 placeholder="Recipient"
               />
-              <input
-                type="text"
-                value={meta.company}
-                onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
-                className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Company"
-              />
-              <input
-                type="text"
-                value={meta.companyAddress}
-                onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                placeholder="Company Address (optional)"
-              />
+              {renderDraggableHeaderElement('company',
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={meta.company}
+                    onChange={(e) => setMeta(prev => ({ ...prev, company: e.target.value }))}
+                    className="font-medium bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Company"
+                  />
+                  <input
+                    type="text"
+                    value={meta.companyAddress}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                    className="text-sm text-gray-600 bg-transparent border-none outline-none w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Company Address (optional)"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -1248,39 +1505,44 @@ export default function CanvaCoverLetterEditor({
         {/* Canvas Area */}
         <div className="flex-1 p-6 overflow-auto">
           <div className="max-w-4xl mx-auto">
-            {renderCoverLetter()}
-            {/* Additional page if content is very long */}
-            {content.length > 2000 && (
-              <div className="mt-8">
-                <div className="text-center text-sm text-gray-500 mb-4">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    Page 2
-                  </div>
-                </div>
+            {/* Single continuous page with fixed A4 page break */}
+            <div 
+              className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
+              style={{ 
+                fontFamily: getFontFamily(),
+                lineHeight: getDensityStyles().lineHeight,
+                color: '#333',
+                width: '210mm', // A4 width
+                minHeight: '297mm' // Minimum A4 height
+              }}
+            >
+              {renderCoverLetter()}
+              
+              {/* Fixed A4 Page Break - positioned at exactly 297mm from top */}
+              {pageBreakData && content.length > pageBreakData.breakPoint && (
                 <div 
-                  className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
+                  className="absolute left-0 right-0 pointer-events-none"
                   style={{ 
-                    minHeight: '800px',
-                    fontFamily: getFontFamily(),
-                    lineHeight: getDensityStyles().lineHeight,
-                    color: '#333'
+                    top: '297mm', // Fixed A4 page height
+                    zIndex: 10
                   }}
                 >
-                  <div className="p-8">
-                    <div className="text-center text-sm text-gray-400 mb-6">
-                      Continuation of cover letter...
-                    </div>
-                    <div className="h-96 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <div className="text-lg font-medium mb-2">Additional Content</div>
-                        <div className="text-sm">This space is available for longer cover letters</div>
+                  {/* Background overlay to create clean break */}
+                  <div className="absolute inset-0 bg-white/90 backdrop-blur-sm"></div>
+                  
+                  {/* Page break indicator */}
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+                    <div className="mx-6">
+                      <div className="bg-white px-4 py-2 text-sm font-medium text-gray-600 border-2 border-gray-300 rounded-lg shadow-lg">
+                        A4 Page Break
                       </div>
                     </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1301,8 +1563,9 @@ export default function CanvaCoverLetterEditor({
               <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                 {[
                   { id: "content", label: "Content", icon: Type },
+                  { id: "structure", label: "Structure", icon: Layout },
                   { id: "design", label: "Design", icon: Palette },
-                  { id: "details", label: "Details", icon: Layout },
+                  { id: "details", label: "Details", icon: Settings },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -1392,43 +1655,152 @@ export default function CanvaCoverLetterEditor({
                 </div>
               )}
 
-              {activeTab === "design" && (
+              {activeTab === "structure" && (
                 <div className="space-y-6">
-                  {/* Templates */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Templates</label>
-                    <div className="space-y-4">
-                      {Object.entries(
-                        TEMPLATE_OPTIONS.reduce((acc, template) => {
-                          const category = template.category;
-                          if (!acc[category]) acc[category] = [];
-                          acc[category].push(template);
-                          return acc;
-                        }, {} as Record<string, typeof TEMPLATE_OPTIONS>)
-                      ).map(([category, templates]) => (
-                        <div key={category}>
-                          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                            {category}
-                          </h4>
-                          <div className="grid grid-cols-2 gap-3">
-                            {templates.map((template) => (
-                              <button
-                                key={template.id}
-                                onClick={() => applyTemplate(template.id)}
-                                className={`p-3 rounded-lg border text-left transition-colors ${
-                                  meta.template === template.id
-                                    ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                              >
-                                <div className="text-lg mb-1">{template.icon}</div>
-                                <div className="text-sm font-medium">{template.name}</div>
-                                <div className="text-xs text-gray-500">{template.description}</div>
-                              </button>
-                            ))}
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Content Structure</label>
+                    <p className="text-sm text-gray-600 mb-4">Drag to reorder sections or hide empty ones</p>
+                    
+                    <div className="space-y-2">
+                      {getSortedSections().map((section, index) => (
+                        <div
+                          key={section.id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          {/* Drag Handle */}
+                          <div className="cursor-move text-gray-400 hover:text-gray-600">
+                            <GripVertical className="h-4 w-4" />
                           </div>
+                          
+                          {/* Section Info */}
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900">{section.label}</div>
+                            <div className="text-xs text-gray-500">
+                              {section.id === 'greeting' && (meta.greeting ? '✓ Has content' : 'Empty')}
+                              {section.id === 'body' && (content.trim() ? '✓ Has content' : 'Empty')}
+                              {section.id === 'closing' && (meta.closing ? '✓ Has content' : 'Empty')}
+                              {section.id === 'signature' && (meta.signatureName ? '✓ Has content' : 'Empty')}
+                            </div>
+                          </div>
+                          
+                          {/* Visibility Toggle */}
+                          <button
+                            onClick={() => toggleSectionVisibility(section.id)}
+                            className={`p-1 rounded transition-colors ${
+                              section.visible 
+                                ? 'text-emerald-600 hover:text-emerald-700' 
+                                : 'text-gray-400 hover:text-gray-600'
+                            }`}
+                            title={section.visible ? 'Hide section' : 'Show section'}
+                          >
+                            {section.visible ? (
+                              <Eye className="h-4 w-4" />
+                            ) : (
+                              <EyeOff className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       ))}
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-sm text-blue-800">
+                        <strong>Tip:</strong> Hide empty sections to create a cleaner look. 
+                        Drag sections to change their order in the cover letter.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "design" && (
+                <div className="space-y-6">
+                  {/* Templates Carousel */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Choose Template</label>
+                    
+                    {/* Category Tabs */}
+                    <div className="flex space-x-1 mb-4 bg-gray-100 rounded-lg p-1 overflow-x-auto scrollbar-hide">
+                      {Object.keys(
+                        TEMPLATE_OPTIONS.reduce((acc, template) => {
+                          if (!acc[template.category]) acc[template.category] = [];
+                          acc[template.category].push(template);
+                          return acc;
+                        }, {} as Record<string, typeof TEMPLATE_OPTIONS>)
+                      ).map((category) => (
+                        <button
+                          key={category}
+                          className={`flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                            selectedCategory === category
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                          onClick={() => setSelectedCategory(category)}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Template Carousel */}
+                    <div className="relative">
+                      <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        {TEMPLATE_OPTIONS
+                          .filter(template => template.category === selectedCategory)
+                          .map((template) => (
+                            <button
+                              key={template.id}
+                              onClick={() => applyTemplate(template.id)}
+                              className={`flex-shrink-0 w-32 h-40 rounded-lg border-2 transition-all duration-200 ${
+                                meta.template === template.id
+                                  ? 'border-emerald-500 shadow-lg scale-105'
+                                  : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                              }`}
+                            >
+                              {/* Template Preview */}
+                              <div className="w-full h-full rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 relative">
+                                {/* Template Icon */}
+                                <div className="absolute top-2 left-2 text-2xl">{template.icon}</div>
+                                
+                                {/* Template Preview Content */}
+                                <div className="absolute inset-0 p-2 flex flex-col justify-between">
+                                  <div className="text-center">
+                                    <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: meta.accent }}></div>
+                                    </div>
+                                    <div className="text-xs font-medium text-gray-700 mb-1">{template.name}</div>
+                                  </div>
+                                  
+                                  {/* Preview Lines */}
+                                  <div className="space-y-1">
+                                    <div className="h-1 bg-gray-300 rounded w-full"></div>
+                                    <div className="h-1 bg-gray-300 rounded w-3/4"></div>
+                                    <div className="h-1 bg-gray-300 rounded w-1/2"></div>
+                                  </div>
+                                </div>
+                                
+                                {/* Selected Indicator */}
+                                {meta.template === template.id && (
+                                  <div className="absolute top-1 right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                                    <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                      
+                      {/* Scroll Indicators */}
+                      <div className="flex justify-center mt-2 space-x-1">
+                        {Array.from({ length: Math.ceil(TEMPLATE_OPTIONS.filter(t => t.category === selectedCategory).length / 4) }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-1.5 h-1.5 rounded-full bg-gray-300"
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
 
