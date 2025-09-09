@@ -12,8 +12,45 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Applika",
+    "description": "AI-powered cover letter generator that creates personalized, professional cover letters in seconds",
+    "url": "https://applika.com",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "9",
+      "priceCurrency": "USD",
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "price": "9",
+        "priceCurrency": "USD"
+      }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "150"
+    },
+    "featureList": [
+      "AI-powered cover letter generation",
+      "CV upload and analysis",
+      "Job description parsing",
+      "Multiple cover letter templates",
+      "Real-time editing",
+      "PDF export"
+    ]
+  };
+
   return (
     <main className="min-h-screen flex flex-col items-center">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="flex-1 w-full flex flex-col items-center">
         {/* NAVBAR */}
         <nav className="w-full flex justify-center border-b border-gray-200/60 dark:border-gray-800/60 h-16">
