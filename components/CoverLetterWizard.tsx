@@ -66,10 +66,8 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [userName, setUserName] = useState(() => {
-    const name = profile?.fullName?.trim() || 
-                 [profile?.firstName?.trim(), profile?.lastName?.trim()].filter(Boolean).join(' ') || 
-                 FALLBACK_NAME;
-    return name;
+    const firstName = profile?.firstName?.trim();
+    return firstName || FALLBACK_NAME;
   });
   const [defaultRole, setDefaultRole] = useState(() => {
     return profile?.desiredRole?.trim() || FALLBACK_ROLE;
@@ -386,16 +384,16 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
             {profileLoading ? "Loading…" : <>Hi, {userName} 👋</>}
           </h2>
           {profileError && <div className="mt-1 text-xs text-red-600">{profileError}</div>}
 
           {step === 1 ? (
-            <div className="mt-1 text-2xl md:text-3xl font-semibold leading-snug">
-              Ready to apply for{" "}
+            <div className="mt-1 text-lg md:text-xl font-medium leading-snug text-gray-700 dark:text-gray-300">
+              Ready to apply for a{" "}
               <span
-                className={`inline-flex items-center gap-1 px-1 rounded ${glow ? "animate-pulse bg-emerald-50" : ""}`}
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border border-transparent hover:border-gray-200 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ${glow ? "animate-pulse bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
                 contentEditable
                 suppressContentEditableWarning
                 onBlur={async (e) => {
@@ -406,12 +404,12 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
                 }}
               >
                 {role}
-                <PencilLine className="h-4 w-4 opacity-50" />
+                <PencilLine className="h-3 w-3 opacity-40" />
               </span>
-              ?
+              {" "}position?
             </div>
           ) : (
-            <div className="mt-1 text-2xl md:text-3xl font-semibold leading-snug">
+            <div className="mt-1 text-lg md:text-xl font-medium leading-snug text-gray-700 dark:text-gray-300">
               Review details for <span className="px-1">{jobTitle || role}</span>
               {companyName && (<> at <span className="px-1">{companyName}</span></>)}
             </div>

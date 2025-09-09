@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/auth/error?m=missing_oauth_code`);
   }
 
-  const supabase = createClient();
-  const { error } = await (await supabase).auth.exchangeCodeForSession(code);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(
       `${origin}/auth/error?m=${encodeURIComponent(error.message)}`
