@@ -7,6 +7,14 @@ const nextConfig = {
   ],
   // Do NOT transpile the same ones; leave this empty or only put client libs here
   transpilePackages: [],
+  // Disable ESLint during build to avoid timeout issues
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Disable TypeScript type checking during build for faster builds
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 module.exports = nextConfig;

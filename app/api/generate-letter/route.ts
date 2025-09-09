@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import OpenAI from "openai";
 import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
-import { withErrorHandler, errors, RateLimiter } from "@/lib/error-handler";
+import { withErrorHandler, RateLimiter } from "@/lib/error-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
