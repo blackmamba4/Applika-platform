@@ -21,6 +21,47 @@ export default function RecentCard() {
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+
+  // Check for cover letters on mount and auto-expand if there are any
+  useEffect(() => {
+    const checkForCoverLetters = async () => {
+      if (initialCheckDone) return;
+      
+      try {
+        const supabase = createClient();
+        
+        // Get current user
+        const { data: auth, error: authError } = await supabase.auth.getUser();
+        if (authError || !auth?.user) {
+          setInitialCheckDone(true);
+          return;
+        }
+        
+        // Get total count to check if there are any cover letters
+        const { count } = await supabase
+          .from('cover_letters')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', auth.user.id);
+        
+        setTotalCount(count || 0);
+        
+        // If there are cover letters, auto-expand and fetch them
+        if (count && count > 0) {
+          setIsCollapsed(false);
+          // Fetch the recent letters immediately
+          await fetchRecentLetters();
+        }
+        
+        setInitialCheckDone(true);
+      } catch (err) {
+        console.error('Error checking for cover letters:', err);
+        setInitialCheckDone(true);
+      }
+    };
+
+    checkForCoverLetters();
+  }, []); // Empty dependency array for mount-only effect
 
   // Only fetch when expanded (lazy loading)
   const fetchRecentLetters = async () => {

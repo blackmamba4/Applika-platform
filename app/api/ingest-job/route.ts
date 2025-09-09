@@ -6,6 +6,7 @@ import { fetchCompanyAbout } from "@/lib/extractors/fetchCompanyAbout";
 import { summarizeCompanyAbout } from "@/lib/extractors/summarizeCompanyAbout";
 import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
 import { RateLimiter } from "@/lib/error-handler";
+import { resolveCvText } from "@/lib/extractors/resolveCvText";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -277,6 +278,17 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Resolve CV text if in auto mode
+      let cvTextResolved = "";
+      if (body.cvMode === "auto") {
+        try {
+          cvTextResolved = await resolveCvText();
+        } catch (error: any) {
+          console.error("[ingest-job] CV resolution failed:", error?.message || error);
+          cvTextResolved = "";
+        }
+      }
+
       return NextResponse.json({
         jobTitle,
         jobDescHtml: jobDescText,                                 // field name kept, value is TEXT
@@ -286,6 +298,7 @@ export async function POST(req: NextRequest) {
         confidence: "low",
         via: "hasdata",
         cached: true,
+        cvTextResolved,
       });
     }
 
@@ -351,6 +364,17 @@ export async function POST(req: NextRequest) {
     const confidence: CachedPayload["confidence"] =
       companyName && homepage ? "high" : companyName || homepage ? "medium" : "low";
 
+    // Resolve CV text if in auto mode
+    let cvTextResolved = "";
+    if (body.cvMode === "auto") {
+      try {
+        cvTextResolved = await resolveCvText();
+      } catch (error: any) {
+        console.error("[ingest-job] CV resolution failed:", error?.message || error);
+        cvTextResolved = "";
+      }
+    }
+
     const payload: CachedPayload = {
       jobTitle,
       jobDescHtml: jobDescText,                                    // store TEXT
@@ -366,7 +390,7 @@ export async function POST(req: NextRequest) {
       setCache(normalizedUrl, payload);
     }
 
-    return NextResponse.json(payload, { headers: { "X-Cache": "MISS" } });
+    return NextResponse.json({ ...payload, cvTextResolved }, { headers: { "X-Cache": "MISS" } });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "ingest failed" }, { status: 500 });
   }

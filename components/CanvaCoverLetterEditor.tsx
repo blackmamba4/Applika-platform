@@ -205,6 +205,63 @@ export default function CanvaCoverLetterEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "structure" | "design" | "details">("content");
+  
+  // Inline editing state
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  // Inline editing functions
+  const startEditing = (sectionId: string, currentValue: string) => {
+    setEditingSection(sectionId);
+    setEditValue(currentValue);
+    
+    // For body content, set initial height after a brief delay to ensure DOM is updated
+    if (sectionId === 'body') {
+      setTimeout(() => {
+        const textarea = document.querySelector('textarea[data-editing="body"]') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = Math.max(200, textarea.scrollHeight) + 'px';
+        }
+      }, 10);
+    }
+  };
+
+  const saveEdit = () => {
+    if (editingSection && editValue !== undefined) {
+      switch (editingSection) {
+        case 'greeting':
+          setMeta(prev => ({ ...prev, greeting: editValue }));
+          break;
+        case 'closing':
+          setMeta(prev => ({ ...prev, closing: editValue }));
+          break;
+        case 'signature':
+          setMeta(prev => ({ ...prev, signatureName: editValue }));
+          break;
+        case 'body':
+          setContent(editValue);
+          break;
+      }
+    }
+    setEditingSection(null);
+    setEditValue("");
+  };
+
+  const cancelEdit = () => {
+    setEditingSection(null);
+    setEditValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
 
   // Parse content to extract structured components
   // Content management functions
@@ -335,15 +392,40 @@ export default function CanvaCoverLetterEditor({
             elements.push(
               <div 
                 key="greeting" 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'greeting', 'content')}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, 'greeting', 'content')}
-                className="mb-4 font-medium cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+                className="mb-4 font-medium hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
               >
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex-1">{meta.greeting}</div>
+                  <div 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'greeting', 'content')}
+                    className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1">
+                    {editingSection === 'greeting' ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent border-none outline-none font-medium"
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="cursor-text hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => startEditing('greeting', meta.greeting || '')}
+                        title="Click to edit"
+                      >
+                        {meta.greeting}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -355,15 +437,50 @@ export default function CanvaCoverLetterEditor({
             elements.push(
               <div 
                 key="body" 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'body', 'content')}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, 'body', 'content')}
-                className="mb-6 whitespace-pre-wrap leading-relaxed cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+                className="mb-6 whitespace-pre-wrap leading-relaxed hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
               >
                 <div className="flex items-start gap-2">
-                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex-shrink-0" />
-                  <div className="flex-1">{content}</div>
+                  <div 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'body', 'content')}
+                    className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors mt-1 flex-shrink-0"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1">
+                    {editingSection === 'body' ? (
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent border-none outline-none resize-none whitespace-pre-wrap leading-relaxed min-h-[200px]"
+                        autoFocus
+                        data-editing="body"
+                        style={{ 
+                          height: 'auto',
+                          minHeight: '200px',
+                          maxHeight: 'none'
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = 'auto';
+                          target.style.height = Math.max(200, target.scrollHeight) + 'px';
+                        }}
+                      />
+                    ) : (
+                      <div 
+                        className="cursor-text hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => startEditing('body', content)}
+                        title="Click to edit"
+                      >
+                        {content}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -374,15 +491,40 @@ export default function CanvaCoverLetterEditor({
             elements.push(
               <div 
                 key="closing" 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'closing', 'content')}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, 'closing', 'content')}
-                className="mb-2 cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+                className="mb-2 hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
               >
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex-1">{meta.closing}</div>
+                  <div 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'closing', 'content')}
+                    className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1">
+                    {editingSection === 'closing' ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent border-none outline-none"
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="cursor-text hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => startEditing('closing', meta.closing || '')}
+                        title="Click to edit"
+                      >
+                        {meta.closing}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -393,15 +535,40 @@ export default function CanvaCoverLetterEditor({
             elements.push(
               <div 
                 key="signature" 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'signature', 'content')}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, 'signature', 'content')}
-                className="font-bold cursor-move hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+                className="font-bold hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
               >
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex-1">{meta.signatureName}</div>
+                  <div 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'signature', 'content')}
+                    className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1">
+                    {editingSection === 'signature' ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent border-none outline-none font-bold"
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="cursor-text hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => startEditing('signature', meta.signatureName || '')}
+                        title="Click to edit"
+                      >
+                        {meta.signatureName}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -411,7 +578,7 @@ export default function CanvaCoverLetterEditor({
     });
     
     return elements;
-  }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, pageBreakData]);
+  }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, pageBreakData, editingSection, editValue]);
 
 
   // Render draggable header elements
@@ -422,15 +589,20 @@ export default function CanvaCoverLetterEditor({
     return (
       <div
         key={elementId}
-        draggable
-        onDragStart={(e) => handleDragStart(e, elementId, 'header')}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, elementId, 'header')}
-        className={`cursor-move hover:bg-gray-50 rounded border-2 border-transparent hover:border-gray-200 transition-all group ${className}`}
+        className={`hover:bg-gray-50 rounded border-2 border-transparent hover:border-gray-200 transition-all group ${className}`}
       >
         <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex-1">{children}</div>
+          <div 
+            draggable
+            onDragStart={(e) => handleDragStart(e, elementId, 'header')}
+            className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="flex-1 cursor-text">{children}</div>
         </div>
       </div>
     );
@@ -1643,6 +1815,17 @@ export default function CanvaCoverLetterEditor({
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Greeting</label>
+                    <input
+                      type="text"
+                      value={meta.greeting || ''}
+                      onChange={(e) => setMeta(prev => ({ ...prev, greeting: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Dear Hiring Manager,"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Cover Letter Content</label>
                     <textarea
                       value={content}
@@ -1650,6 +1833,28 @@ export default function CanvaCoverLetterEditor({
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       rows={8}
                       placeholder="Write your cover letter here..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Closing</label>
+                    <input
+                      type="text"
+                      value={meta.closing || ''}
+                      onChange={(e) => setMeta(prev => ({ ...prev, closing: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Sincerely,"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Signature Name</label>
+                    <input
+                      type="text"
+                      value={meta.signatureName || ''}
+                      onChange={(e) => setMeta(prev => ({ ...prev, signatureName: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Your Name"
                     />
                   </div>
                 </div>
