@@ -32,27 +32,27 @@ export default function DashboardLayout({
                 </span>
               </Link>
               
-              {/* Navigation Links */}
-              <div className="hidden md:flex gap-6 text-sm font-medium">
-                <Link 
-                  href="/Dashboard" 
-                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
-                >
-                  Home
-                </Link>
-                <Link 
-                  href="/Dashboard/Coverletters" 
-                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
-                >
-                  Cover Letters
-                </Link>
-                <Link 
-                  href="/pricing" 
-                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
-                >
-                  Pricing
-                </Link>
-              </div>
+                     {/* Navigation Links */}
+                     <div className="hidden md:flex gap-6 text-sm font-medium">
+                       <Link
+                         href="/Dashboard"
+                         className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                       >
+                         Home
+                       </Link>
+                       <Link
+                         href="/Dashboard/Coverletters"
+                         className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                       >
+                         Cover Letters
+                       </Link>
+                       <Link
+                         href="/pricing"
+                         className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                       >
+                         Pricing
+                       </Link>
+                     </div>
             </div>
             {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
           </div>

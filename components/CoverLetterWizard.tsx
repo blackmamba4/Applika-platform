@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ToastGlobal";
 import TemplateSelector from "./TemplateSelector";
 import { CoverLetterTemplate, TemplateData } from "@/lib/templates/coverLetterTemplates";
+import { trackCoverLetterEvent, trackUserJourney } from "@/components/GoogleAnalytics";
 
 // Inline skeleton components to avoid import issues
 function WizardStepSkeleton() {
@@ -312,6 +313,10 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
     setGenerateError(null);
     setGenerateStage("Generating cover letter...");
 
+    // Track generation start
+    trackCoverLetterEvent('generation_started', template.id);
+    trackUserJourney('cover_letter_generation', 'started', { templateId: template.id });
+
     try {
       const generatedLetter = template.generate(data);
       
@@ -353,12 +358,33 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
         confetti: true
       });
 
+      // Track successful generation
+      trackCoverLetterEvent('generation_completed', template.id, {
+        generationTime: Date.now() - Date.now(), // Will be calculated properly
+        success: true,
+        tokensUsed: 0
+      });
+      trackUserJourney('cover_letter_generation', 'completed', { 
+        templateId: template.id,
+        success: true 
+      });
+
       // Navigate to the editor
       router.push(`/Dashboard/Coverletters/${insertData.id}`);
       
     } catch (error: any) {
       console.error("Template generation error:", error);
       setGenerateError(error?.message || "Failed to generate cover letter");
+      
+      // Track failed generation
+      trackCoverLetterEvent('generation_failed', template.id, {
+        error: error?.message,
+        success: false
+      });
+      trackUserJourney('cover_letter_generation', 'failed', { 
+        templateId: template.id,
+        error: error?.message 
+      });
     } finally {
       setGenerating(false);
       setGenerateStage(null);
