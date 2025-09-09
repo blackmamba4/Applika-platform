@@ -27,7 +27,7 @@ export async function loadCheerio(url: string): Promise<FetchResult> {
 export async function loadWithPlaywright(url: string): Promise<FetchResult> {
   // Only use if explicitly enabled; requires Node runtime (not Edge).
   if (process.env.SCRAPE_USE_PLAYWRIGHT !== "true") {
-    throw new Error("Playwright disabled");
+    throw new Error("Playwright disabled - set SCRAPE_USE_PLAYWRIGHT=true to enable");
   }
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });
