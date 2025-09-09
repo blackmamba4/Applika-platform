@@ -28,7 +28,7 @@ type Payload = {
 };
 
 type Meta = {
-  template: "letterhead" | "sidebar" | "minimalPro" | "creative" | "modernGradient" | "professionalAccent" | "sidebarProfile" | "minimalElegant";
+  template: "letterhead" | "sidebar" | "minimalPro" | "creative" | "modernGradient" | "professionalAccent" | "sidebarProfile" | "minimalElegant" | "corporateClassic" | "executiveBold" | "bankingFormal" | "consultingSharp" | "designCreative" | "marketingDynamic" | "startupVibrant" | "techModern" | "healthcareClean" | "educationWarm" | "nonprofitHeart" | "salesEnergetic";
   accent: string;
   font: "inter" | "georgia" | "serif" | "system" | "poppins" | "montserrat" | "playfair";
   density: "compact" | "normal" | "roomy";
@@ -375,7 +375,7 @@ async function buildDefaultMeta(opts: {
 // Rate limiter for AI generation (expensive operation)
 const generationRateLimiter = new RateLimiter(5, 60000); // 5 requests per minute
 
-async function POSTHandler(req: NextRequest) {
+async function POSTHandler(req: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   if (authErr || !auth?.user) {
@@ -522,7 +522,7 @@ async function POSTHandler(req: NextRequest) {
       },
     });
 
-    return new Response(stream, {
+    return new NextResponse(stream, {
       headers: {
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache, no-transform",
