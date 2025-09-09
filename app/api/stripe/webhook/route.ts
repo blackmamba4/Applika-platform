@@ -6,9 +6,15 @@ import { PLANS, TOKEN_PACKS } from "@/lib/billing/config";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-08-27.basil",
-});
+// Initialize Stripe only when needed to avoid build-time errors
+const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-08-27.basil",
+  });
+};
 
 export async function POST(req: NextRequest) {
   const body = await req.text(); // important: raw body
@@ -18,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
@@ -45,6 +52,7 @@ export async function POST(req: NextRequest) {
           let amount = Number(md.pack_amount || 0);
           if (!amount) {
             // fallback: look up price from the session (expand to get line item price id)
+            const stripe = getStripe();
             const s = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items"] });
             const priceId = s.line_items?.data?.[0]?.price?.id;
             const pack = Object.values(TOKEN_PACKS).find((p) => p.stripePriceId === priceId);
@@ -70,6 +78,7 @@ export async function POST(req: NextRequest) {
 
           if (!planCode || !quota) {
             // Fallback: infer from price id
+            const stripe = getStripe();
             const s = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items", "subscription"] });
             const priceId = s.line_items?.data?.[0]?.price?.id;
             const plan = Object.values(PLANS).find((p) => p.stripePriceId === priceId);

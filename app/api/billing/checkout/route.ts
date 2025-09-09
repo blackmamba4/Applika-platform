@@ -7,7 +7,13 @@ import { PLANS, TOKEN_PACKS } from "@/lib/billing/config";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-08-27.basil" });
+// Initialize Stripe only when needed to avoid build-time errors
+const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" });
+};
 
 export async function POST(req: Request) {
   try {
@@ -47,6 +53,7 @@ export async function POST(req: Request) {
       metadata.pack_price_id = packEntry.stripePriceId ?? "";
     }
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode,
       line_items: [{ price: priceId, quantity: 1 }],

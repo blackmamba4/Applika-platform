@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import SocialButtons from "./SocialButtons";
+import { getEmailConfirmUrl } from "@/lib/auth-utils";
 
 export function SignUpForm({
   className,
@@ -45,7 +46,7 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/Dashboard`,
+          emailRedirectTo: getEmailConfirmUrl(),
         },
       });
       if (error) throw error;

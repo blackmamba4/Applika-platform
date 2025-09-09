@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { getAuthCallbackUrl } from "@/lib/auth-utils";
 
 export default function SocialButtons() {
   const supabase = createClient();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   
-  const redirectTo =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/auth/callback`
-      : undefined;
+  const redirectTo = getAuthCallbackUrl();
 
   async function signIn(provider: "google" | "linkedin_oidc") {
     setLoadingProvider(provider);
