@@ -2,11 +2,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Download, Settings } from "lucide-react";
+import { ArrowLeft, Download, Palette } from "lucide-react";
 import { useToast } from "@/components/ToastGlobal";
 import { SettingsPanel } from "./coverLetter/SettingsPanel";
 import { ContentEditor } from "./coverLetter/ContentEditor";
 import { TemplateRenderer } from "./coverLetter/TemplateRenderer";
+import { A4PageBreak } from "./coverLetter/A4PageBreak";
 import type { CoverLetterMeta, CoverLetterEditorProps, ContentSection, HeaderElement } from "@/types/coverLetter";
 
 export default function CanvaCoverLetterEditor({
@@ -21,7 +22,8 @@ export default function CanvaCoverLetterEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "structure" | "design" | "details">("content");
-
+  const [isEditing, setIsEditing] = useState(false);
+  
   // Content sections management
   const [contentSections, setContentSections] = useState<ContentSection[]>([
     { id: 'greeting', label: 'Greeting', visible: true, order: 0 },
@@ -38,7 +40,7 @@ export default function CanvaCoverLetterEditor({
     { id: 'company', label: 'Company Info', visible: true, order: 3 },
     { id: 'date', label: 'Date', visible: true, order: 4 }
   ]);
-
+  
   const [meta, setMeta] = useState<CoverLetterMeta>({
     template: "modernGradient",
     accent: "#10B981",
@@ -61,6 +63,7 @@ export default function CanvaCoverLetterEditor({
     closing: "Sincerely,",
     signatureName: "Your Name",
     gradientColor: "#10B981",
+    showA4PageBreak: false,
     ...initialMeta,
   });
 
@@ -131,64 +134,80 @@ export default function CanvaCoverLetterEditor({
       });
     }
   }, [toast]);
-
-  return (
+    
+    return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+              {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBackToStep1}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-            >
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+              <button
+                onClick={onBackToStep1}
+              className="p-2 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+              >
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </button>
+              </button>
             
-            <input
-              type="text"
+                    <input
+                      type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-xl font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+              className="text-lg sm:text-xl lg:text-2xl font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors flex-1 min-w-0"
               placeholder="Cover Letter Title"
-            />
-          </div>
+                    />
+                  </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowSettings(!showSettings)}
+          <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                onClick={() => setShowSettings(!showSettings)}
               className={`p-2 rounded transition-colors ${
                 showSettings ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
               }`}
             >
-              <Settings className="h-5 w-5" />
-            </button>
-            
-            <button
+              <Palette className="h-5 w-5" />
+                          </button>
+              
+                        <button
               onClick={exportToPDF}
               className="p-2 hover:bg-gray-100 rounded transition-colors"
-            >
+              >
               <Download className="h-5 w-5 text-gray-600" />
-            </button>
-            
+                        </button>
+              
             {isSaving && (
-              <div className="text-sm text-gray-500">Saving...</div>
-            )}
-          </div>
-        </div>
-      </div>
+              <div className="text-sm text-gray-500 hidden sm:block">Saving...</div>
+                                )}
+                              </div>
+                    </div>
+                  </div>
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Editor */}
         <div className="flex-1 flex flex-col">
           {/* Cover Letter Preview */}
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-4xl mx-auto">
-              <div 
-                className="bg-white shadow-lg rounded-lg overflow-hidden"
-                style={{ fontFamily: meta.font === 'inter' ? 'Inter, sans-serif' : 'system-ui, sans-serif' }}
+          <div className="flex-1 overflow-y-auto">
+          <div className="w-full">
+            <div 
+                className={`bg-white shadow-lg rounded-lg overflow-hidden relative ${
+                  meta.showA4PageBreak ? 'a4-page-break' : ''
+                }`}
+                style={{ 
+                  fontFamily: meta.font === 'inter' ? 'Inter, sans-serif' : 'system-ui, sans-serif',
+                  width: '100%',
+                  minWidth: '800px',
+                  position: 'relative', // Always relative for toolbar positioning
+                  ...(meta.showA4PageBreak && {
+                    maxWidth: '210mm',
+                    minHeight: '297mm',
+                    margin: '0 auto'
+                  })
+                }}
               >
+                <A4PageBreak 
+                  show={meta.showA4PageBreak || false}
+                  isEditing={isEditing}
+                />
                 <TemplateRenderer
                   meta={meta}
                   setMeta={setMeta}
@@ -202,15 +221,17 @@ export default function CanvaCoverLetterEditor({
                       setMeta={setMeta}
                       contentSections={contentSections}
                       setContentSections={setContentSections}
+                      isEditing={isEditing}
+                      setIsEditing={setIsEditing}
                     />
                   }
                 />
-              </div>
-            </div>
-          </div>
-        </div>
+                          </div>
+                    </div>
+                    </div>
+                  </div>
 
-        {/* Settings Panel */}
+        {/* Settings Panel - Now a fixed overlay for all screen sizes */}
         <SettingsPanel
           meta={meta}
           setMeta={setMeta}
@@ -223,7 +244,8 @@ export default function CanvaCoverLetterEditor({
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
-      </div>
+
+                  </div>
     </div>
   );
 }

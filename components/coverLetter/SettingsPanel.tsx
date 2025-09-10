@@ -55,11 +55,11 @@ export const SettingsPanel = ({
   if (!showSettings) return null;
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full">
+    <div className="fixed top-0 right-0 w-80 bg-white border-l border-gray-200 flex flex-col h-full z-40 shadow-lg">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Settings</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Customize</h3>
           <button
             onClick={() => setShowSettings(false)}
             className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -69,7 +69,7 @@ export const SettingsPanel = ({
         </div>
         
         {/* Tab Navigation */}
-        <div className="flex gap-1 mt-3">
+        <div className="flex gap-1 mt-3 overflow-x-auto">
           {[
             { id: "content", label: "Content", icon: Type },
             { id: "structure", label: "Structure", icon: Layout },
@@ -79,14 +79,14 @@ export const SettingsPanel = ({
             <button
               key={id}
               onClick={() => setActiveTab(id as any)}
-              className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors ${
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors whitespace-nowrap ${
                 activeTab === id
                   ? "bg-blue-100 text-blue-700"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
@@ -96,19 +96,126 @@ export const SettingsPanel = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Content Tab */}
         {activeTab === "content" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h4 className="font-medium text-gray-900">Content Sections</h4>
             {contentSections.map((section) => (
-              <div key={section.id} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">{section.label}</span>
-                <button
-                  onClick={() => toggleSectionVisibility(section.id)}
-                  className={`p-1 rounded transition-colors ${
-                    section.visible ? "text-blue-600" : "text-gray-400"
-                  }`}
-                >
-                  {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
+              <div key={section.id} className="border border-gray-200 rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">{section.label}</span>
+                  <button
+                    onClick={() => toggleSectionVisibility(section.id)}
+                    className={`p-1 rounded transition-colors ${
+                      section.visible ? "text-blue-600" : "text-gray-400"
+                    }`}
+                  >
+                    {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </button>
+                </div>
+                
+                {/* Individual Section Controls */}
+                <div className="space-y-3">
+                  {/* Spacing Control */}
+                  <div>
+                    <label className="text-xs text-gray-600">Spacing</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={section.spacing || 50}
+                        onChange={(e) => setContentSections(prev => 
+                          prev.map(s => s.id === section.id 
+                            ? { ...s, spacing: parseInt(e.target.value) }
+                            : s
+                          )
+                        )}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500 w-12">{section.spacing || 50}%</span>
+                    </div>
+                  </div>
+
+                  {/* Font Color */}
+                  <div>
+                    <label className="text-xs text-gray-600">Font Color</label>
+                    <input
+                      type="color"
+                      value={section.fontColor || '#000000'}
+                      onChange={(e) => setContentSections(prev => 
+                        prev.map(s => s.id === section.id 
+                          ? { ...s, fontColor: e.target.value }
+                          : s
+                        )
+                      )}
+                      className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Bold & Underline */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setContentSections(prev => 
+                        prev.map(s => s.id === section.id 
+                          ? { ...s, isBold: !s.isBold }
+                          : s
+                        )
+                      )}
+                      className={`px-3 py-1 text-xs rounded border transition-colors ${
+                        section.isBold 
+                          ? "border-blue-500 bg-blue-50 text-blue-700" 
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      Bold
+                    </button>
+                    <button
+                      onClick={() => setContentSections(prev => 
+                        prev.map(s => s.id === section.id 
+                          ? { ...s, isUnderlined: !s.isUnderlined }
+                          : s
+                        )
+                      )}
+                      className={`px-3 py-1 text-xs rounded border transition-colors ${
+                        section.isUnderlined 
+                          ? "border-blue-500 bg-blue-50 text-blue-700" 
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      Underline
+                    </button>
+                  </div>
+
+                  {/* Text Highlighting */}
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-600">Highlight Text</label>
+                    <input
+                      type="text"
+                      value={section.highlightedText || ''}
+                      onChange={(e) => setContentSections(prev => 
+                        prev.map(s => s.id === section.id 
+                          ? { ...s, highlightedText: e.target.value }
+                          : s
+                        )
+                      )}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="Text to highlight"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={section.highlightColor || '#ffff00'}
+                        onChange={(e) => setContentSections(prev => 
+                          prev.map(s => s.id === section.id 
+                            ? { ...s, highlightColor: e.target.value }
+                            : s
+                          )
+                        )}
+                        className="w-8 h-6 border border-gray-300 rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500">Highlight color</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
             
@@ -234,6 +341,29 @@ export const SettingsPanel = ({
               onChange={(color) => setMeta(prev => ({ ...prev, accent: color }))}
               label="Accent Color"
             />
+
+            {/* A4 Page Break Toggle */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Page Layout</h4>
+              <div className="flex items-center justify-between p-3 border border-gray-200 rounded">
+                <div>
+                  <div className="font-medium text-sm">A4 Page Break</div>
+                  <div className="text-xs text-gray-500">Show page break lines for A4 printing</div>
+                </div>
+                <button
+                  onClick={() => setMeta(prev => ({ ...prev, showA4PageBreak: !prev.showA4PageBreak }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    meta.showA4PageBreak ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      meta.showA4PageBreak ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

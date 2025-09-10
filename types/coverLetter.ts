@@ -17,12 +17,17 @@ export interface CoverLetterMeta {
   yourInitials: string;
   showSignature: boolean;
   companyAddress: string;
+  recipientName?: string; // "Hiring Manager Name"
+  companyName?: string; // "Company Name"
+  date?: string; // "Date"
   // Parsed content components
   greeting?: string; // "Dear Red Sift Hiring Team,"
   closing?: string; // "Warm regards,"
   signatureName?: string; // "James"
   gradientColor?: string; // Custom gradient color
   showRecipientBlock: boolean;
+  showA4PageBreak?: boolean; // Toggle for A4 page break
+  sectionSpacing?: number; // Spacing between sections (0-100)
 }
 
 export interface CoverLetterEditorProps {
@@ -38,6 +43,16 @@ export interface ContentSection {
   label: string;
   visible: boolean;
   order: number;
+  spacing?: number; // Individual spacing for this section (0-100)
+  fontColor?: string; // Individual font color
+  isBold?: boolean; // Individual bold styling
+  isItalic?: boolean; // Individual italic styling
+  isUnderlined?: boolean; // Individual underline styling
+  highlightedText?: string; // Text to highlight within this section
+  highlightColor?: string; // Color for highlighting
+  spacingTop?: number; // Top spacing in pixels (0-50)
+  spacingBottom?: number; // Bottom spacing in pixels (0-50)
+  spacingSides?: number; // Side spacing in pixels (0-50)
 }
 
 export interface HeaderElement {
