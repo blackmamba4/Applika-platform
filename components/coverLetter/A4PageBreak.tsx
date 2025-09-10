@@ -12,7 +12,7 @@ export const A4PageBreak = ({
   isEditing, 
   position = 1123 // A4 page height: 297mm = 1123px at 96 DPI
 }: A4PageBreakProps) => {
-  if (!show || isEditing) {
+  if (!show) {
     return null;
   }
 

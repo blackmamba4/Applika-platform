@@ -160,3 +160,9 @@ html {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* A4 Page Break Styles */
+.a4-page-break {
+  box-shadow: 0 0 0 1px #e5e7eb;
+  background: white;
+}
