@@ -609,69 +609,28 @@ export default function CanvaCoverLetterEditor({
   };
 
   const parseContent = (content: string): { greeting: string; closing: string; signatureName: string } => {
-    // Extract greeting (Dear...)
-    const greetingMatch = content.match(/Dear\s+([^,\n]+),?\s*/i);
-    const greeting = greetingMatch ? greetingMatch[0].trim() : '';
-    
-    // Extract closing (Warm regards, Best regards, etc.) - more flexible matching
-    const closingPatterns = [
-      /(Warm regards),?\s*$/im,
-      /(Best regards),?\s*$/im,
-      /(Sincerely),?\s*$/im,
-      /(Kind regards),?\s*$/im,
-      /(Yours truly),?\s*$/im,
-      /(Thank you),?\s*$/im,
-      /(Respectfully),?\s*$/im
-    ];
-    
-    let closing = '';
-    for (const pattern of closingPatterns) {
-      const match = content.match(pattern);
-      if (match) {
-        closing = match[1] + ',';
-        break;
-      }
-    }
-    
-    // Extract signature name (last non-empty line)
-    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-    let signatureName = '';
-    
-    if (lines.length > 0) {
-      const lastLine = lines[lines.length - 1];
-      // If last line doesn't contain common closing words, it's likely the signature
-      if (!lastLine.match(/^(Warm regards|Best regards|Sincerely|Kind regards|Yours truly|Thank you|Respectfully),?\s*$/i)) {
-        signatureName = lastLine;
-      }
-    }
-    
-    // Fallback: try to extract from pattern after closing
-    if (!signatureName && closing) {
-      const signatureMatch = content.match(new RegExp(`${closing.replace(',', '')}\\s*\\n\\s*([A-Za-z\\s]+)\\s*$`, 'im'));
-      if (signatureMatch) {
-        signatureName = signatureMatch[1].trim();
-      }
-    }
-    
+    // Since AI only generates body content, we don't need to parse greeting/closing/signature from content
+    // These are set separately in the meta
     return { 
-      greeting: greeting || `Dear ${content.match(/Dear\s+([^,\n]+)/i)?.[1] || 'Hiring Manager'},`,
-      closing: closing || 'Sincerely,',
-      signatureName: signatureName || 'Your Name'
+      greeting: meta.greeting || `Dear Hiring Manager,`,
+      closing: meta.closing || 'Sincerely,',
+      signatureName: meta.signatureName || meta.yourName || 'Your Name'
     };
   };
 
-  // Auto-parse content when it changes
+  // Auto-parse content when it changes - but only for initial setup
   useEffect(() => {
-    const parsed = parseContent(content);
-    if (parsed.greeting || parsed.closing || parsed.signatureName) {
+    // Only parse if we don't already have proper meta values
+    if (!meta.greeting || !meta.closing || !meta.signatureName) {
+      const parsed = parseContent(content);
       setMeta(prev => ({
         ...prev,
-        greeting: parsed.greeting,
-        closing: parsed.closing,
-        signatureName: parsed.signatureName
+        greeting: prev.greeting || parsed.greeting,
+        closing: prev.closing || parsed.closing,
+        signatureName: prev.signatureName || parsed.signatureName
       }));
     }
-  }, [content]);
+  }, [content, meta.greeting, meta.closing, meta.signatureName]);
   const toast = useToast();
 
   const getFontFamily = () => {
@@ -1132,7 +1091,6 @@ export default function CanvaCoverLetterEditor({
               <div className="mb-6 w-full min-h-96">
                 {renderStructuredContent}
               </div>
-              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
         )}
@@ -1256,7 +1214,6 @@ export default function CanvaCoverLetterEditor({
               <div className="mb-6 w-full min-h-96">
                 {renderStructuredContent}
               </div>
-              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </>
         )}
@@ -1389,7 +1346,6 @@ export default function CanvaCoverLetterEditor({
               <div className="mb-6 w-full min-h-96">
                 {renderStructuredContent}
               </div>
-              <p className="font-bold">{meta.signatureName || meta.yourName || 'Your Name'}</p>
             </div>
           </div>
         )}

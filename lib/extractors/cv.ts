@@ -4,18 +4,65 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
 
-// Dynamic import for pdf-parse to avoid ENOENT issues
-let pdfParse: any = null;
-const loadPdfParse = async () => {
-  if (!pdfParse) {
-    try {
-      pdfParse = (await import("pdf-parse")).default;
-    } catch (error) {
-      console.error("Failed to load pdf-parse:", error);
-      throw new Error("PDF parsing not available");
+// Simple PDF text extraction without external dependencies
+const extractPdfText = async (buffer: Buffer): Promise<string> => {
+  try {
+    // Convert buffer to string and look for text patterns
+    const pdfString = buffer.toString('binary');
+    
+    // Look for text objects in PDF format
+    const textMatches = pdfString.match(/BT\s+([^E]+)ET/g);
+    if (textMatches && textMatches.length > 0) {
+      return textMatches
+        .map(match => {
+          // Extract text content between BT and ET
+          const content = match.replace(/BT\s+/, '').replace(/ET/, '');
+          // Remove PDF formatting codes
+          return content
+            .replace(/\(/g, '')
+            .replace(/\)/g, '')
+            .replace(/\\n/g, ' ')
+            .replace(/\\r/g, ' ')
+            .replace(/\\t/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        })
+        .filter(text => text.length > 0)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
+    
+    // Alternative: look for stream objects with text
+    const streamMatches = pdfString.match(/stream\s+([^e]+)endstream/g);
+    if (streamMatches && streamMatches.length > 0) {
+      return streamMatches
+        .map(match => {
+          const content = match.replace(/stream\s+/, '').replace(/endstream/, '');
+          // Try to extract readable text
+          return content
+            .replace(/[^\x20-\x7E]/g, ' ') // Keep only printable ASCII
+            .replace(/\s+/g, ' ')
+            .trim();
+        })
+        .filter(text => text.length > 10) // Only keep substantial text
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    
+    // Final fallback: try to extract any readable text
+    const readableText = buffer.toString('utf8')
+      .replace(/[^\x20-\x7E]/g, ' ') // Keep only printable ASCII
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    return readableText;
+  } catch (error) {
+    console.warn("PDF text extraction failed:", error);
+    // Ultimate fallback
+    return buffer.toString('utf8').trim();
   }
-  return pdfParse;
 };
 
 const isType = (t: string | null, m: string) => (t || "").toLowerCase() === m;
@@ -31,9 +78,15 @@ export async function extractTextFromFile(file: File): Promise<string> {
   // ---- PDF ----
   if (isType(mime, "application/pdf") || ends(name, ".pdf")) {
     try {
-      const pdfParser = await loadPdfParse();
-      const res = await pdfParser(buf);
-      return (res.text || "").trim();
+      const text = await extractPdfText(buf);
+      
+      // If PDF parsing returned empty text, try fallback
+      if (!text) {
+        console.warn("PDF parsing returned empty text, using fallback");
+        return buf.toString("utf8").trim();
+      }
+      
+      return text;
     } catch (error: any) {
       console.error("PDF parsing failed:", error?.message || error);
       // Fallback to utf8 decoding for PDFs

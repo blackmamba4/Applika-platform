@@ -365,7 +365,7 @@ async function buildDefaultMeta(opts: {
 
     // Parsed content components - set clean defaults since we generate only body content
     greeting: `Dear ${collapse(payload.companyName) || 'Company'} Team,`,
-    closing: "Warm regards,",
+    closing: "Sincerely,",
     signatureName: yourName,
     gradientColor: "#10B981", // Default gradient color
   };
@@ -532,7 +532,8 @@ async function POSTHandler(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const body = (await req.json()) as Payload;
+    // Use the already parsed body from validation
+    const body = validation.data as Payload;
 
     const jobTitle = collapse(body?.jobTitle);
     const companyName = collapse(body?.companyName);
