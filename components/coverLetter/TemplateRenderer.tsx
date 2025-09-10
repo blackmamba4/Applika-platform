@@ -6,7 +6,10 @@ import {
   ProfessionalAccentTemplate,
   MinimalElegantTemplate,
   SidebarProfileTemplate,
-  DefaultTemplate
+  DefaultTemplate,
+  CreativeLayoutTemplate,
+  CorporateTemplate,
+  SplitLayoutTemplate
 } from './templates';
 import type { CoverLetterMeta, HeaderElement } from "@/types/coverLetter";
 
@@ -33,24 +36,39 @@ export const TemplateRenderer = ({
     renderStructuredContent
   };
 
-  // Modern Gradient Template
+  // Modern Gradient Template - Diagonal teal shape
   if (meta.template === 'modernGradient') {
     return <ModernGradientTemplate {...templateProps} />;
   }
 
-  // Professional Accent Template
+  // Professional Accent Template - Colorful gradient header
   if (meta.template === 'professionalAccent') {
     return <ProfessionalAccentTemplate {...templateProps} />;
   }
 
-  // Sidebar Profile Template
+  // Sidebar Profile Template - Purple sidebar with profile
   if (meta.template === 'sidebarProfile') {
     return <SidebarProfileTemplate {...templateProps} />;
   }
 
-  // Minimal Elegant Template
+  // Minimal Elegant Template - Clean, sophisticated design
   if (meta.template === 'minimalElegant') {
     return <MinimalElegantTemplate {...templateProps} />;
+  }
+
+  // Creative Layout Template - Bold, modern with patterns
+  if (meta.template === 'creativeLayout') {
+    return <CreativeLayoutTemplate {...templateProps} />;
+  }
+
+  // Corporate Template - Dark header, professional
+  if (meta.template === 'corporate') {
+    return <CorporateTemplate {...templateProps} />;
+  }
+
+  // Split Layout Template - Diagonal color split
+  if (meta.template === 'splitLayout') {
+    return <SplitLayoutTemplate {...templateProps} />;
   }
 
   // Default fallback template

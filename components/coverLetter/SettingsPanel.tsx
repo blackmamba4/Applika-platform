@@ -342,6 +342,22 @@ export const SettingsPanel = ({
               label="Accent Color"
             />
 
+            {/* Gradient Colors - Only show for Modern Gradient template */}
+            {meta.template === 'modernGradient' && (
+              <>
+                <ColorWheel
+                  value={meta.gradientColor1 || meta.accent}
+                  onChange={(color) => setMeta(prev => ({ ...prev, gradientColor1: color }))}
+                  label="Gradient Color 1"
+                />
+                <ColorWheel
+                  value={meta.gradientColor2 || '#6366f1'}
+                  onChange={(color) => setMeta(prev => ({ ...prev, gradientColor2: color }))}
+                  label="Gradient Color 2"
+                />
+              </>
+            )}
+
             {/* A4 Page Break Toggle */}
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Page Layout</h4>

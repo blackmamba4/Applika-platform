@@ -24,7 +24,8 @@ export interface CoverLetterMeta {
   greeting?: string; // "Dear Red Sift Hiring Team,"
   closing?: string; // "Warm regards,"
   signatureName?: string; // "James"
-  gradientColor?: string; // Custom gradient color
+  gradientColor1?: string; // First gradient color
+  gradientColor2?: string; // Second gradient color
   showRecipientBlock: boolean;
   showA4PageBreak?: boolean; // Toggle for A4 page break
   sectionSpacing?: number; // Spacing between sections (0-100)

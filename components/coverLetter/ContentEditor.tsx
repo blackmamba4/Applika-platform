@@ -228,8 +228,6 @@ export const ContentEditor = ({
               className="hover:bg-gray-50 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
               style={{ 
                 marginBottom: `${getSectionSpacing('body')}px`, 
-                width: '100%', 
-                minWidth: '800px',
                 ...getSectionStyles('body')
               }}
               draggable
@@ -389,7 +387,7 @@ export const ContentEditor = ({
   }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, editingSection, editingValue, getSortedSections, startEditing, saveEdit, cancelEdit, updateSection, autoSaveEdit]);
 
   return (
-    <div className="mb-6 w-full" style={{ width: '100%', minWidth: '800px' }}>
+    <div className="mb-6 w-full">
       {renderStructuredContent}
       
       {/* Top Toolbar for Editing */}

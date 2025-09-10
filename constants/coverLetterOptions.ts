@@ -9,29 +9,15 @@ export const FONT_OPTIONS = [
 ];
 
 export const TEMPLATE_OPTIONS = [
-  // Current Templates
-  { id: "modernGradient", name: "Modern Gradient", description: "Stunning gradient header with clean typography", icon: "🌈", category: "Modern" },
-  { id: "professionalAccent", name: "Professional Accent", description: "Clean design with colored accent block", icon: "💼", category: "Professional" },
-  { id: "sidebarProfile", name: "Sidebar Profile", description: "Two-column layout with profile picture", icon: "👤", category: "Layout" },
-  { id: "minimalElegant", name: "Minimal Elegant", description: "Sophisticated minimal design", icon: "✨", category: "Minimal" },
-  
-  // New Professional Templates
-  { id: "corporateClassic", name: "Corporate Classic", description: "Traditional corporate format with formal styling", icon: "🏢", category: "Corporate" },
-  { id: "executiveBold", name: "Executive Bold", description: "Bold header with executive presence", icon: "👔", category: "Executive" },
-  { id: "bankingFormal", name: "Banking Formal", description: "Conservative design for finance industry", icon: "🏦", category: "Finance" },
-  { id: "consultingSharp", name: "Consulting Sharp", description: "Clean lines perfect for consulting", icon: "📊", category: "Consulting" },
-  
-  // Creative Templates
-  { id: "designCreative", name: "Design Creative", description: "Bold colors for creative professionals", icon: "🎨", category: "Creative" },
-  { id: "marketingDynamic", name: "Marketing Dynamic", description: "Eye-catching design for marketing roles", icon: "📈", category: "Marketing" },
-  { id: "startupVibrant", name: "Startup Vibrant", description: "Energetic design for startup culture", icon: "🚀", category: "Startup" },
-  { id: "techModern", name: "Tech Modern", description: "Sleek design for tech professionals", icon: "💻", category: "Tech" },
-  
-  // Industry-Specific Templates
-  { id: "healthcareClean", name: "Healthcare Clean", description: "Clean, trustworthy design for healthcare", icon: "🏥", category: "Healthcare" },
-  { id: "educationWarm", name: "Education Warm", description: "Approachable design for education sector", icon: "🎓", category: "Education" },
-  { id: "nonprofitHeart", name: "Nonprofit Heart", description: "Warm, mission-focused design", icon: "❤️", category: "Nonprofit" },
-  { id: "salesEnergetic", name: "Sales Energetic", description: "High-energy design for sales roles", icon: "💪", category: "Sales" },
+  // Stunning Professional Templates
+  { id: "modernGradient", name: "Modern Gradient", description: "Diagonal teal shape with modern typography", icon: "🌈", category: "Modern" },
+  { id: "professionalAccent", name: "Professional Accent", description: "Colorful gradient header with wave patterns", icon: "💼", category: "Professional" },
+  { id: "sidebarProfile", name: "Sidebar Profile", description: "Purple sidebar with profile picture", icon: "👤", category: "Layout" },
+  { id: "minimalElegant", name: "Minimal Elegant", description: "Sophisticated design with serif typography", icon: "✨", category: "Minimal" },
+  { id: "creativeLayout", name: "Creative Layout", description: "Bold design with dot patterns and modern styling", icon: "🎨", category: "Creative" },
+  { id: "corporate", name: "Corporate", description: "Dark header with professional corporate styling", icon: "🏢", category: "Corporate" },
+  { id: "splitLayout", name: "Split Layout", description: "Diagonal color split with glassmorphism cards", icon: "📐", category: "Layout" },
+  { id: "default", name: "Default", description: "Clean, professional fallback template", icon: "📄", category: "Professional" },
 ];
 
 export const DENSITY_OPTIONS = [
