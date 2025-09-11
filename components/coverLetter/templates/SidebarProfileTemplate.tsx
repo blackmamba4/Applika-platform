@@ -23,7 +23,7 @@ export const SidebarProfileTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: SidebarProfileTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,

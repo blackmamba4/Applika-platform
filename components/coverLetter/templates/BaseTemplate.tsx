@@ -39,6 +39,20 @@ export const BaseTemplate = ({
     const spacing = meta.sectionSpacing || 50; // Default to 50 if not set
     return Math.round(baseSpacing + (spacing / 100) * (maxSpacing - baseSpacing));
   };
+
+  const getHeaderElementFormatting = (elementId: string) => {
+    const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as any || {};
+    return {
+      fontWeight: formatting.isBold ? 'bold' : 'normal',
+      fontStyle: formatting.isItalic ? 'italic' : 'normal',
+      textDecoration: formatting.isUnderlined ? 'underline' : 'none',
+      color: formatting.fontColor || 'inherit',
+      paddingTop: formatting.spacingTop ? `${formatting.spacingTop}px` : '0',
+      paddingBottom: formatting.spacingBottom ? `${formatting.spacingBottom}px` : '0',
+      paddingLeft: formatting.spacingSides ? `${formatting.spacingSides}px` : '0',
+      paddingRight: formatting.spacingSides ? `${formatting.spacingSides}px` : '0'
+    };
+  };
   const handleDragStart = (e: React.DragEvent, elementId: string) => {
     e.dataTransfer.setData('text/plain', elementId);
     e.dataTransfer.effectAllowed = 'move';
@@ -149,6 +163,7 @@ export const BaseTemplate = ({
     renderStructuredContent,
     getDensityStyles,
     getSpacingValue,
+    getHeaderElementFormatting,
     DensityWrapper
   };
 };

@@ -23,7 +23,7 @@ export const MinimalElegantTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: MinimalElegantTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,

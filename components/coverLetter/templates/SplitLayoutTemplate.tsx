@@ -23,7 +23,7 @@ export const SplitLayoutTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: SplitLayoutTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,

@@ -31,8 +31,6 @@ export const ContentEditor = ({
   editingElementId,
   setEditingElementId
 }: ContentEditorProps) => {
-  const [editingSection, setEditingSection] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState("");
 
   // Simple function to get current value for editing
   const getCurrentValue = useCallback((elementId: string) => {
@@ -45,6 +43,67 @@ export const ContentEditor = ({
       default: return '';
     }
   }, [meta]);
+
+  // Function to get actual section data for editing
+  const getSectionData = useCallback((elementId: string) => {
+    // For header elements, get from meta
+    if (['name', 'contact', 'recipient', 'company', 'date'].includes(elementId)) {
+      const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as Partial<ContentSection> || {};
+      return {
+        id: elementId,
+        label: elementId,
+        visible: true,
+        order: 0,
+        isBold: formatting.isBold || false,
+        isItalic: formatting.isItalic || false,
+        isUnderlined: formatting.isUnderlined || false,
+        fontColor: formatting.fontColor || '#000000',
+        spacingTop: formatting.spacingTop || 0,
+        spacingBottom: formatting.spacingBottom || 0,
+        spacingSides: formatting.spacingSides || 0,
+        highlightedText: formatting.highlightedText || '',
+        highlightColor: formatting.highlightColor || '#ffff00'
+      };
+    }
+    
+    // For content sections, get from contentSections
+    const section = contentSections.find(s => s.id === elementId);
+    return section || {
+      id: elementId,
+      label: elementId,
+      visible: true,
+      order: 0,
+      isBold: false,
+      isItalic: false,
+      isUnderlined: false,
+      fontColor: '#000000',
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingSides: 0,
+      highlightedText: '',
+      highlightColor: '#ffff00'
+    };
+  }, [contentSections, meta]);
+
+  // Function to update section properties
+  const updateSectionProperties = useCallback((updates: Partial<ContentSection>) => {
+    if (!editingElementId) return;
+    
+    // For content sections, update the contentSections array
+    if (['greeting', 'body', 'closing', 'signature'].includes(editingElementId)) {
+      updateSection(editingElementId, updates);
+    }
+    // For header elements, store formatting in meta
+    else if (['name', 'contact', 'recipient', 'company', 'date'].includes(editingElementId)) {
+      setMeta(prev => ({
+        ...prev,
+        [`${editingElementId}Formatting`]: {
+          ...prev[`${editingElementId}Formatting` as keyof typeof prev],
+          ...updates
+        }
+      }));
+    }
+  }, [editingElementId, updateSection, setMeta]);
 
   // Simple save function
   const saveEdit = useCallback((value: string) => {
@@ -137,29 +196,9 @@ export const ContentEditor = ({
   };
 
   const startEditing = useCallback((sectionId: string, currentValue: string) => {
-    setEditingSection(sectionId);
-    setEditingValue(currentValue);
+    setEditingElementId(sectionId);
     setIsEditing(true);
-  }, [setIsEditing]);
-
-  const autoSaveEdit = useCallback((value: string) => {
-    if (editingSection && value !== undefined) {
-      switch (editingSection) {
-        case 'greeting':
-          setMeta(prev => ({ ...prev, greeting: value }));
-          break;
-        case 'closing':
-          setMeta(prev => ({ ...prev, closing: value }));
-          break;
-        case 'signature':
-          setMeta(prev => ({ ...prev, signatureName: value }));
-          break;
-        case 'body':
-          setContent(value);
-          break;
-      }
-    }
-  }, [editingSection, setMeta, setContent]);
+  }, [setEditingElementId, setIsEditing]);
 
   const updateSection = useCallback((sectionId: string, updates: Partial<ContentSection>) => {
     setContentSections(prev => 
@@ -237,13 +276,12 @@ export const ContentEditor = ({
                     <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="flex-1">
-                    {editingSection === 'greeting' ? (
+                    {editingElementId === 'greeting' ? (
                       <input
                         type="text"
-                        value={editingValue}
+                        value={getCurrentValue('greeting')}
                         onChange={(e) => {
-                          setEditingValue(e.target.value);
-                          autoSaveEdit(e.target.value);
+                          setMeta(prev => ({ ...prev, greeting: e.target.value }));
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Escape') {
@@ -290,12 +328,11 @@ export const ContentEditor = ({
                   <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="flex-1 w-full">
-                  {editingSection === 'body' ? (
+                  {editingElementId === 'body' ? (
                     <textarea
-                      value={editingValue}
+                      value={getCurrentValue('body')}
                       onChange={(e) => {
-                        setEditingValue(e.target.value);
-                        autoSaveEdit(e.target.value);
+                        setContent(e.target.value);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
@@ -343,13 +380,12 @@ export const ContentEditor = ({
                     <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="flex-1">
-                    {editingSection === 'closing' ? (
+                    {editingElementId === 'closing' ? (
                       <input
                         type="text"
-                        value={editingValue}
+                        value={getCurrentValue('closing')}
                         onChange={(e) => {
-                          setEditingValue(e.target.value);
-                          autoSaveEdit(e.target.value);
+                          setMeta(prev => ({ ...prev, closing: e.target.value }));
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Escape') {
@@ -397,13 +433,12 @@ export const ContentEditor = ({
                     <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="flex-1">
-                    {editingSection === 'signature' ? (
+                    {editingElementId === 'signature' ? (
                       <input
                         type="text"
-                        value={editingValue}
+                        value={getCurrentValue('signature')}
                         onChange={(e) => {
-                          setEditingValue(e.target.value);
-                          autoSaveEdit(e.target.value);
+                          setMeta(prev => ({ ...prev, signatureName: e.target.value }));
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Escape') {
@@ -434,7 +469,7 @@ export const ContentEditor = ({
     });
     
     return elements;
-  }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, editingSection, editingValue, getSortedSections, startEditing, saveEdit, cancelEdit, updateSection, autoSaveEdit]);
+  }, [contentSections, meta.greeting, meta.closing, meta.signatureName, content, getSortedSections, startEditing, saveEdit, cancelEdit, updateSection]);
 
   return (
     <div className="mb-6 w-full">
@@ -444,25 +479,11 @@ export const ContentEditor = ({
       {editingElementId && (
         <InlineEditingPanel
           sectionId={editingElementId}
-          section={{
-            id: editingElementId,
-            label: editingElementId,
-            visible: true,
-            order: 0,
-            isBold: false,
-            isItalic: false,
-            isUnderlined: false,
-            fontColor: '#000000',
-            spacingTop: 0,
-            spacingBottom: 0,
-            spacingSides: 0,
-            highlightedText: '',
-            highlightColor: '#ffff00'
-          }}
+          section={getSectionData(editingElementId)}
           currentValue={getCurrentValue(editingElementId)}
           onSave={saveEdit}
           onCancel={cancelEdit}
-          onUpdateSection={() => {}} // Not needed for header elements
+          onUpdateSection={updateSectionProperties}
         />
       )}
     </div>

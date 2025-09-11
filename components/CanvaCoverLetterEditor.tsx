@@ -27,10 +27,66 @@ export default function CanvaCoverLetterEditor({
   
   // Content sections management
   const [contentSections, setContentSections] = useState<ContentSection[]>([
-    { id: 'greeting', label: 'Greeting', visible: true, order: 0 },
-    { id: 'body', label: 'Body Content', visible: true, order: 1 },
-    { id: 'closing', label: 'Closing', visible: true, order: 2 },
-    { id: 'signature', label: 'Signature', visible: true, order: 3 }
+    { 
+      id: 'greeting', 
+      label: 'Greeting', 
+      visible: true, 
+      order: 0,
+      isBold: false,
+      isItalic: false,
+      isUnderlined: false,
+      fontColor: '#000000',
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingSides: 0,
+      highlightedText: '',
+      highlightColor: '#ffff00'
+    },
+    { 
+      id: 'body', 
+      label: 'Body Content', 
+      visible: true, 
+      order: 1,
+      isBold: false,
+      isItalic: false,
+      isUnderlined: false,
+      fontColor: '#000000',
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingSides: 0,
+      highlightedText: '',
+      highlightColor: '#ffff00'
+    },
+    { 
+      id: 'closing', 
+      label: 'Closing', 
+      visible: true, 
+      order: 2,
+      isBold: false,
+      isItalic: false,
+      isUnderlined: false,
+      fontColor: '#000000',
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingSides: 0,
+      highlightedText: '',
+      highlightColor: '#ffff00'
+    },
+    { 
+      id: 'signature', 
+      label: 'Signature', 
+      visible: true, 
+      order: 3,
+      isBold: false,
+      isItalic: false,
+      isUnderlined: false,
+      fontColor: '#000000',
+      spacingTop: 0,
+      spacingBottom: 0,
+      spacingSides: 0,
+      highlightedText: '',
+      highlightColor: '#ffff00'
+    }
   ]);
 
   // Header elements management

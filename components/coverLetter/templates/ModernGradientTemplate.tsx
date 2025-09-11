@@ -23,7 +23,7 @@ export const ModernGradientTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: ModernGradientTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,

@@ -23,7 +23,7 @@ export const CorporateTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: CorporateTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
@@ -48,6 +48,7 @@ export const CorporateTemplate = ({
                     value={meta.yourName}
                     onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
                     className="text-4xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors text-white"
+                    style={getHeaderElementFormatting('name')}
                     placeholder="Your Name"
                   />
                   <div className="w-24 h-1 bg-white mt-2"></div>
@@ -60,7 +61,7 @@ export const CorporateTemplate = ({
               {renderDraggableHeaderElement('contact',
                 <div className="space-y-1">
                   {meta.contactLine?.split('\n').map((line, index) => (
-                    <div key={index} className="text-sm text-gray-300">{line}</div>
+                    <div key={index} className="text-sm text-gray-300" style={getHeaderElementFormatting('contact')}>{line}</div>
                   ))}
                 </div>
               )}
@@ -82,6 +83,7 @@ export const CorporateTemplate = ({
                   value={meta.recipientName || ''}
                   onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
                   className="text-xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={getHeaderElementFormatting('recipient')}
                   placeholder="Hiring Manager Name"
                 />
               </div>
@@ -96,6 +98,7 @@ export const CorporateTemplate = ({
                     value={meta.companyName || ''}
                     onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
                     className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors w-full"
+                    style={getHeaderElementFormatting('company')}
                     placeholder="Company Name"
                   />
                 </div>
@@ -119,6 +122,7 @@ export const CorporateTemplate = ({
                   value={meta.date || ''}
                   onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
                   className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={getHeaderElementFormatting('date')}
                   placeholder="Date"
                 />
               </div>

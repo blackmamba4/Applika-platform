@@ -23,7 +23,7 @@ export const CreativeLayoutTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: CreativeLayoutTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,

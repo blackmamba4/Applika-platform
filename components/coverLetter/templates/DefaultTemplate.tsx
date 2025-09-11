@@ -23,7 +23,7 @@ export const DefaultTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: DefaultTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
@@ -44,7 +44,7 @@ export const DefaultTemplate = ({
               value={meta.yourName}
               onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
               className="text-4xl font-bold mb-2 bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-              style={{ color: meta.accent }}
+              style={{ color: meta.accent, ...getHeaderElementFormatting('name') }}
               placeholder="Your Name"
             />
             <div className="w-20 h-1 mx-auto" style={{ backgroundColor: meta.accent }}></div>
@@ -57,6 +57,7 @@ export const DefaultTemplate = ({
               value={meta.contactLine}
               onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
               className="text-sm text-gray-600 bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none"
+              style={getHeaderElementFormatting('contact')}
               rows={3}
               placeholder="Contact Information"
             />
@@ -70,6 +71,7 @@ export const DefaultTemplate = ({
               value={meta.recipientName || ''}
               onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
               className="text-lg font-semibold bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+              style={getHeaderElementFormatting('recipient')}
               placeholder="Hiring Manager Name"
             />
           </div>
@@ -82,6 +84,7 @@ export const DefaultTemplate = ({
               value={meta.companyName || ''}
               onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
               className="text-base font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+              style={getHeaderElementFormatting('company')}
               placeholder="Company Name"
             />
             <textarea
@@ -101,6 +104,7 @@ export const DefaultTemplate = ({
               value={meta.date || ''}
               onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
               className="text-sm font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+              style={getHeaderElementFormatting('date')}
               placeholder="Date"
             />
           </div>

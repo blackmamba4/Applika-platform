@@ -23,7 +23,7 @@ export const ProfessionalAccentTemplate = ({
   onHeaderElementClick,
   editingElementId
 }: ProfessionalAccentTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
+  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
@@ -57,6 +57,7 @@ export const ProfessionalAccentTemplate = ({
                   value={meta.yourName}
                   onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
                   className="text-4xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors text-white w-full"
+                  style={getHeaderElementFormatting('name')}
                   placeholder="Your Name"
                 />
               </div>
@@ -68,7 +69,7 @@ export const ProfessionalAccentTemplate = ({
             {renderDraggableHeaderElement('contact',
               <div className="space-y-1">
                 {meta.contactLine?.split('\n').map((line, index) => (
-                  <div key={index} className="text-sm font-medium text-white/90">{line}</div>
+                  <div key={index} className="text-sm font-medium text-white/90" style={getHeaderElementFormatting('contact')}>{line}</div>
                 ))}
               </div>
             )}
