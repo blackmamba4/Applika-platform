@@ -86,6 +86,16 @@ export const ContentEditor = ({
   }, [contentSections, meta]);
 
   // Function to update section properties
+  const updateSection = useCallback((sectionId: string, updates: Partial<ContentSection>) => {
+    setContentSections(prev => 
+      prev.map(section => 
+        section.id === sectionId 
+          ? { ...section, ...updates }
+          : section
+      )
+    );
+  }, [setContentSections]);
+
   const updateSectionProperties = useCallback((updates: Partial<ContentSection>) => {
     if (!editingElementId) return;
     
@@ -199,16 +209,6 @@ export const ContentEditor = ({
     setEditingElementId(sectionId);
     setIsEditing(true);
   }, [setEditingElementId, setIsEditing]);
-
-  const updateSection = useCallback((sectionId: string, updates: Partial<ContentSection>) => {
-    setContentSections(prev => 
-      prev.map(section => 
-        section.id === sectionId 
-          ? { ...section, ...updates }
-          : section
-      )
-    );
-  }, [setContentSections]);
 
   const handleDragStart = useCallback((e: React.DragEvent, sectionId: string) => {
     e.dataTransfer.setData('text/plain', sectionId);
