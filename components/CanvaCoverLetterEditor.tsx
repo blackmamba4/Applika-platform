@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Download, Palette } from "lucide-react";
+import { ArrowLeft, Download, Palette, Save } from "lucide-react";
 import { useToast } from "@/components/ToastGlobal";
 import { SettingsPanel } from "./coverLetter/SettingsPanel";
 import { ContentEditor } from "./coverLetter/ContentEditor";
@@ -69,9 +69,7 @@ export default function CanvaCoverLetterEditor({
 
   const toast = useToast();
 
-  // Auto-save functionality
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+  // Manual save functionality
   const saveLetter = useCallback(async () => {
     if (isSaving) return;
     
@@ -103,23 +101,6 @@ export default function CanvaCoverLetterEditor({
       setIsSaving(false);
     }
   }, [letterId, title, content, meta, isSaving, toast]);
-
-  // Auto-save on changes
-  useEffect(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    saveTimeoutRef.current = setTimeout(() => {
-      saveLetter();
-    }, 2000);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [title, content, meta]);
 
   const exportToPDF = useCallback(async () => {
     try {
@@ -158,26 +139,34 @@ export default function CanvaCoverLetterEditor({
                   </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                onClick={() => setShowSettings(!showSettings)}
+            <button
+              onClick={saveLetter}
+              disabled={isSaving}
+              className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            >
+              <Save className="h-5 w-5 text-gray-600" />
+            </button>
+            
+            <button
+              onClick={() => setShowSettings(!showSettings)}
               className={`p-2 rounded transition-colors ${
                 showSettings ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
               }`}
             >
               <Palette className="h-5 w-5" />
-                          </button>
-              
-                        <button
+            </button>
+            
+            <button
               onClick={exportToPDF}
               className="p-2 hover:bg-gray-100 rounded transition-colors"
-              >
+            >
               <Download className="h-5 w-5 text-gray-600" />
-                        </button>
-              
+            </button>
+            
             {isSaving && (
               <div className="text-sm text-gray-500 hidden sm:block">Saving...</div>
-                                )}
-                              </div>
+            )}
+          </div>
                     </div>
                   </div>
 

@@ -82,22 +82,26 @@ export const CorporateTemplate = ({
             )}
             
             {renderDraggableHeaderElement('company',
-              <div className="space-y-2">
+              <div className="space-y-2 block">
                 <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>Company:</div>
-                <input
-                  type="text"
-                  value={meta.companyName || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
-                  className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company Name"
-                />
-                <textarea
-                  value={meta.companyAddress || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none"
-                  rows={2}
-                  placeholder="Company Address"
-                />
+                <div className="block">
+                  <input
+                    type="text"
+                    value={meta.companyName || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
+                    className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors w-full"
+                    placeholder="Company Name"
+                  />
+                </div>
+                <div className="block">
+                  <textarea
+                    value={meta.companyAddress || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                    className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none text-left w-full"
+                    rows={2}
+                    placeholder="Company Address"
+                  />
+                </div>
               </div>
             )}
             
