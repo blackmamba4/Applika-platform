@@ -10,6 +10,8 @@ interface ProfessionalAccentTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const ProfessionalAccentTemplate = ({
@@ -17,14 +19,18 @@ export const ProfessionalAccentTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: ProfessionalAccentTemplateProps) => {
   const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
     setHeaderElements,
-    renderStructuredContent
+    renderStructuredContent,
+    onHeaderElementClick,
+    editingElementId
   });
 
   return (

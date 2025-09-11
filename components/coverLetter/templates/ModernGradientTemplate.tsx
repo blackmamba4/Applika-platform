@@ -10,6 +10,8 @@ interface ModernGradientTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const ModernGradientTemplate = ({
@@ -17,14 +19,18 @@ export const ModernGradientTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: ModernGradientTemplateProps) => {
   const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
     setHeaderElements,
-    renderStructuredContent
+    renderStructuredContent,
+    onHeaderElementClick,
+    editingElementId
   });
 
   return (

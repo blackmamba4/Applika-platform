@@ -10,6 +10,8 @@ interface BaseTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const BaseTemplate = ({
@@ -17,7 +19,9 @@ export const BaseTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: BaseTemplateProps) => {
   const getDensityStyles = () => {
     const densityMap = {
@@ -72,17 +76,51 @@ export const BaseTemplate = ({
     const element = headerElements.find(e => e.id === elementId);
     if (!element || !element.visible) return null;
 
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      
+      if (onHeaderElementClick) {
+        // Get the current value based on element type
+        let currentValue = '';
+        switch (elementId) {
+          case 'name':
+            currentValue = meta.yourName || '';
+            break;
+          case 'contact':
+            currentValue = meta.contactLine || '';
+            break;
+          case 'recipient':
+            currentValue = meta.recipientName || '';
+            break;
+          case 'company':
+            currentValue = meta.companyName || '';
+            break;
+          case 'date':
+            currentValue = meta.date || '';
+            break;
+          default:
+            currentValue = '';
+        }
+        console.log('BaseTemplate: Calling onHeaderElementClick with', elementId, currentValue);
+        onHeaderElementClick(elementId, currentValue);
+      }
+    };
+
     return (
       <div
         key={elementId}
-        className={`group relative hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all ${className}`}
-        draggable
-        onDragStart={(e) => handleDragStart(e, elementId)}
-        onDragOver={handleDragOver}
-        onDrop={(e) => handleDrop(e, elementId)}
+        className={`group relative hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all cursor-pointer ${className}`}
+        onClick={handleClick}
+        data-editable-element="true"
       >
         <div className="absolute -left-8 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors">
+          <div 
+            className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, elementId)}
+          >
             <GripVertical className="h-4 w-4 text-gray-400" />
           </div>
         </div>

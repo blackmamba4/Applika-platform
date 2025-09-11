@@ -10,6 +10,8 @@ interface SidebarProfileTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const SidebarProfileTemplate = ({
@@ -17,14 +19,18 @@ export const SidebarProfileTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: SidebarProfileTemplateProps) => {
   const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
     setHeaderElements,
-    renderStructuredContent
+    renderStructuredContent,
+    onHeaderElementClick,
+    editingElementId
   });
 
   return (

@@ -23,6 +23,7 @@ export default function CanvaCoverLetterEditor({
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "structure" | "design" | "details">("content");
   const [isEditing, setIsEditing] = useState(false);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
   
   // Content sections management
   const [contentSections, setContentSections] = useState<ContentSection[]>([
@@ -60,10 +61,9 @@ export default function CanvaCoverLetterEditor({
     company: "Company Name",
     dateLine: new Date().toLocaleDateString(),
     greeting: "Dear Hiring Manager,",
-    closing: "Sincerely,",
-    signatureName: "Your Name",
-    gradientColor: "#10B981",
-    showA4PageBreak: false,
+      closing: "Sincerely,",
+      signatureName: "Your Name",
+      showA4PageBreak: false,
     ...initialMeta,
   });
 
@@ -101,6 +101,13 @@ export default function CanvaCoverLetterEditor({
       setIsSaving(false);
     }
   }, [letterId, title, content, meta, isSaving, toast]);
+
+  // Handle header element clicks for inline editing
+  const handleHeaderElementClick = useCallback((elementId: string, currentValue: string) => {
+    // Always switch to the clicked element - don't prevent any clicks
+    setEditingElementId(elementId);
+    setIsEditing(true);
+  }, [editingElementId]);
 
   const exportToPDF = useCallback(async () => {
     try {
@@ -202,6 +209,8 @@ export default function CanvaCoverLetterEditor({
                   setMeta={setMeta}
                   headerElements={headerElements}
                   setHeaderElements={setHeaderElements}
+                  onHeaderElementClick={handleHeaderElementClick}
+                  editingElementId={editingElementId}
                   renderStructuredContent={
                     <ContentEditor
                       content={content}
@@ -212,6 +221,8 @@ export default function CanvaCoverLetterEditor({
                       setContentSections={setContentSections}
                       isEditing={isEditing}
                       setIsEditing={setIsEditing}
+                      editingElementId={editingElementId}
+                      setEditingElementId={setEditingElementId}
                     />
                   }
                 />

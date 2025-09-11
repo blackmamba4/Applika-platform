@@ -10,6 +10,8 @@ interface DefaultTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const DefaultTemplate = ({
@@ -17,14 +19,18 @@ export const DefaultTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: DefaultTemplateProps) => {
   const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
     setHeaderElements,
-    renderStructuredContent
+    renderStructuredContent,
+    onHeaderElementClick,
+    editingElementId
   });
 
   return (

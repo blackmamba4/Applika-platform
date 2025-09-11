@@ -1,7 +1,7 @@
 // components/coverLetter/ContentEditor.tsx
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { GripVertical } from "lucide-react";
 import { InlineEditingPanel } from "./InlineEditingPanel";
 import type { CoverLetterMeta, ContentSection } from "@/types/coverLetter";
@@ -15,6 +15,8 @@ interface ContentEditorProps {
   setContentSections: React.Dispatch<React.SetStateAction<ContentSection[]>>;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  editingElementId: string | null;
+  setEditingElementId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export const ContentEditor = ({
@@ -25,10 +27,85 @@ export const ContentEditor = ({
   contentSections,
   setContentSections,
   isEditing,
-  setIsEditing
+  setIsEditing,
+  editingElementId,
+  setEditingElementId
 }: ContentEditorProps) => {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
+
+  // Simple function to get current value for editing
+  const getCurrentValue = useCallback((elementId: string) => {
+    switch (elementId) {
+      case 'name': return meta.yourName || '';
+      case 'contact': return meta.contactLine || '';
+      case 'recipient': return meta.recipientName || '';
+      case 'company': return meta.companyName || '';
+      case 'date': return meta.date || '';
+      default: return '';
+    }
+  }, [meta]);
+
+  // Simple save function
+  const saveEdit = useCallback((value: string) => {
+    if (editingElementId) {
+      switch (editingElementId) {
+        case 'name':
+          setMeta(prev => ({ ...prev, yourName: value }));
+          break;
+        case 'contact':
+          setMeta(prev => ({ ...prev, contactLine: value }));
+          break;
+        case 'recipient':
+          setMeta(prev => ({ ...prev, recipientName: value }));
+          break;
+        case 'company':
+          setMeta(prev => ({ ...prev, companyName: value }));
+          break;
+        case 'date':
+          setMeta(prev => ({ ...prev, date: value }));
+          break;
+      }
+    }
+    setEditingElementId(null);
+    setIsEditing(false);
+  }, [editingElementId, setMeta, setIsEditing]);
+
+  // Simple cancel function
+  const cancelEdit = useCallback(() => {
+    setEditingElementId(null);
+    setIsEditing(false);
+  }, [setEditingElementId, setIsEditing]);
+
+  // Handle clicks outside to close editing
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      // Check if click is on any editable element using data attribute
+      const isClickOnEditableElement = target.closest('[data-editable-element="true"]');
+      
+      // Check if click is on the inline editing panel
+      const isClickOnInlinePanel = target.closest('[data-inline-editing-panel]');
+      
+      // Only close if clicking on truly empty space (not on any editable element or panel)
+      if (!isClickOnEditableElement && !isClickOnInlinePanel && editingElementId) {
+        cancelEdit();
+      }
+    };
+  
+    if (editingElementId) {
+      // Add a small delay to prevent immediate closing on double-clicks
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside);
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [editingElementId, cancelEdit]);
 
   // Helper functions for individual section styling
   const getSectionSpacing = (sectionId: string) => {
@@ -65,28 +142,6 @@ export const ContentEditor = ({
     setIsEditing(true);
   }, [setIsEditing]);
 
-  const saveEdit = useCallback((value: string) => {
-    if (editingSection && value !== undefined) {
-      switch (editingSection) {
-        case 'greeting':
-          setMeta(prev => ({ ...prev, greeting: value }));
-          break;
-        case 'closing':
-          setMeta(prev => ({ ...prev, closing: value }));
-          break;
-        case 'signature':
-          setMeta(prev => ({ ...prev, signatureName: value }));
-          break;
-        case 'body':
-          setContent(value);
-          break;
-      }
-    }
-    setEditingSection(null);
-    setEditingValue("");
-    setIsEditing(false);
-  }, [editingSection, setMeta, setContent, setIsEditing]);
-
   const autoSaveEdit = useCallback((value: string) => {
     if (editingSection && value !== undefined) {
       switch (editingSection) {
@@ -105,12 +160,6 @@ export const ContentEditor = ({
       }
     }
   }, [editingSection, setMeta, setContent]);
-
-  const cancelEdit = useCallback(() => {
-    setEditingSection(null);
-    setEditingValue("");
-    setIsEditing(false);
-  }, [setIsEditing]);
 
   const updateSection = useCallback((sectionId: string, updates: Partial<ContentSection>) => {
     setContentSections(prev => 
@@ -170,18 +219,19 @@ export const ContentEditor = ({
         case 'greeting':
           if (meta.greeting) {
             elements.push(
-              <div 
-                key="greeting" 
-                className="font-medium hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
-                style={{ 
-                  marginBottom: `${getSectionSpacing('greeting')}px`,
-                  ...getSectionStyles('greeting')
-                }}
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'greeting')}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, 'greeting')}
-              >
+               <div 
+                 key="greeting" 
+                 className="font-medium hover:bg-gray-50 p-2 rounded border-2 border-transparent hover:border-gray-200 transition-all group"
+                 style={{ 
+                   marginBottom: `${getSectionSpacing('greeting')}px`,
+                   ...getSectionStyles('greeting')
+                 }}
+                 draggable
+                 onDragStart={(e) => handleDragStart(e, 'greeting')}
+                 onDragOver={handleDragOver}
+                 onDrop={(e) => handleDrop(e, 'greeting')}
+                 data-editable-element="true"
+               >
                 <div className="flex items-center gap-2">
                   <div className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors">
                     <GripVertical className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -233,7 +283,7 @@ export const ContentEditor = ({
               draggable
               onDragStart={(e) => handleDragStart(e, 'body')}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 'body')}
+                 data-editable-element="true"
             >
               <div className="flex items-start gap-2">
                 <div className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors flex-shrink-0">
@@ -286,7 +336,7 @@ export const ContentEditor = ({
                 draggable
                 onDragStart={(e) => handleDragStart(e, 'closing')}
                 onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, 'closing')}
+                 data-editable-element="true"
               >
                 <div className="flex items-center gap-2">
                   <div className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors">
@@ -340,7 +390,7 @@ export const ContentEditor = ({
                 draggable
                 onDragStart={(e) => handleDragStart(e, 'signature')}
                 onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, 'signature')}
+                 data-editable-element="true"
               >
                 <div className="flex items-center gap-2">
                   <div className="cursor-move p-1 rounded hover:bg-gray-200 transition-colors">
@@ -390,15 +440,29 @@ export const ContentEditor = ({
     <div className="mb-6 w-full">
       {renderStructuredContent}
       
-      {/* Top Toolbar for Editing */}
-      {editingSection && (
+      {/* Inline Editing Panel */}
+      {editingElementId && (
         <InlineEditingPanel
-          sectionId={editingSection}
-          section={contentSections.find(s => s.id === editingSection)!}
-          currentValue={editingValue}
-          onSave={autoSaveEdit}
+          sectionId={editingElementId}
+          section={{
+            id: editingElementId,
+            label: editingElementId,
+            visible: true,
+            order: 0,
+            isBold: false,
+            isItalic: false,
+            isUnderlined: false,
+            fontColor: '#000000',
+            spacingTop: 0,
+            spacingBottom: 0,
+            spacingSides: 0,
+            highlightedText: '',
+            highlightColor: '#ffff00'
+          }}
+          currentValue={getCurrentValue(editingElementId)}
+          onSave={saveEdit}
           onCancel={cancelEdit}
-          onUpdateSection={(updates) => updateSection(editingSection, updates)}
+          onUpdateSection={() => {}} // Not needed for header elements
         />
       )}
     </div>

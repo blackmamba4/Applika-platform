@@ -10,6 +10,8 @@ interface CreativeLayoutTemplateProps {
   headerElements: HeaderElement[];
   setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   renderStructuredContent: React.ReactNode;
+  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  editingElementId?: string | null;
 }
 
 export const CreativeLayoutTemplate = ({
@@ -17,14 +19,18 @@ export const CreativeLayoutTemplate = ({
   setMeta,
   headerElements,
   setHeaderElements,
-  renderStructuredContent
+  renderStructuredContent,
+  onHeaderElementClick,
+  editingElementId
 }: CreativeLayoutTemplateProps) => {
   const { renderDraggableHeaderElement, DensityWrapper } = BaseTemplate({
     meta,
     setMeta,
     headerElements,
     setHeaderElements,
-    renderStructuredContent
+    renderStructuredContent,
+    onHeaderElementClick,
+    editingElementId
   });
 
   return (

@@ -29,25 +29,6 @@ export const InlineEditingPanel = ({
     setEditValue(currentValue);
   }, [currentValue]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Only close if clicking outside the toolbar
-      if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    };
-
-    // Add a small delay to prevent immediate closing when opening
-    const timeoutId = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 200);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onCancel]);
-
   const handleSave = () => {
     onSave(editValue);
   };
