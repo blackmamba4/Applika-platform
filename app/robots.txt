@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://applika.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Disallow admin areas
+Disallow: /api/
+Disallow: /Dashboard/
+Disallow: /auth/
+
+# Allow important pages
+Allow: /pricing
+Allow: /pricing/success
