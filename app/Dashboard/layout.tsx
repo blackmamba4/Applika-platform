@@ -62,18 +62,36 @@ export default function DashboardLayout({
         </div>
 
         <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
+          <div className="flex items-center gap-8">
+            <p>
+              Powered by{" "}
+              <a
+                href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
+                target="_blank"
+                className="font-bold hover:underline"
+                rel="noreferrer"
+              >
+                Supabase
+              </a>
+            </p>
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
+            <div className="flex gap-6 text-xs">
+              <Link
+                href="/privacy"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+              >
+                Terms of Service
+              </Link>
+            </div>
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
+            <ThemeSwitcher />
+          </div>
         </footer>
       </div>
       </ToastGlobal>

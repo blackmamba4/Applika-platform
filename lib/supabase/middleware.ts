@@ -41,7 +41,10 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/favicon") ||
     path.startsWith("/auth/callback") ||
     path.startsWith("/auth/error") ||
-    path.startsWith("/auth/confirm");
+    path.startsWith("/auth/confirm") ||
+    path === "/privacy" ||
+    path === "/terms" ||
+    path === "/pricing";
 
   // our delete API must be reachable even when not logged in (it will 401 itself)
   const isAllowedApi =
