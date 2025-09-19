@@ -1,0 +1,29 @@
+# Allow everything in this project
+# This file ensures Cursor doesn't ignore the project files
+
+# Only ignore common build/cache directories
+node_modules/
+.next/
+.git/
+.DS_Store
+*.log
+
+# But allow all source files including env files
+!app/
+!components/
+!lib/
+!types/
+!constants/
+!supabase/
+!*.ts
+!*.tsx
+!*.js
+!*.jsx
+!*.json
+!*.md
+!*.css
+!*.scss
+!*.html
+!.env.local
+!.env.production
+!.env.development
