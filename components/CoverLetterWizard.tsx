@@ -671,42 +671,77 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
                     <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
                     <span>No CV uploaded yet</span>
                   </div>
-                  <div className="flex gap-3">
-                    <label className="flex-1 cursor-pointer">
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx,.txt"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) uploadCv(file);
-                        }}
-                        className="hidden"
-                        disabled={cvUploading}
+                  
+                  {/* Show text area if user clicked "Paste Instead" */}
+                  {cvMode === "manual" ? (
+                    <div className="space-y-3">
+                      <textarea 
+                        rows={8} 
+                        placeholder="Paste your CV content here... (This will be used to personalize your cover letter)" 
+                        value={cvText} 
+                        onChange={(e) => setCvText(e.target.value)} 
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all resize-none" 
                       />
-                      <div className={`w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-6 text-center text-sm transition-all hover:border-violet-400 hover:bg-violet-50 ${
-                        cvUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                      }`}>
-                        {cvUploading ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-violet-600">Uploading...</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">Or upload a file instead</span>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.txt"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadCv(file);
+                            }}
+                            className="hidden"
+                            disabled={cvUploading}
+                          />
+                          <div className={`px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors ${
+                            cvUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          }`}>
+                            {cvUploading ? 'Uploading...' : '📄 Upload File'}
                           </div>
-                        ) : (
-                          <div className="text-gray-600">
-                            <div className="font-medium">📄 Upload your CV</div>
-                            <div className="text-xs mt-1">PDF, DOC, DOCX, or TXT</div>
-                          </div>
-                        )}
+                        </label>
                       </div>
-                    </label>
-                    <button 
-                      type="button" 
-                      onClick={() => setCvMode("manual")} 
-                      className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Paste Instead
-                    </button>
-                  </div>
+                    </div>
+                  ) : (
+                    /* Show upload area and paste button */
+                    <div className="flex gap-3">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) uploadCv(file);
+                          }}
+                          className="hidden"
+                          disabled={cvUploading}
+                        />
+                        <div className={`w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-6 text-center text-sm transition-all hover:border-violet-400 hover:bg-violet-50 ${
+                          cvUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}>
+                          {cvUploading ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-violet-600">Uploading...</span>
+                            </div>
+                          ) : (
+                            <div className="text-gray-600">
+                              <div className="font-medium">📄 Upload your CV</div>
+                              <div className="text-xs mt-1">PDF, DOC, DOCX, or TXT</div>
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                      <button 
+                        type="button" 
+                        onClick={() => setCvMode("manual")} 
+                        className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Paste Instead
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
