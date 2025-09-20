@@ -111,6 +111,44 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
   const [jobSummary, setJobSummary] = useState("");
   const [companyAbout, setCompanyAbout] = useState("");
 
+  // CV detection and upload
+  const [hasUploadedCv, setHasUploadedCv] = useState<boolean | null>(null);
+  const [cvUploading, setCvUploading] = useState(false);
+
+  // Check if user has uploaded CV
+  useEffect(() => {
+    async function checkCvStatus() {
+      try {
+        const res = await fetch("/api/cv/resolve");
+        setHasUploadedCv(res.ok);
+      } catch {
+        setHasUploadedCv(false);
+      }
+    }
+    checkCvStatus();
+  }, []);
+
+  // CV upload function
+  async function uploadCv(file: File) {
+    setCvUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/cv/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const msg = await res.text();
+        toast.show({ message: `Upload failed: ${msg}` });
+        return;
+      }
+      setHasUploadedCv(true);
+      toast.show({ message: "CV uploaded successfully!" });
+    } catch (e: any) {
+      toast.show({ message: e?.message || "Upload failed" });
+    } finally {
+      setCvUploading(false);
+    }
+  }
+
   // Step 2 fetch states
   const [resolvingHomepage, setResolvingHomepage] = useState(false);
   const [resolveErr, setResolveErr] = useState<string | null>(null);
@@ -234,7 +272,16 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
       if (data?.companyAbout) setCompanyAbout(data.companyAbout);
       if (data?.companyHomepage) setCompanyHomepage(data.companyHomepage);
     } catch (e: any) {
-      setResolveErr(e?.message || "Could not fetch company about");
+      const errorMessage = e?.message || "Could not fetch company information";
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        setResolveErr("Company website not found. Please check the URL or try a different one.");
+      } else if (errorMessage.includes("timeout") || errorMessage.includes("network")) {
+        setResolveErr("Network error. Please check your connection and try again.");
+      } else if (errorMessage.includes("invalid") || errorMessage.includes("malformed")) {
+        setResolveErr("Invalid URL format. Please enter a valid website address.");
+      } else {
+        setResolveErr("Failed to fetch company information. Please check the URL or enter details manually.");
+      }
     } finally {
       setResolvingHomepage(false);
     }
@@ -560,53 +607,107 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
             </div>
             
             <div className="space-y-4">
-              <p className="text-sm text-gray-600 mb-4">
-                {cvMode === "auto" 
-                  ? "We'll use your uploaded CV to personalize the cover letter" 
-                  : "Or paste your CV content directly"
-                }
-              </p>
-              
-              {/* Mode toggle */}
-              <div className="flex bg-white rounded-xl p-1 border border-gray-200">
-                <button 
-                  type="button" 
-                  onClick={() => setCvMode("auto")} 
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                    cvMode === "auto" 
-                      ? "bg-violet-500 text-white shadow-sm" 
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Use Uploaded CV
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setCvMode("manual")} 
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                    cvMode === "manual" 
-                      ? "bg-violet-500 text-white shadow-sm" 
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Paste CV Content
-                </button>
-              </div>
-
-              {/* CV content */}
-              {cvMode === "auto" ? (
-                <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span>Using your uploaded CV from profile</span>
+              {/* CV status and content */}
+              {hasUploadedCv === null ? (
+                <div className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
+                  <span>Checking CV status...</span>
                 </div>
+              ) : hasUploadedCv ? (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {cvMode === "auto" 
+                      ? "We'll use your uploaded CV to personalize the cover letter" 
+                      : "Or paste your CV content directly"
+                    }
+                  </p>
+                  
+                  {/* Mode toggle */}
+                  <div className="flex bg-white rounded-xl p-1 border border-gray-200 mb-3">
+                    <button 
+                      type="button" 
+                      onClick={() => setCvMode("auto")} 
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                        cvMode === "auto" 
+                          ? "bg-violet-500 text-white shadow-sm" 
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Use Uploaded CV
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setCvMode("manual")} 
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                        cvMode === "manual" 
+                          ? "bg-violet-500 text-white shadow-sm" 
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Paste CV Content
+                    </button>
+                  </div>
+
+                  {/* CV content */}
+                  {cvMode === "auto" ? (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span>Using your uploaded CV from profile</span>
+                    </div>
+                  ) : (
+                    <textarea 
+                      rows={4} 
+                      placeholder="Paste your CV content here..." 
+                      value={cvText} 
+                      onChange={(e) => setCvText(e.target.value)} 
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all resize-none" 
+                    />
+                  )}
+                </>
               ) : (
-                <textarea 
-                  rows={4} 
-                  placeholder="Paste your CV content here..." 
-                  value={cvText} 
-                  onChange={(e) => setCvText(e.target.value)} 
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all resize-none" 
-                />
+                /* No CV uploaded - show upload option */
+                <div className="space-y-3">
+                  <div className="bg-amber-50 rounded-xl border border-amber-200 px-4 py-3 text-sm text-amber-700 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                    <span>No CV uploaded yet</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) uploadCv(file);
+                        }}
+                        className="hidden"
+                        disabled={cvUploading}
+                      />
+                      <div className={`w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-6 text-center text-sm transition-all hover:border-violet-400 hover:bg-violet-50 ${
+                        cvUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}>
+                        {cvUploading ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-violet-600">Uploading...</span>
+                          </div>
+                        ) : (
+                          <div className="text-gray-600">
+                            <div className="font-medium">📄 Upload your CV</div>
+                            <div className="text-xs mt-1">PDF, DOC, DOCX, or TXT</div>
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                    <button 
+                      type="button" 
+                      onClick={() => setCvMode("manual")} 
+                      className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Paste Instead
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -635,13 +736,35 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
           <div>
             <label className="text-sm font-medium">Company Homepage</label>
             <div className="flex gap-2">
-              <input value={companyHomepage} onChange={(e) => setCompanyHomepage(e.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" placeholder="https://company.com" />
+              <div className="flex-1 relative">
+                <input 
+                  value={companyHomepage} 
+                  onChange={(e) => setCompanyHomepage(e.target.value)} 
+                  className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm transition-colors ${
+                    resolveErr ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500'
+                  }`} 
+                  placeholder="https://company.com" 
+                />
+                {resolveErr && (
+                  <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-red-50 border border-red-200 rounded-lg shadow-sm z-10">
+                    <div className="flex items-start gap-2">
+                      <div className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-red-600 text-xs font-bold">!</span>
+                      </div>
+                      <div className="text-xs text-red-700">
+                        <div className="font-medium">Failed to fetch company information</div>
+                        <div className="mt-1">{resolveErr}</div>
+                        <div className="mt-1 text-red-600">Please check the URL or enter company details manually</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <button type="button" onClick={handleFetchCompanyAbout} disabled={resolvingHomepage} className="shrink-0 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium hover:shadow disabled:opacity-50" title="Fetch About from homepage">
                 {resolvingHomepage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Fetch
               </button>
             </div>
-            {resolveErr && <div className="mt-1 text-xs text-red-600">{resolveErr}</div>}
           </div>
           <div>
             <label className="text-sm font-medium">Company About</label>
