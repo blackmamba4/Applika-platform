@@ -101,7 +101,7 @@ export default function Pricing() {
     },
     {
       name: "Pro",
-      price: "£29.99",
+      price: "£30",
       period: "/month",
       tokens: `${PLANS.pro.quota} tokens / month`, // 300
       features: [

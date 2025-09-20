@@ -10,7 +10,10 @@ export default function SocialButtons() {
   const supabase = createClient();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   
-  const redirectTo = getAuthCallbackUrl();
+  // Temporary override for localhost testing
+  const redirectTo = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/auth/callback'
+    : getAuthCallbackUrl();
 
   async function signIn(provider: "google" | "linkedin_oidc") {
     setLoadingProvider(provider);

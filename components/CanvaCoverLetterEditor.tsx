@@ -382,7 +382,7 @@ export default function CanvaCoverLetterEditor({
                   />
             )}
             
-            <div className="w-full">
+            <div className="w-full overflow-x-auto">
             <div 
                 className={`bg-white shadow-lg rounded-lg overflow-hidden relative ${
                   meta.showA4PageBreak ? 'a4-page-break' : ''
@@ -390,7 +390,8 @@ export default function CanvaCoverLetterEditor({
                 style={{ 
                   fontFamily: meta.font === 'inter' ? 'Inter, sans-serif' : 'system-ui, sans-serif',
                   width: '100%',
-                  minWidth: '800px',
+                  minWidth: '320px', // Much smaller minimum width for mobile
+                  maxWidth: '100%',
                   position: 'relative', // Always relative for toolbar positioning
                   ...(meta.showA4PageBreak && {
                     maxWidth: '210mm',

@@ -57,7 +57,7 @@ export default function DashboardLayout({
             {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
           </div>
         </nav>
-        <div className="flex-1 flex flex-col gap-6 max-w-5xl">
+        <div className="flex-1 flex flex-col gap-6 max-w-5xl px-4 sm:px-6 lg:px-8">
           {children}
         </div>
 

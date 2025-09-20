@@ -39,7 +39,7 @@ export default function DashboardClient({
     <div className="flex-1 w-full flex flex-col gap-6 md:gap-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="pl-2 sm:pl-4">
           <h1 className="text-2xl md:text-3xl font-bold">Home</h1>
         </div>
         <div className="hidden md:flex gap-3">
@@ -65,6 +65,7 @@ export default function DashboardClient({
             w-full lg:w-[320px] shrink-0 self-start
             lg:sticky lg:top-20
             space-y-3
+            px-2 sm:px-0
           "
           aria-label="Sidebar"
         >
