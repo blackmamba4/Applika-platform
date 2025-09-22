@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       cancel_url: process.env.NEXT_PUBLIC_STRIPE_CANCEL_URL || "http://localhost:3000/pricing",
       customer_email: auth.user.email ?? undefined,
       metadata,
-      // Tip: allow_promotion_codes: true,
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ url: session.url });
