@@ -15,30 +15,20 @@ export default async function Page() {
     .from("profiles")
     .upsert({ id: user.id, email: user.email ?? "" }, { onConflict: "id" });
 
-  // Run ensure_plan_cycle and profile fetch in parallel for better performance
-  const [planCycleResult, profileResult] = await Promise.allSettled([
-    supabase.rpc("ensure_plan_cycle", { p_user_id: user.id }),
-    supabase
-      .from("profiles")
-      .select("plan, plan_quota_remaining, tokens_remaining, plan_quota, first_name, last_name, full_name, desired_role, tone_default")
-      .eq("id", user.id)
-      .single()
-  ]);
-
-  // Handle plan cycle errors (non-critical)
-  if (planCycleResult.status === "rejected") {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("ensure_plan_cycle failed:", planCycleResult.reason?.message);
-    }
-  }
+  // Fetch user profile (removed ensure_plan_cycle RPC call as it was overriding plan quotas)
+  const profileResult = await supabase
+    .from("profiles")
+    .select("plan, plan_quota_remaining, tokens_remaining, plan_quota, first_name, last_name, full_name, desired_role, tone_default")
+    .eq("id", user.id)
+    .single();
 
   // Handle profile fetch errors (critical)
-  if (profileResult.status === "rejected") {
-    console.error("Profile query failed:", profileResult.reason?.message);
+  if (profileResult.error) {
+    console.error("Profile query failed:", profileResult.error.message);
     redirect("/auth/login");
   }
 
-  const prof = profileResult.value.data;
+  const prof = profileResult.data;
   const plan = prof?.plan ?? "Free";
   const planQuotaRemaining = prof?.plan_quota_remaining ?? 0;
   const topupRemaining = prof?.tokens_remaining ?? 0;
