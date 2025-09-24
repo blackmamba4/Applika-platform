@@ -58,10 +58,17 @@ export async function POST(req: NextRequest) {
   }
 
   // Use service role key for webhook operations (bypasses RLS)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  let supabase;
+  try {
+    supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    console.log("✅ Supabase client initialized successfully");
+  } catch (err: any) {
+    console.error("❌ Failed to initialize Supabase client:", err.message);
+    return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
+  }
 
   try {
     console.log("🔄 Processing event type:", event.type);
@@ -319,14 +326,16 @@ export async function POST(req: NextRequest) {
         // Ignore other events
         break;
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("❌ Webhook handler failed:", {
-      error: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
+      error: err?.message || String(err),
+      stack: err?.stack,
       eventType: event?.type,
-      eventId: event?.id
+      eventId: event?.id,
+      name: err?.name,
+      code: err?.code
     });
-    // Don't fail the webhook unless it's a signature/parse error
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   console.log("✅ Webhook processing completed successfully");
