@@ -39,24 +39,6 @@ export async function POST(req: Request) {
     const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
     const lookupKey = isLiveMode ? (planEntry?.lookupKey || packEntry?.lookupKey) : null;
 
-    // Rich metadata so the webhook knows exactly what to do
-    const metadata: Record<string, string> = {
-      user_id: auth.user.id,
-      mode,
-    };
-    if (planEntry) {
-      metadata.kind = "plan";
-      metadata.plan_code = planEntry.code;
-      metadata.plan_quota = String(planEntry.quota ?? 0);
-      metadata.plan_price_id = planEntry.stripePriceId ?? "";
-    }
-    if (packEntry) {
-      metadata.kind = "pack";
-      metadata.pack_code = packEntry.code;
-      metadata.pack_amount = String(packEntry.amount ?? 0);
-      metadata.pack_price_id = packEntry.stripePriceId ?? "";
-    }
-
     const stripe = getStripe();
     
     // If using lookup key, retrieve the actual price ID first
@@ -75,6 +57,24 @@ export async function POST(req: Request) {
         console.error(`❌ Error retrieving price for lookup key ${lookupKey}:`, error);
         return NextResponse.json({ error: "Failed to retrieve price" }, { status: 500 });
       }
+    }
+
+    // Rich metadata so the webhook knows exactly what to do
+    const metadata: Record<string, string> = {
+      user_id: auth.user.id,
+      mode,
+    };
+    if (planEntry) {
+      metadata.kind = "plan";
+      metadata.plan_code = planEntry.code;
+      metadata.plan_quota = String(planEntry.quota ?? 0);
+      metadata.plan_price_id = finalPriceId; // Use the actual price ID (live or test)
+    }
+    if (packEntry) {
+      metadata.kind = "pack";
+      metadata.pack_code = packEntry.code;
+      metadata.pack_amount = String(packEntry.amount ?? 0);
+      metadata.pack_price_id = finalPriceId; // Use the actual price ID (live or test)
     }
 
     const session = await stripe.checkout.sessions.create({
