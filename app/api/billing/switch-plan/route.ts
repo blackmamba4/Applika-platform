@@ -104,17 +104,30 @@ export async function POST(req: Request) {
         
         // Use lookup_key for live mode, priceId for test mode
         const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
-        const useLookupKey = isLiveMode && newPlan.lookupKey;
+        const lookupKey = isLiveMode ? newPlan.lookupKey : null;
         
-        // Create line items based on whether we're using lookup keys or price IDs
-        const lineItems = useLookupKey ? 
-          [{ price_data: { lookup_key: newPlan.lookupKey }, quantity: 1 }] :
-          [{ price: newPlan.stripePriceId, quantity: 1 }];
+        // If using lookup key, retrieve the actual price ID first
+        let finalPriceId = newPlan.stripePriceId;
+        if (lookupKey) {
+          try {
+            const prices = await stripe.prices.list({ lookup_keys: [lookupKey], limit: 1 });
+            if (prices.data.length > 0) {
+              finalPriceId = prices.data[0].id;
+              console.log(`✅ Found price ID ${finalPriceId} for lookup key ${lookupKey}`);
+            } else {
+              console.error(`❌ No price found for lookup key: ${lookupKey}`);
+              return NextResponse.json({ error: `Price not found for lookup key: ${lookupKey}` }, { status: 400 });
+            }
+          } catch (error) {
+            console.error(`❌ Error retrieving price for lookup key ${lookupKey}:`, error);
+            return NextResponse.json({ error: "Failed to retrieve price" }, { status: 500 });
+          }
+        }
         
         const checkoutSession = await stripe.checkout.sessions.create({
           mode: "subscription",
           payment_method_types: ["card"],
-          line_items: lineItems,
+          line_items: [{ price: finalPriceId, quantity: 1 }],
           success_url: `${process.env.NEXT_PUBLIC_STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: process.env.NEXT_PUBLIC_STRIPE_CANCEL_URL,
           customer_email: auth.user.email,
