@@ -62,7 +62,13 @@ export async function POST(req: NextRequest) {
   try {
     supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
     console.log("✅ Supabase client initialized successfully");
   } catch (err: any) {
@@ -94,16 +100,6 @@ export async function POST(req: NextRequest) {
           kind,
           mode,
           allMetadata: md
-        });
-
-        console.log("🔍 Detailed metadata check:", {
-          hasUserId: !!userId,
-          hasKind: !!kind,
-          hasMode: !!mode,
-          planCode: md.plan_code,
-          planQuota: md.plan_quota,
-          packCode: md.pack_code,
-          packAmount: md.pack_amount
         });
 
         if (!userId) {
@@ -143,6 +139,13 @@ export async function POST(req: NextRequest) {
         // --- Handle plans (subscription start)
         if (kind === "plan" || mode === "subscription") {
           console.log("📋 Processing plan subscription for user:", userId);
+          console.log("🔍 Plan processing check:", {
+            kind,
+            mode,
+            sessionMode: session.mode,
+            hasUserId: !!userId,
+            willProcess: kind === "plan" || mode === "subscription"
+          });
           
           // Resolve plan code & quota
           let planCode = md.plan_code || "";
@@ -151,25 +154,10 @@ export async function POST(req: NextRequest) {
           console.log("📊 Initial plan data from metadata:", { planCode, quota });
 
           if (!planCode || !quota) {
-            console.log("🔍 Plan data missing from metadata, fetching from Stripe...");
-            // Fallback: infer from price id (but this won't work in live mode with lookup keys)
-            const stripe = getStripe();
-            const s = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items", "subscription"] });
-            const priceId = s.line_items?.data?.[0]?.price?.id;
-            console.log("💰 Retrieved price ID from Stripe:", priceId);
-            
-            // Try to find plan by price ID (works in test mode)
-            const plan = Object.values(PLANS).find((p) => p.stripePriceId === priceId);
-            if (plan) {
-              planCode = plan.code;
-              quota = plan.quota ?? 0;
-              console.log("✅ Found plan from price ID:", { planCode, quota, planName: plan.name });
-            } else {
-              console.error("❌ No plan found for price ID:", priceId);
-              console.error("❌ This is expected in live mode when using lookup keys");
-              console.error("❌ The checkout session should include plan metadata");
-              return NextResponse.json({ error: "Plan data missing from checkout metadata" }, { status: 400 });
-            }
+            console.log("🔍 Plan data missing from metadata, this should not happen!");
+            console.log("❌ Cannot process plan without metadata - skipping plan update");
+            console.log("❌ This suggests the checkout session was not created properly");
+            return NextResponse.json({ error: "Plan data missing from checkout metadata" }, { status: 400 });
           }
 
           if (planCode) {
@@ -202,12 +190,15 @@ export async function POST(req: NextRequest) {
             };
             
             console.log("🔄 Updating user profile with plan:", { userId, planUpdate });
+            console.log("🔍 About to execute database update...");
             
             const { data: updateData, error: updErr } = await supabase
               .from("profiles")
               .update(planUpdate)
               .eq("id", userId)
               .select();
+              
+            console.log("🔍 Database update result:", { updateData, updErr });
             
             if (updErr) {
               console.error("❌ profiles update (plan) error:", updErr.message, updErr);
@@ -340,16 +331,14 @@ export async function POST(req: NextRequest) {
         // Ignore other events
         break;
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error("❌ Webhook handler failed:", {
-      error: err?.message || String(err),
-      stack: err?.stack,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
       eventType: event?.type,
-      eventId: event?.id,
-      name: err?.name,
-      code: err?.code
+      eventId: event?.id
     });
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
+    // Don't fail the webhook unless it's a signature/parse error
   }
 
   console.log("✅ Webhook processing completed successfully");
