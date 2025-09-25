@@ -35,6 +35,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unknown pack priceId" }, { status: 400 });
     }
 
+    // Use lookup_key for live mode, priceId for test mode
+    const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
+    const finalPriceId = isLiveMode && planEntry?.lookupKey ? planEntry.lookupKey : 
+                        isLiveMode && packEntry?.lookupKey ? packEntry.lookupKey : 
+                        priceId;
+
     // Rich metadata so the webhook knows exactly what to do
     const metadata: Record<string, string> = {
       user_id: auth.user.id,
@@ -56,7 +62,7 @@ export async function POST(req: Request) {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: finalPriceId, quantity: 1 }],
       success_url: process.env.NEXT_PUBLIC_STRIPE_SUCCESS_URL || "http://localhost:3000/pricing/success",
       cancel_url: process.env.NEXT_PUBLIC_STRIPE_CANCEL_URL || "http://localhost:3000/pricing",
       customer_email: auth.user.email ?? undefined,

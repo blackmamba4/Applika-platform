@@ -102,12 +102,16 @@ export async function POST(req: Request) {
         // Create new checkout session for the new plan
         console.log("🔄 Creating new checkout session for plan:", newPlanCode);
         
+        // Use lookup_key for live mode, priceId for test mode
+        const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
+        const finalPriceId = isLiveMode && newPlan.lookupKey ? newPlan.lookupKey : newPlan.stripePriceId;
+        
         const checkoutSession = await stripe.checkout.sessions.create({
           mode: "subscription",
           payment_method_types: ["card"],
           line_items: [
             {
-              price: newPlan.stripePriceId,
+              price: finalPriceId,
               quantity: 1,
             },
           ],
