@@ -96,6 +96,16 @@ export async function POST(req: NextRequest) {
           allMetadata: md
         });
 
+        console.log("🔍 Detailed metadata check:", {
+          hasUserId: !!userId,
+          hasKind: !!kind,
+          hasMode: !!mode,
+          planCode: md.plan_code,
+          planQuota: md.plan_quota,
+          packCode: md.pack_code,
+          packAmount: md.pack_amount
+        });
+
         if (!userId) {
           console.warn("⚠️ No user_id in session metadata, skipping");
           break;
@@ -142,12 +152,13 @@ export async function POST(req: NextRequest) {
 
           if (!planCode || !quota) {
             console.log("🔍 Plan data missing from metadata, fetching from Stripe...");
-            // Fallback: infer from price id
+            // Fallback: infer from price id (but this won't work in live mode with lookup keys)
             const stripe = getStripe();
             const s = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items", "subscription"] });
             const priceId = s.line_items?.data?.[0]?.price?.id;
             console.log("💰 Retrieved price ID from Stripe:", priceId);
             
+            // Try to find plan by price ID (works in test mode)
             const plan = Object.values(PLANS).find((p) => p.stripePriceId === priceId);
             if (plan) {
               planCode = plan.code;
@@ -155,6 +166,9 @@ export async function POST(req: NextRequest) {
               console.log("✅ Found plan from price ID:", { planCode, quota, planName: plan.name });
             } else {
               console.error("❌ No plan found for price ID:", priceId);
+              console.error("❌ This is expected in live mode when using lookup keys");
+              console.error("❌ The checkout session should include plan metadata");
+              return NextResponse.json({ error: "Plan data missing from checkout metadata" }, { status: 400 });
             }
           }
 
