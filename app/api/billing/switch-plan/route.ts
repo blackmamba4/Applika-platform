@@ -104,17 +104,17 @@ export async function POST(req: Request) {
         
         // Use lookup_key for live mode, priceId for test mode
         const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
-        const finalPriceId = isLiveMode && newPlan.lookupKey ? newPlan.lookupKey : newPlan.stripePriceId;
+        const useLookupKey = isLiveMode && newPlan.lookupKey;
+        
+        // Create line items based on whether we're using lookup keys or price IDs
+        const lineItems = useLookupKey ? 
+          [{ price_data: { lookup_key: newPlan.lookupKey }, quantity: 1 }] :
+          [{ price: newPlan.stripePriceId, quantity: 1 }];
         
         const checkoutSession = await stripe.checkout.sessions.create({
           mode: "subscription",
           payment_method_types: ["card"],
-          line_items: [
-            {
-              price: finalPriceId,
-              quantity: 1,
-            },
-          ],
+          line_items: lineItems,
           success_url: `${process.env.NEXT_PUBLIC_STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: process.env.NEXT_PUBLIC_STRIPE_CANCEL_URL,
           customer_email: auth.user.email,

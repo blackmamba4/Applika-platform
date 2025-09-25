@@ -37,9 +37,7 @@ export async function POST(req: Request) {
 
     // Use lookup_key for live mode, priceId for test mode
     const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
-    const finalPriceId = isLiveMode && planEntry?.lookupKey ? planEntry.lookupKey : 
-                        isLiveMode && packEntry?.lookupKey ? packEntry.lookupKey : 
-                        priceId;
+    const useLookupKey = isLiveMode && (planEntry?.lookupKey || packEntry?.lookupKey);
 
     // Rich metadata so the webhook knows exactly what to do
     const metadata: Record<string, string> = {
@@ -60,9 +58,15 @@ export async function POST(req: Request) {
     }
 
     const stripe = getStripe();
+    
+    // Create line items based on whether we're using lookup keys or price IDs
+    const lineItems = useLookupKey ? 
+      [{ price_data: { lookup_key: planEntry?.lookupKey || packEntry?.lookupKey }, quantity: 1 }] :
+      [{ price: priceId, quantity: 1 }];
+
     const session = await stripe.checkout.sessions.create({
       mode,
-      line_items: [{ price: finalPriceId, quantity: 1 }],
+      line_items: lineItems,
       success_url: process.env.NEXT_PUBLIC_STRIPE_SUCCESS_URL || "http://localhost:3000/pricing/success",
       cancel_url: process.env.NEXT_PUBLIC_STRIPE_CANCEL_URL || "http://localhost:3000/pricing",
       customer_email: auth.user.email ?? undefined,
