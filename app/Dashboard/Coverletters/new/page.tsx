@@ -6,8 +6,8 @@ import CoverLetterWizard from "@/components/CoverLetterWizard"; // fixed import 
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims) redirect("/auth/login");
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) redirect("/auth/login");
 
   return (
     <div className="min-h-screen px-4">

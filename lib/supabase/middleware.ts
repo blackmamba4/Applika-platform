@@ -27,9 +27,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // ⚠️ do not insert logic between client creation and getClaims()
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  // ⚠️ do not insert logic between client creation and getUser()
+  const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
   const method = request.method;
