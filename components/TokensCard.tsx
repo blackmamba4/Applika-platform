@@ -109,8 +109,6 @@ export default function TokensCard({
   // Determine if user is on free plan
   const isFreePlan = plan === "Free";
   
-  // Debug logging
-  console.log('TokensCard props:', { plan, planQuotaRemaining, topupRemaining, planQuota, totalTokens, progressMax });
   
   return (
     <div className="rounded-lg border bg-white p-4 hover-lift">

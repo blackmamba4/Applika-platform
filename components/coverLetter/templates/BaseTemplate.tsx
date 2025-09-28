@@ -142,7 +142,6 @@ export const BaseTemplate = ({
           default:
             currentValue = '';
         }
-        console.log('BaseTemplate: Calling onHeaderElementClick with', elementId, currentValue);
         onHeaderElementClick(elementId, currentValue);
       }
     };

@@ -48,7 +48,6 @@ export async function POST(req: Request) {
         const prices = await stripe.prices.list({ lookup_keys: [lookupKey], limit: 1 });
         if (prices.data.length > 0) {
           finalPriceId = prices.data[0].id;
-          console.log(`✅ Found price ID ${finalPriceId} for lookup key ${lookupKey}`);
         } else {
           console.error(`❌ No price found for lookup key: ${lookupKey}`);
           return NextResponse.json({ error: `Price not found for lookup key: ${lookupKey}` }, { status: 400 });

@@ -154,8 +154,8 @@ export const SettingsPanel = ({
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Font</h4>
               <select
-                value={meta.fontFamily}
-                onChange={(e) => setMeta(prev => ({ ...prev, fontFamily: e.target.value as any }))}
+                value={meta.font}
+                onChange={(e) => setMeta(prev => ({ ...prev, font: e.target.value as any }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
               >
                 {FONT_OPTIONS.map((font) => (

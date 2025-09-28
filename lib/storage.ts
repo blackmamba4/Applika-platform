@@ -40,13 +40,6 @@ export function saveScrape(id: string, data: Omit<ScrapeData, "ts">): void {
     const json = JSON.stringify(payload);
     const compressed = LZString.compressToUTF16(json);
     localStorage.setItem(key, compressed);
-    console.log("[scrape] saved", {
-      key,
-      pages: payload.pages.length,
-      url: payload.url,
-      compressedKB: (new Blob([compressed]).size / 1024).toFixed(1),
-      jsonKB: (new Blob([json]).size / 1024).toFixed(1),
-    });
   } catch (e) {
     console.error("[scrape] Failed to save:", e);
   }
@@ -64,7 +57,6 @@ export function loadScrape(id: string): ScrapeData | null {
   try {
     const json = LZString.decompressFromUTF16(compressed);
     const data = json ? (JSON.parse(json) as ScrapeData) : null;
-    console.log("[scrape] loaded", { key, ok: !!data, pages: data?.pages.length ?? 0 });
     return data;
   } catch (e) {
     console.error("[scrape] Failed to load:", e);
@@ -88,7 +80,6 @@ export function deleteScrape(id: string): void {
   if (!isBrowser()) return;
   const key = STORAGE_PREFIX + id;
   localStorage.removeItem(key);
-  console.log("[scrape] deleted", { key });
 }
 
 function cleanupOldScrapes(): void {

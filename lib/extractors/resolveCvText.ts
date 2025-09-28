@@ -64,7 +64,6 @@ export async function resolveCvText(): Promise<string> {
     }
 
     let cvUrl = collapse((data?.cv_url as string) || "");
-    console.log("[resolveCvText] raw cv_url from DB:", cvUrl);
     if (!cvUrl) {
       console.warn("[resolveCvText] cv_url empty for user:", user.id);
       return "";

@@ -18,33 +18,22 @@ const getStripe = () => {
 
 export async function POST(req: Request) {
   try {
-    console.log("🔄 Switch plan API called");
-    
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth?.user) {
-      console.log("❌ No authenticated user");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
-    console.log("✅ User authenticated:", auth.user.id);
 
     const { newPlanCode } = (await req.json()) as { newPlanCode: string };
     if (!newPlanCode) {
-      console.log("❌ Missing newPlanCode");
       return NextResponse.json({ error: "Missing newPlanCode" }, { status: 400 });
     }
-    
-    console.log("📋 Switching to plan:", newPlanCode);
 
     // Validate the new plan exists
     const newPlan = PLANS[newPlanCode as keyof typeof PLANS];
     if (!newPlan) {
-      console.log("❌ Invalid plan code:", newPlanCode);
       return NextResponse.json({ error: "Invalid plan code" }, { status: 400 });
     }
-    
-    console.log("✅ New plan config:", { name: newPlan.name, quota: newPlan.quota });
 
     // Use service role client for database operations
     const serviceSupabase = createServiceClient(
@@ -65,7 +54,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to get user profile" }, { status: 500 });
     }
     
-    console.log("✅ Current profile:", { plan: profile.plan, plan_quota: profile.plan_quota });
 
     // Check if user is already on this plan
     if (profile.plan?.toLowerCase() === newPlan.name.toLowerCase()) {
@@ -74,33 +62,25 @@ export async function POST(req: Request) {
 
     // Handle free plan switching (cancel Stripe subscription)
     if (newPlanCode === "free") {
-      console.log("📝 Switching to free plan - will cancel Stripe subscription");
       
       // Cancel Stripe subscription if it exists
       if (profile.stripe_subscription_id) {
         try {
           const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-          console.log("🔄 Cancelling Stripe subscription:", profile.stripe_subscription_id);
-          
           await stripe.subscriptions.cancel(profile.stripe_subscription_id);
-          console.log("✅ Successfully cancelled Stripe subscription");
         } catch (stripeError) {
           console.error("❌ Error cancelling Stripe subscription:", stripeError);
           // Continue with plan update even if Stripe cancellation fails
         }
-      } else {
-        console.log("ℹ️ No Stripe subscription found to cancel");
       }
     } else {
       // For paid plan switches, create new checkout session first
       // The old subscription will be cancelled by the webhook after successful payment
-      console.log("📝 Switching between paid plans - creating new checkout session");
       
       try {
         const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
         
         // Create new checkout session for the new plan
-        console.log("🔄 Creating new checkout session for plan:", newPlanCode);
         
         // Use lookup_key for live mode, priceId for test mode
         const isLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
@@ -143,7 +123,6 @@ export async function POST(req: Request) {
           },
         });
         
-        console.log("✅ Created new checkout session:", checkoutSession.id);
         
         // Return the checkout URL for the user to complete payment
         return NextResponse.json({
@@ -182,7 +161,7 @@ export async function POST(req: Request) {
       .eq("id", auth.user.id);
 
     if (updateError) {
-      console.error("Failed to update user profile:", updateError);
+      console.error("❌ Failed to update user profile:", updateError);
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
@@ -194,7 +173,7 @@ export async function POST(req: Request) {
     });
 
   } catch (e: any) {
-    console.error("Plan switch error:", e);
+    console.error("❌ Plan switch error:", e);
     return NextResponse.json({ error: e?.message || "Plan switch failed" }, { status: 500 });
   }
 }

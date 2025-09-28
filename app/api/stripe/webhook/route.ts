@@ -17,18 +17,8 @@ const getStripe = () => {
 };
 
 export async function POST(req: NextRequest) {
-  console.log("🔔 Webhook received at:", new Date().toISOString());
-  
   const body = await req.text(); // important: raw body
   const sig = req.headers.get("stripe-signature");
-  
-  console.log("📝 Request details:", {
-    hasBody: !!body,
-    bodyLength: body.length,
-    hasSignature: !!sig,
-    userAgent: req.headers.get("user-agent"),
-    contentType: req.headers.get("content-type")
-  });
 
   if (!sig) {
     console.error("❌ Missing stripe-signature header");
@@ -44,9 +34,6 @@ export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    console.log("✅ Webhook signature verified successfully");
-    console.log("📋 Event type:", event.type);
-    console.log("🆔 Event ID:", event.id);
   } catch (err: any) {
     console.error("❌ Webhook signature verification failed:", {
       error: err.message,
@@ -70,24 +57,17 @@ export async function POST(req: NextRequest) {
         }
       }
     );
-    console.log("✅ Supabase client initialized successfully");
+    // Supabase client initialized
   } catch (err: any) {
     console.error("❌ Failed to initialize Supabase client:", err.message);
     return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
   }
 
   try {
-    console.log("🔄 Processing event type:", event.type);
     
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("💳 Checkout session completed:", {
-          sessionId: session.id,
-          mode: session.mode,
-          paymentStatus: session.payment_status,
-          customerEmail: session.customer_email
-        });
 
         // Pull metadata we set in checkout
         const md = session.metadata || {};
@@ -95,12 +75,6 @@ export async function POST(req: NextRequest) {
         const kind = md.kind; // 'plan' | 'pack'
         const mode = md.mode as "payment" | "subscription" | undefined;
 
-        console.log("📊 Session metadata:", {
-          userId,
-          kind,
-          mode,
-          allMetadata: md
-        });
 
         if (!userId) {
           console.warn("⚠️ No user_id in session metadata, skipping");
@@ -121,7 +95,6 @@ export async function POST(req: NextRequest) {
           }
 
           if (amount > 0) {
-            console.log("💰 Crediting tokens to user:", { userId, amount, reason: `stripe:pack_${md.pack_code || "unknown"}` });
             const { error: rpcErr } = await supabase.rpc("credit_topup_tokens", {
               p_user_id: userId,
               p_amount: amount,
@@ -131,32 +104,19 @@ export async function POST(req: NextRequest) {
             if (rpcErr) {
               console.error("❌ credit_topup_tokens error:", rpcErr.message, rpcErr);
             } else {
-              console.log("✅ Successfully credited", amount, "tokens to user");
             }
           }
         }
 
         // --- Handle plans (subscription start)
         if (kind === "plan" || mode === "subscription") {
-          console.log("📋 Processing plan subscription for user:", userId);
-          console.log("🔍 Plan processing check:", {
-            kind,
-            mode,
-            sessionMode: session.mode,
-            hasUserId: !!userId,
-            willProcess: kind === "plan" || mode === "subscription"
-          });
           
           // Resolve plan code & quota
           let planCode = md.plan_code || "";
           let quota = Number(md.plan_quota || 0);
 
-          console.log("📊 Initial plan data from metadata:", { planCode, quota });
-
           if (!planCode || !quota) {
-            console.log("🔍 Plan data missing from metadata, this should not happen!");
-            console.log("❌ Cannot process plan without metadata - skipping plan update");
-            console.log("❌ This suggests the checkout session was not created properly");
+            console.error("❌ Plan data missing from checkout metadata");
             return NextResponse.json({ error: "Plan data missing from checkout metadata" }, { status: 400 });
           }
 
@@ -165,13 +125,11 @@ export async function POST(req: NextRequest) {
             const oldSubscriptionId = md.old_subscription_id;
             
             if (oldSubscriptionId) {
-              console.log("🔄 This is a plan switch, will cancel old subscription:", oldSubscriptionId);
               
               // Cancel the old subscription
               try {
                 const stripe = getStripe();
                 await stripe.subscriptions.cancel(oldSubscriptionId);
-                console.log("✅ Successfully cancelled old subscription:", oldSubscriptionId);
               } catch (cancelError) {
                 console.error("❌ Error cancelling old subscription:", cancelError);
                 // Continue with plan update even if cancellation fails
@@ -189,8 +147,6 @@ export async function POST(req: NextRequest) {
               stripe_subscription_id: session.subscription as string,
             };
             
-            console.log("🔄 Updating user profile with plan:", { userId, planUpdate });
-            console.log("🔍 About to execute database update...");
             
             const { data: updateData, error: updErr } = await supabase
               .from("profiles")
@@ -198,13 +154,8 @@ export async function POST(req: NextRequest) {
               .eq("id", userId)
               .select();
               
-            console.log("🔍 Database update result:", { updateData, updErr });
-            
             if (updErr) {
               console.error("❌ profiles update (plan) error:", updErr.message, updErr);
-            } else {
-              console.log("✅ Successfully updated user plan to:", planCode);
-              console.log("📊 Update result:", updateData);
             }
           } else {
             console.error("❌ No plan code available to update user profile");
@@ -217,11 +168,6 @@ export async function POST(req: NextRequest) {
       // Handle subscription updates (plan changes)
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
-      console.log("🔄 Subscription updated:", {
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        metadata: subscription.metadata
-      });
 
       // Check if this is a plan switch
       if (subscription.metadata?.switched_at && subscription.metadata?.user_id) {
@@ -229,7 +175,6 @@ export async function POST(req: NextRequest) {
         const planCode = subscription.metadata.plan_code;
         const quota = Number(subscription.metadata.plan_quota || 0);
 
-        console.log("📋 Processing plan switch:", { userId, planCode, quota });
 
         if (planCode && quota > 0) {
           const { error: updErr } = await supabase
@@ -258,10 +203,6 @@ export async function POST(req: NextRequest) {
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
-      console.log("🗑️ Subscription cancelled:", {
-        subscriptionId: subscription.id,
-        customerId: subscription.customer
-      });
 
       // Check if this is part of a plan switch (don't set to free if user is switching plans)
       const { data: profile, error: profileError } = await supabase
@@ -285,9 +226,7 @@ export async function POST(req: NextRequest) {
           
           // If the profile still has a subscription ID, it means they switched plans
           if (newerProfile?.stripe_subscription_id && newerProfile.stripe_subscription_id !== subscription.id) {
-            console.log("ℹ️ Subscription cancellation was part of plan switch, not updating to free plan");
           } else {
-            console.log("📋 Updating user to free plan after subscription cancellation:", profile.id);
             
             const { error: updateError } = await supabase
               .from("profiles")
@@ -304,12 +243,8 @@ export async function POST(req: NextRequest) {
 
             if (updateError) {
               console.error("❌ Error updating user to free plan:", updateError);
-            } else {
-              console.log("✅ Successfully updated user to free plan after cancellation");
             }
           }
-        } else {
-          console.log("ℹ️ Subscription cancellation was not the user's current subscription, ignoring");
         }
       }
       break;
@@ -323,7 +258,6 @@ export async function POST(req: NextRequest) {
         // We usually need to map sub -> customer -> our user id via Stripe Customer metadata
         // If you also store user_id in Customer metadata, you can look up and reset here.
         // For now we skip; your ensure_plan_cycle RPC on page load will handle resets.
-        console.log("invoice.payment_succeeded for subscription", subId);
         break;
       }
 
@@ -341,6 +275,5 @@ export async function POST(req: NextRequest) {
     // Don't fail the webhook unless it's a signature/parse error
   }
 
-  console.log("✅ Webhook processing completed successfully");
   return NextResponse.json({ received: true });
 }

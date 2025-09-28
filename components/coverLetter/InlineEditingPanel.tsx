@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bold, Italic, Underline, Palette, Type, AlignLeft, AlignCenter, AlignRight, Highlighter, Save, X } from "lucide-react";
+import { Bold, Italic, Underline, Palette, Type, X } from "lucide-react";
 import type { ContentSection } from "@/types/coverLetter";
 import { useColorSystem } from "@/lib/hooks/useColorSystem";
 

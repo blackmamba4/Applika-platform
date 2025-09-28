@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET(req: NextRequest) {
-  console.log("🔍 Debug webhook environment check");
   
   const checks = {
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -14,7 +13,6 @@ export async function GET(req: NextRequest) {
     stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10) + "...",
   };
   
-  console.log("📊 Environment checks:", checks);
   
   // Test Supabase connection
   let supabaseTest = "❌ Failed";

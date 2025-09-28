@@ -13,7 +13,6 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    console.log("🔄 Starting monthly token reset process...");
 
     // Get all users with active plans (not free)
     const { data: profiles, error: fetchError } = await supabase
@@ -27,7 +26,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 });
     }
 
-    console.log(`📊 Found ${profiles?.length || 0} users with active plans`);
 
     const now = new Date();
     const resetResults = [];
@@ -38,7 +36,6 @@ export async function POST(req: Request) {
 
       // Reset if it's been 30+ days since last reset
       if (daysSinceLastReset >= 30) {
-        console.log(`🔄 Resetting tokens for user ${profile.id} (${profile.plan} plan, ${daysSinceLastReset} days since last reset)`);
 
         const { error: updateError } = await supabase
           .from("profiles")
@@ -53,11 +50,8 @@ export async function POST(req: Request) {
           console.error(`❌ Error resetting tokens for user ${profile.id}:`, updateError);
           resetResults.push({ userId: profile.id, success: false, error: updateError.message });
         } else {
-          console.log(`✅ Successfully reset tokens for user ${profile.id}`);
           resetResults.push({ userId: profile.id, success: true, plan: profile.plan, quota: profile.plan_quota });
         }
-      } else {
-        console.log(`⏳ User ${profile.id} not due for reset yet (${daysSinceLastReset} days since last reset)`);
       }
     }
 

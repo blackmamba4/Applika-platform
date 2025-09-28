@@ -116,7 +116,6 @@ class GoogleAnalyticsTracker {
 
     // Send to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Analytics Event:', analyticsEvent);
     }
   }
 
