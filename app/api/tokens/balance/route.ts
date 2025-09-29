@@ -10,8 +10,9 @@ export async function GET() {
   const user = auth?.user;
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Note: Removed ensure_plan_cycle RPC call as it was overriding plan quotas
-  // Monthly token reset is now handled by the dedicated reset endpoint
+  // Call ensure_plan_cycle to ensure quotas are properly initialized
+  await supabase.rpc("ensure_plan_cycle", { p_user_id: user.id });
+
   const { data, error } = await supabase
     .from("profiles")
     .select("plan, plan_quota, plan_quota_remaining, tokens_remaining")

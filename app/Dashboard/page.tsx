@@ -15,7 +15,10 @@ export default async function Page() {
     .from("profiles")
     .upsert({ id: user.id, email: user.email ?? "" }, { onConflict: "id" });
 
-  // Fetch user profile (removed ensure_plan_cycle RPC call as it was overriding plan quotas)
+  // Call ensure_plan_cycle to initialize plan quotas for new users
+  await supabase.rpc("ensure_plan_cycle", { p_user_id: user.id });
+
+  // Fetch user profile
   const profileResult = await supabase
     .from("profiles")
     .select("plan, plan_quota_remaining, tokens_remaining, plan_quota, first_name, last_name, full_name, desired_role, tone_default")

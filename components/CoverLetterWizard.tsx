@@ -210,6 +210,16 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
       setFetchError("Please paste a job URL (or switch to Manual).");
       return;
     }
+    
+    // Validate Indeed URL
+    if (jobMode === "auto" && jobUrl.trim()) {
+      const url = jobUrl.trim();
+      if (!url.includes("indeed.com") || (!url.includes("viewjob") && !url.includes("jobs"))) {
+        setFetchError("Please enter a valid Indeed job posting URL (e.g., https://www.indeed.com/viewjob?jk=...)");
+        return;
+      }
+    }
+    
     if (jobMode === "manual" && (!jobTitle.trim() || !jobDescHtml.trim())) {
       setFetchError("Please enter a job title and description (HTML/text) for Manual mode.");
       return;
@@ -516,7 +526,7 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
             <div className="space-y-4">
               <p className="text-sm text-gray-600 mb-4">
                 {jobMode === "auto" 
-                  ? "Paste the job posting URL and we'll extract everything automatically" 
+                  ? "Paste the Indeed job posting URL and we'll extract everything automatically" 
                   : "Or tell us about the role manually"
                 }
               </p>
@@ -550,8 +560,24 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
               {/* Input area */}
               {jobMode === "auto" ? (
                 <div className="space-y-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                    <div className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">i</span>
+                      </div>
+                      <div className="text-xs text-blue-800">
+                        <p className="font-medium mb-1">How to get the Indeed job link:</p>
+                        <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                          <li>Go to the job posting on Indeed.com</li>
+                          <li>Click the <strong>link button</strong> (🔗) next to "Apply on company site"</li>
+                          <li>Copy the URL that appears in your clipboard</li>
+                          <li>Paste it here</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
                   <input 
-                    placeholder="https://company.com/jobs/software-engineer" 
+                    placeholder="https://www.indeed.com/viewjob?jk=..." 
                     value={jobUrl} 
                     onChange={(e) => setJobUrl(e.target.value)} 
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
