@@ -370,12 +370,19 @@ async function buildDefaultMeta(opts: {
     company: collapse(payload.companyName),
     companyAddress: "",
     dateLine: new Date().toLocaleDateString(),
+    date: new Date().toLocaleDateString(),
 
     // Parsed content components - set clean defaults since we generate only body content
     greeting: `Dear ${collapse(payload.companyName) || 'Company'} Team,`,
     closing: "Sincerely,",
     signatureName: yourName,
     gradientColor: getTemplateDefaultAccentColor("modernGradient"), // Use template-specific default
+
+    // Header element visibility controls - will be overridden by client-side localStorage preferences
+    showContactInfo: false,
+    showRecipientInfo: false,
+    showCompanyInfo: false,
+    showDate: false,
   };
 }
 

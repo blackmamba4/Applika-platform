@@ -29,6 +29,11 @@ export interface CoverLetterMeta {
   showRecipientBlock: boolean;
   showA4PageBreak?: boolean; // Toggle for A4 page break
   sectionSpacing?: number; // Spacing between sections (0-100)
+  // Header element visibility controls
+  showContactInfo: boolean;
+  showRecipientInfo: boolean;
+  showCompanyInfo: boolean;
+  showDate: boolean;
 }
 
 export interface CoverLetterEditorProps {

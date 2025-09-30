@@ -9,6 +9,7 @@ import { ContentEditor } from "./coverLetter/ContentEditor";
 import { TemplateRenderer } from "./coverLetter/TemplateRenderer";
 import { InlineEditingPanel } from "./coverLetter/InlineEditingPanel";
 import { A4PageBreak } from "./coverLetter/A4PageBreak";
+import { applyHeaderVisibilityPreferences } from "@/lib/header-visibility";
 import type { CoverLetterMeta, CoverLetterEditorProps, ContentSection, HeaderElement } from "@/types/coverLetter";
 
 export default function CanvaCoverLetterEditor({
@@ -99,29 +100,40 @@ export default function CanvaCoverLetterEditor({
     { id: 'date', label: 'Date', visible: true, order: 4 }
   ]);
   
-  const [meta, setMeta] = useState<CoverLetterMeta>({
-    template: "modernGradient",
-    accent: "#10B981",
-    font: "inter",
-    density: "normal",
-    headerStyle: "centered",
-    footerStyle: "none",
-    showDivider: true,
-    signatureUrl: "",
-    yourInitials: "",
-    showSignature: false,
-    companyAddress: "",
-    showRecipientBlock: true,
-    recipient: "Hiring Manager",
-    contactLine: "(555) 123-4567\nyour@email.com\nCity, State\nProfessional Title",
-    yourName: "Your Name",
-    company: "Company Name",
-    dateLine: new Date().toLocaleDateString(),
-    greeting: "Dear Hiring Manager,",
+  const [meta, setMeta] = useState<CoverLetterMeta>(() => {
+    const defaultMeta = {
+      template: "modernGradient",
+      accent: "#10B981",
+      font: "inter",
+      density: "normal",
+      headerStyle: "centered",
+      footerStyle: "none",
+      showDivider: true,
+      signatureUrl: "",
+      yourInitials: "",
+      showSignature: false,
+      companyAddress: "",
+      showRecipientBlock: true,
+      recipient: "Hiring Manager",
+      contactLine: "(555) 123-4567\nyour@email.com\nCity, State\nProfessional Title",
+      yourName: "Your Name",
+      company: "Company Name",
+      dateLine: new Date().toLocaleDateString(),
+      date: new Date().toLocaleDateString(),
+      greeting: "Dear Hiring Manager,",
       closing: "Sincerely,",
       signatureName: "Your Name",
       showA4PageBreak: false,
-    ...initialMeta,
+      // Default visibility values (will be overridden by localStorage preferences)
+      showContactInfo: false,
+      showRecipientInfo: false,
+      showCompanyInfo: false,
+      showDate: false,
+      ...initialMeta,
+    };
+    
+    // Apply localStorage preferences on client-side
+    return applyHeaderVisibilityPreferences(defaultMeta);
   });
 
   const toast = useToast();

@@ -1,11 +1,12 @@
 // components/coverLetter/SettingsPanel.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Palette, Layout, Eye, EyeOff } from "lucide-react";
 import { ColorWheel } from "./ColorWheel";
 import { FONT_OPTIONS, TEMPLATE_OPTIONS } from "@/constants/coverLetterOptions";
 import { getTemplateDefaultAccentColor } from "@/lib/color-system";
+import { setHeaderVisibilityPreference } from "@/lib/header-visibility";
 import type { CoverLetterMeta, ContentSection, HeaderElement } from "@/types/coverLetter";
 
 interface SettingsPanelProps {
@@ -20,6 +21,9 @@ interface SettingsPanelProps {
   activeTab: "design" | "layout";
   setActiveTab: React.Dispatch<React.SetStateAction<"design" | "layout">>;
 }
+
+// Type for header visibility keys
+type HeaderVisibilityKey = 'showContactInfo' | 'showRecipientInfo' | 'showCompanyInfo' | 'showDate';
 
 export const SettingsPanel = ({
   meta,
@@ -51,6 +55,12 @@ export const SettingsPanel = ({
           : element
       )
     );
+  };
+
+  const toggleHeaderElementVisibility = (key: HeaderVisibilityKey) => {
+    const newValue = !meta[key];
+    setMeta(prev => ({ ...prev, [key]: newValue }));
+    setHeaderVisibilityPreference(key, newValue);
   };
 
   if (!showSettings) return null;
@@ -124,31 +134,37 @@ export const SettingsPanel = ({
               </div>
             </div>
 
-            {/* Accent Color */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Accent Color</h4>
-              <div className="space-y-3">
+            {/* Accent Color - Hide for modernGradient template */}
+            {meta.template !== 'modernGradient' && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Accent Color</h4>
                 <ColorWheel
                   selectedColor={meta.accent}
                   onColorChange={(color) => setMeta(prev => ({ ...prev, accent: color }))}
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={meta.accent}
-                    onChange={(e) => setMeta(prev => ({ ...prev, accent: e.target.value }))}
-                    className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={meta.accent}
-                    onChange={(e) => setMeta(prev => ({ ...prev, accent: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                    placeholder="#000000"
+              </div>
+            )}
+
+            {/* Gradient Colors - Only show for modernGradient template */}
+            {meta.template === 'modernGradient' && (
+              <>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Gradient Color 1</h4>
+                  <ColorWheel
+                    selectedColor={meta.gradientColor1 || '#ff6b6b'}
+                    onColorChange={(color) => setMeta(prev => ({ ...prev, gradientColor1: color }))}
                   />
                 </div>
-              </div>
-            </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Gradient Color 2</h4>
+                  <ColorWheel
+                    selectedColor={meta.gradientColor2 || '#feca57'}
+                    onColorChange={(color) => setMeta(prev => ({ ...prev, gradientColor2: color }))}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Font Selection */}
             <div>
@@ -205,6 +221,31 @@ export const SettingsPanel = ({
                       }`}
                     >
                       {element.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Header Element Visibility */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Header Elements</h4>
+              <div className="space-y-2">
+                {[
+                  { key: 'showContactInfo' as const, label: 'Contact Information', value: meta.showContactInfo },
+                  { key: 'showRecipientInfo' as const, label: 'Recipient Name', value: meta.showRecipientInfo },
+                  { key: 'showCompanyInfo' as const, label: 'Company Information', value: meta.showCompanyInfo },
+                  { key: 'showDate' as const, label: 'Date', value: meta.showDate }
+                ].map(({ key, label, value }) => (
+                  <div key={key} className="flex items-center justify-between p-2 border border-gray-200 rounded">
+                    <span className="text-sm text-gray-700">{label}</span>
+                    <button
+                      onClick={() => toggleHeaderElementVisibility(key)}
+                      className={`p-1 rounded transition-colors ${
+                        value ? "text-blue-600" : "text-gray-400"
+                      }`}
+                    >
+                      {value ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </button>
                   </div>
                 ))}

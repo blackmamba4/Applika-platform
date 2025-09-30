@@ -60,15 +60,22 @@ export const CorporateTemplate = ({
             </div>
             
             {/* Right - Contact */}
-            <div className="text-right">
-              {renderDraggableHeaderElement('contact',
-                <div className="space-y-1">
-                  {meta.contactLine?.split('\n').map((line, index) => (
-                    <div key={index} className="text-sm" style={getHeaderElementFormatting('contact')}>{line}</div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {meta.showContactInfo && (
+              <div className="text-right">
+                {renderDraggableHeaderElement('contact',
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      value={meta.contactLine}
+                      onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
+                      className="text-sm bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
+                      style={getHeaderElementFormatting('contact')}
+                      placeholder="Contact Information"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -76,62 +83,64 @@ export const CorporateTemplate = ({
       {/* Main Content */}
       <div className="mx-auto pl-4 pr-8 pb-8">
         {/* Recipient Section */}
-        <div className="mb-8 border-l-4 pl-6" style={{ borderLeftColor: meta.accent }}>
-          <div className="space-y-4">
-            {renderDraggableHeaderElement('recipient',
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>To:</div>
-                <input
-                  type="text"
-                  value={meta.recipientName || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
-                  className="text-xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={getHeaderElementFormatting('recipient')}
-                  placeholder="Hiring Manager Name"
-                />
-              </div>
-            )}
-            
-            {renderDraggableHeaderElement('company',
-              <div className="space-y-2 block">
-                <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>Company:</div>
-                <div className="block">
+        {(meta.showRecipientInfo || meta.showCompanyInfo || meta.showDate) && (
+          <div className="mb-8 border-l-4 pl-6" style={{ borderLeftColor: meta.accent }}>
+            <div className="space-y-4">
+              {meta.showRecipientInfo && renderDraggableHeaderElement('recipient',
+                <div>
+                  <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>To:</div>
                   <input
                     type="text"
-                    value={meta.companyName || ''}
-                    onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
-                    className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors w-full"
-                    style={getHeaderElementFormatting('company')}
-                    placeholder="Company Name"
+                    value={meta.recipientName || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
+                    className="text-xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    style={getHeaderElementFormatting('recipient')}
+                    placeholder="Hiring Manager Name"
                   />
                 </div>
-                <div className="block">
-                  <textarea
-                    value={meta.companyAddress || ''}
-                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                    className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none text-left w-full"
-                    rows={2}
-                    placeholder="Company Address"
+              )}
+              
+              {meta.showCompanyInfo && renderDraggableHeaderElement('company',
+                <div className="space-y-2 block">
+                  <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>Company:</div>
+                  <div className="block">
+                    <input
+                      type="text"
+                      value={meta.companyName || ''}
+                      onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
+                      className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors w-full"
+                      style={getHeaderElementFormatting('company')}
+                      placeholder="Company Name"
+                    />
+                  </div>
+                  <div className="block">
+                    <textarea
+                      value={meta.companyAddress || ''}
+                      onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                      className="text-sm text-gray-600 bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none text-left w-full"
+                      rows={2}
+                      placeholder="Company Address"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {meta.showDate && renderDraggableHeaderElement('date',
+                <div>
+                  <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>Date:</div>
+                  <input
+                    type="text"
+                    value={meta.date || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
+                    className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    style={getHeaderElementFormatting('date')}
+                    placeholder="Date"
                   />
                 </div>
-              </div>
-            )}
-            
-            {renderDraggableHeaderElement('date',
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-wider mb-1" style={{ color: meta.accent }}>Date:</div>
-                <input
-                  type="text"
-                  value={meta.date || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
-                  className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={getHeaderElementFormatting('date')}
-                  placeholder="Date"
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Structured Content */}
         <div className="prose prose-lg max-w-none">

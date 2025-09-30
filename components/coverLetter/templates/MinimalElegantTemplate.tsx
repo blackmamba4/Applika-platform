@@ -56,11 +56,16 @@ export const MinimalElegantTemplate = ({
               </div>
             )}
             
-            {renderDraggableHeaderElement('contact',
+            {meta.showContactInfo && renderDraggableHeaderElement('contact',
               <div>
-                {meta.contactLine?.split('\n').map((line, index) => (
-                  <div key={index} className="text-sm mb-1" style={getHeaderElementFormatting('contact')}>{line}</div>
-                ))}
+                <input
+                  type="text"
+                  value={meta.contactLine}
+                  onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
+                  className="text-sm bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                  style={getHeaderElementFormatting('contact')}
+                  placeholder="Contact Information"
+                />
               </div>
             )}
           </div>
@@ -69,51 +74,53 @@ export const MinimalElegantTemplate = ({
         {/* Main Content */}
         <div className="p-8">
           {/* Recipient Section */}
-          <div className="mb-12 space-y-6">
-            {renderDraggableHeaderElement('recipient',
-              <div className="text-right">
-                <div className="text-sm text-gray-500 mb-2 font-medium">TO:</div>
-                <input
-                  type="text"
-                  value={meta.recipientName || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
-                  className="text-xl font-semibold bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Hiring Manager Name"
-                />
-              </div>
-            )}
-            
-            {renderDraggableHeaderElement('company',
-              <div className="text-right space-y-2">
-                <input
-                  type="text"
-                  value={meta.companyName || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
-                  className="text-lg font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Company Name"
-                />
-                <textarea
-                  value={meta.companyAddress || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                  className="text-sm text-gray-600 bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none"
-                  rows={2}
-                  placeholder="Company Address"
-                />
-              </div>
-            )}
-            
-            {renderDraggableHeaderElement('date',
-              <div className="text-right">
-                <input
-                  type="text"
-                  value={meta.date || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
-                  className="text-sm font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  placeholder="Date"
-                />
-              </div>
-            )}
-          </div>
+          {(meta.showRecipientInfo || meta.showCompanyInfo || meta.showDate) && (
+            <div className="mb-12 space-y-6">
+              {meta.showRecipientInfo && renderDraggableHeaderElement('recipient',
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 mb-2 font-medium">TO:</div>
+                  <input
+                    type="text"
+                    value={meta.recipientName || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
+                    className="text-xl font-semibold bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Hiring Manager Name"
+                  />
+                </div>
+              )}
+              
+              {meta.showCompanyInfo && renderDraggableHeaderElement('company',
+                <div className="text-right space-y-2">
+                  <input
+                    type="text"
+                    value={meta.companyName || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
+                    className="text-lg font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Company Name"
+                  />
+                  <textarea
+                    value={meta.companyAddress || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
+                    className="text-sm text-gray-600 bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none"
+                    rows={2}
+                    placeholder="Company Address"
+                  />
+                </div>
+              )}
+              
+              {meta.showDate && renderDraggableHeaderElement('date',
+                <div className="text-right">
+                  <input
+                    type="text"
+                    value={meta.date || ''}
+                    onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
+                    className="text-sm font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                    placeholder="Date"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Structured Content */}
           <div className="prose prose-lg max-w-none" style={{ fontFamily: 'Georgia, serif' }}>

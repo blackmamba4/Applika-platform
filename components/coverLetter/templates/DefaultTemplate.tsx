@@ -54,20 +54,20 @@ export const DefaultTemplate = ({
           </div>
         )}
         
-        {renderDraggableHeaderElement('contact',
+        {meta.showContactInfo && renderDraggableHeaderElement('contact',
           <div className="mb-8">
-            <textarea
+            <input
+              type="text"
               value={meta.contactLine}
               onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
-              className="text-sm bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none"
+              className="text-sm bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
               style={getHeaderElementFormatting('contact')}
-              rows={3}
               placeholder="Contact Information"
             />
           </div>
         )}
         
-        {renderDraggableHeaderElement('recipient',
+        {meta.showRecipientInfo && renderDraggableHeaderElement('recipient',
           <div className="text-right mb-6 mt-8">
             <input
               type="text"
@@ -80,7 +80,7 @@ export const DefaultTemplate = ({
           </div>
         )}
         
-        {renderDraggableHeaderElement('company',
+        {meta.showCompanyInfo && renderDraggableHeaderElement('company',
           <div className="text-right mb-6">
             <input
               type="text"
@@ -100,7 +100,7 @@ export const DefaultTemplate = ({
           </div>
         )}
         
-        {renderDraggableHeaderElement('date',
+        {meta.showDate && renderDraggableHeaderElement('date',
           <div className="text-right mb-6">
             <input
               type="text"

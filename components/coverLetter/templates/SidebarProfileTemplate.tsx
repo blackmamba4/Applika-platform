@@ -60,9 +60,14 @@ export const SidebarProfileTemplate = ({
           <div className="text-center">
             <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-white/80">CONTACT</h3>
             <div className="space-y-3 text-sm">
-              {meta.contactLine?.split('\n').map((line, index) => (
-                <div key={index} className="leading-relaxed" style={getHeaderElementFormatting('contact')}>{line}</div>
-              ))}
+              <input
+                type="text"
+                value={meta.contactLine}
+                onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
+                className="text-sm bg-transparent border-none outline-none text-center w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
+                style={getHeaderElementFormatting('contact')}
+                placeholder="Contact Information"
+              />
             </div>
           </div>
         </div>
