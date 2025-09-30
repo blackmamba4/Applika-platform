@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles, PencilLine } from "lucide-react";
+import { Loader2, Sparkles, PencilLine, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ToastGlobal";
@@ -87,6 +87,7 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
   // UI / steps
   const [glow, setGlow] = useState(true);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [indeedInstructionsOpen, setIndeedInstructionsOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [generating, setGenerating] = useState(false);
   
@@ -560,21 +561,34 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
               {/* Input area */}
               {jobMode === "auto" ? (
                 <div className="space-y-3">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                    <div className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs font-bold">i</span>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setIndeedInstructionsOpen(!indeedInstructionsOpen)}
+                      className="w-full flex items-center justify-between p-3 hover:bg-blue-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-xs font-bold">i</span>
+                        </div>
+                        <p className="text-xs font-medium text-blue-800">How to get the Indeed job link</p>
                       </div>
-                      <div className="text-xs text-blue-800">
-                        <p className="font-medium mb-1">How to get the Indeed job link:</p>
-                        <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                      {indeedInstructionsOpen ? (
+                        <ChevronUp className="h-4 w-4 text-blue-700" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-blue-700" />
+                      )}
+                    </button>
+                    {indeedInstructionsOpen && (
+                      <div className="px-3 pb-3 pt-0">
+                        <ol className="list-decimal list-inside space-y-1 text-xs text-blue-700">
                           <li>Go to the job posting on Indeed.com</li>
                           <li>Click the <strong>link button</strong> (🔗) next to "Apply on company site"</li>
                           <li>Copy the URL that appears in your clipboard</li>
                           <li>Paste it here</li>
                         </ol>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <input 
                     placeholder="https://www.indeed.com/viewjob?jk=..." 
