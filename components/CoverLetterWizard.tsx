@@ -88,6 +88,8 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
   const [glow, setGlow] = useState(true);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [indeedInstructionsOpen, setIndeedInstructionsOpen] = useState(false);
+  const [jobDescOpen, setJobDescOpen] = useState(false);
+  const [companyAboutOpen, setCompanyAboutOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [generating, setGenerating] = useState(false);
   
@@ -207,6 +209,17 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
       setStep(2);
       return;
     }
+    
+    // Check if CV is uploaded (in auto mode) or provided (in manual mode)
+    if (cvMode === "auto" && !hasUploadedCv) {
+      setFetchError("Please upload your CV first, or switch to Manual CV mode.");
+      return;
+    }
+    if (cvMode === "manual" && !cvText.trim()) {
+      setFetchError("Please paste your CV text in Manual CV mode, or switch to Auto and upload your CV.");
+      return;
+    }
+    
     if (jobMode === "auto" && !jobUrl.trim()) {
       setFetchError("Please paste a job URL (or switch to Manual).");
       return;
@@ -796,30 +809,53 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
         </div>
       ) : step === 2 ? (
         <div className="mt-6 space-y-4">
-          <div>
-            <label className="text-sm font-medium">Job Title</label>
-            <input className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+          {/* Compact Job Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+              <input 
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                value={jobTitle} 
+                onChange={(e) => setJobTitle(e.target.value)} 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+              <input 
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                value={companyName} 
+                onChange={(e) => setCompanyName(e.target.value)} 
+              />
+            </div>
           </div>
+
+          {/* Company Homepage */}
           <div>
-            <label className="text-sm font-medium">Company Name</label>
-            <input className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Job Summary</label>
-            <textarea rows={3} value={jobSummary} onChange={(e) => { const v = e.target.value; setJobSummary(v); setJobDescHtml(v); }} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" placeholder="Short summary or full HTML — we'll use whatever is here." />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Company Homepage</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              Company Homepage
+              {companyHomepage && (
+                <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full animate-pulse">
+                  Auto-detected ✓
+                </span>
+              )}
+            </label>
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <input 
                   value={companyHomepage} 
                   onChange={(e) => setCompanyHomepage(e.target.value)} 
-                  className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm transition-colors ${
+                  className={`w-full rounded-xl border px-4 py-3 text-sm bg-white transition-colors ${
                     resolveErr ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-500'
                   }`} 
-                  placeholder="https://company.com" 
+                  placeholder="https://company.com (editable)" 
                 />
+                {!companyHomepage && !resolveErr && (
+                  <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-amber-50 border border-amber-200 rounded-lg shadow-sm z-10">
+                    <div className="text-xs text-amber-800">
+                      💡 We couldn't auto-detect the company website. Please enter it manually or it will be guessed from the company name.
+                    </div>
+                  </div>
+                )}
                 {resolveErr && (
                   <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-red-50 border border-red-200 rounded-lg shadow-sm z-10">
                     <div className="flex items-start gap-2">
@@ -835,15 +871,93 @@ export default function CoverLetterWizard({ profile }: { profile: ProfileData })
                   </div>
                 )}
               </div>
-              <button type="button" onClick={handleFetchCompanyAbout} disabled={resolvingHomepage} className="shrink-0 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium hover:shadow disabled:opacity-50" title="Fetch About from homepage">
+              <button 
+                type="button" 
+                onClick={handleFetchCompanyAbout} 
+                disabled={resolvingHomepage} 
+                className="shrink-0 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50 transition-all" 
+                title="Fetch About from homepage"
+              >
                 {resolvingHomepage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Fetch
               </button>
             </div>
           </div>
-          <div>
-            <label className="text-sm font-medium">Company About</label>
-            <textarea rows={3} value={companyAbout} onChange={(e) => setCompanyAbout(e.target.value)} className="w-full rounded-xl border px-3 py-2 text-sm shadow-sm" placeholder="About the company (mission, products, scale)…" />
+
+          {/* Collapsible Job Description */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setJobDescOpen(!jobDescOpen)}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold">📝</span>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">Job Description</div>
+                  <div className="text-xs text-gray-500">
+                    {jobSummary ? `${jobSummary.slice(0, 60)}${jobSummary.length > 60 ? '...' : ''}` : 'Click to add job description'}
+                  </div>
+                </div>
+              </div>
+              {jobDescOpen ? (
+                <ChevronUp className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+            {jobDescOpen && (
+              <div className="p-4 bg-white border-t border-gray-200">
+                <textarea 
+                  rows={8} 
+                  value={jobSummary} 
+                  onChange={(e) => { const v = e.target.value; setJobSummary(v); setJobDescHtml(v); }} 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none" 
+                  placeholder="Job description, requirements, and responsibilities..." 
+                />
+                <p className="mt-2 text-xs text-gray-500">This will be used to tailor your cover letter to the specific role</p>
+              </div>
+            )}
+          </div>
+
+          {/* Collapsible Company About */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setCompanyAboutOpen(!companyAboutOpen)}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold">🏢</span>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">About the Company</div>
+                  <div className="text-xs text-gray-500">
+                    {companyAbout ? `${companyAbout.slice(0, 60)}${companyAbout.length > 60 ? '...' : ''}` : 'Click to add company information'}
+                  </div>
+                </div>
+              </div>
+              {companyAboutOpen ? (
+                <ChevronUp className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+            {companyAboutOpen && (
+              <div className="p-4 bg-white border-t border-gray-200">
+                <textarea 
+                  rows={7} 
+                  value={companyAbout} 
+                  onChange={(e) => setCompanyAbout(e.target.value)} 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none" 
+                  placeholder="Company mission, products, culture, and what makes them unique..." 
+                />
+                <p className="mt-2 text-xs text-gray-500">This helps personalize your cover letter to the company's values and culture</p>
+              </div>
+            )}
           </div>
 
           {/* Letter length */}

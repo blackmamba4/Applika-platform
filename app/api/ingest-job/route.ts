@@ -7,6 +7,7 @@ import { summarizeCompanyAbout } from "@/lib/extractors/summarizeCompanyAbout";
 import { validateRequest, schemas, createValidationErrorResponse } from "@/lib/validation";
 import { RateLimiter } from "@/lib/error-handler";
 import { resolveCvText } from "@/lib/extractors/resolveCvText";
+import OpenAI from "openai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,6 +95,149 @@ function pickCountryFromUrl(url: string): "US" | "GB" {
     return "GB";
   } catch {
     return "GB";
+  }
+}
+
+/* ---------------- LLM Company Name Extraction ---------------- */
+
+async function suggestCompanyDomain(companyName: string, jobDescText: string, jobTitle: string): Promise<string | null> {
+  if (!process.env.OPENAI_API_KEY) return null;
+  
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  
+  const systemPrompt = `You are a domain name predictor. Given a company name, predict the most likely website domain.
+
+Rules:
+- Return ONLY the domain name without .com (e.g., "bachysoletanche"), nothing else
+- No "https://", "www.", or ".com" suffix
+- Use common domain patterns (companyname, company-name, etc.)
+- If unsure, return "UNKNOWN"
+
+Common patterns:
+- "Bachy Soletanche" → "bachysoletanche"
+- "Microsoft Corporation" → "microsoft"
+- "Johnson & Johnson" → "jnj" or "johnsonandjohnson"
+- "AT&T" → "att"
+- "SmoothCart" → "smoothcart"`;
+
+  const userPrompt = `Company Name: ${companyName}
+Job Title: ${jobTitle}
+
+Job Description Context:
+${jobDescText.slice(0, 1000)}
+
+Predict the most likely website domain:`;
+
+  try {
+    console.info("[suggestCompanyDomain:start]", {
+      companyName,
+      jobTitle,
+      jobDescLength: jobDescText.length
+    });
+    
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.1,
+      max_tokens: 30,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]
+    });
+
+    const suggested = response.choices?.[0]?.message?.content?.trim();
+    
+    // Clean up the response - remove .com, https://, www. if present
+    let cleanedDomain = suggested;
+    if (cleanedDomain) {
+      cleanedDomain = cleanedDomain
+        .replace(/^https?:\/\//, '') // Remove https:// or http://
+        .replace(/^www\./, '') // Remove www.
+        .replace(/\.com$/, '') // Remove .com suffix
+        .replace(/\.org$/, '') // Remove .org suffix
+        .replace(/\.net$/, '') // Remove .net suffix
+        .toLowerCase(); // Convert to lowercase
+    }
+    
+    console.info("[suggestCompanyDomain:response]", {
+      raw: suggested,
+      cleaned: cleanedDomain,
+      isUnknown: cleanedDomain === "unknown",
+      isValid: cleanedDomain && cleanedDomain !== "unknown"
+    });
+    
+    return cleanedDomain && cleanedDomain !== "unknown" ? cleanedDomain : null;
+  } catch (error) {
+    console.warn("[suggestCompanyDomain:error]", error);
+    return null;
+  }
+}
+
+/* ---------------- Google Search Fallback ---------------- */
+
+async function searchCompanyWebsite(companyName: string): Promise<string | null> {
+  if (!process.env.GOOGLE_SEARCH_API_KEY || !process.env.GOOGLE_SEARCH_ENGINE_ID) {
+    console.warn("[searchCompanyWebsite] Missing Google API credentials");
+    return null;
+  }
+
+  try {
+    const searchQuery = `"${companyName}" company website`;
+    const url = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_SEARCH_ENGINE_ID}&q=${encodeURIComponent(searchQuery)}&num=3`;
+    
+    console.info("[searchCompanyWebsite:start]", { companyName, searchQuery });
+    
+    const response = await fetch(url, { 
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000) // 10s timeout
+    });
+    
+    if (!response.ok) {
+      console.warn("[searchCompanyWebsite:api-error]", { status: response.status });
+      return null;
+    }
+    
+    const data = await response.json();
+    const items = data.items || [];
+    
+    console.info("[searchCompanyWebsite:results]", { 
+      totalResults: items.length,
+      results: items.map((item: any) => ({ title: item.title, url: item.link }))
+    });
+    
+    // Look for the most likely company website
+    for (const item of items) {
+      const url = item.link;
+      const title = item.title?.toLowerCase() || "";
+      
+      // Skip job boards and aggregators
+      if (url.includes('indeed.com') || url.includes('linkedin.com') || 
+          url.includes('glassdoor.com') || url.includes('monster.com') ||
+          url.includes('ziprecruiter.com') || url.includes('careerbuilder.com')) {
+        continue;
+      }
+      
+      // Prefer URLs that look like company websites
+      if (url.match(/^https?:\/\/(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/?$/)) {
+        console.info("[searchCompanyWebsite:found]", { url, title });
+        return url;
+      }
+    }
+    
+    // Fallback: return first non-job-board result
+    for (const item of items) {
+      const url = item.link;
+      if (!url.includes('indeed.com') && !url.includes('linkedin.com') && 
+          !url.includes('glassdoor.com') && !url.includes('monster.com')) {
+        console.info("[searchCompanyWebsite:fallback]", { url });
+        return url;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn("[searchCompanyWebsite:error]", error);
+    return null;
   }
 }
 
@@ -314,6 +458,38 @@ export async function POST(req: NextRequest) {
     const companyName: string = collapse(
       j.company || j.hiring_organization?.name || j.hiringOrganization?.name || ""
     );
+    
+    console.info("[companyName:structured]", {
+      original: j.company || j.hiring_organization?.name || j.hiringOrganization?.name || "",
+      collapsed: companyName,
+      length: companyName.length
+    });
+    
+    // LLM-based website domain suggestion if we have a company name
+    let suggestedDomain = "";
+    if (companyName && companyName.length > 2) {
+      console.info("[domain:llm-suggestion]", "Getting LLM suggestion for website domain");
+      try {
+        const jobDescText = sanitizeToText(html);
+        suggestedDomain = await suggestCompanyDomain(companyName, jobDescText, jobTitle);
+        if (suggestedDomain) {
+          console.info("[domain:llm-suggested]", { companyName, suggestedDomain });
+        } else {
+          console.info("[domain:llm-failed]", "LLM domain suggestion failed");
+        }
+      } catch (error) {
+        console.warn("[domain:llm-error]", error);
+      }
+    } else {
+      console.info("[companyName:missing]", "No company name from structured data");
+    }
+    
+    console.info("[companyName:final]", {
+      name: companyName,
+      length: companyName.length,
+      suggestedDomain,
+      willUseForClearbit: !!companyName
+    });
     const orgUrlHint: string = collapse(
       j.company_url ||
         j.companyUrl ||
@@ -334,7 +510,7 @@ export async function POST(req: NextRequest) {
     const jobDescText = sanitizeToText(candidateHtml);            // <- TEXT
     console.info("[jobDesc:text]", jobDescText.slice(0, 600));
 
-    const homepage =
+    let homepage =
       orgUrlHint ||
       (await resolveCompanyHomepage({
         html,
@@ -343,6 +519,45 @@ export async function POST(req: NextRequest) {
         orgUrlHint,
       })) ||
       "";
+    
+    // Try Clearbit with LLM-suggested domain if available
+    if (!homepage && suggestedDomain) {
+      console.info("[homepage:clearbit-suggested]", "Trying Clearbit with LLM-suggested domain");
+      try {
+        const resp = await fetch(
+          `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(suggestedDomain)}`,
+          { cache: "no-store", signal: AbortSignal.timeout(5000) }
+        );
+        if (resp.ok) {
+          const arr = (await resp.json()) as Array<{ domain?: string; name?: string }>;
+          // Look for exact match with .com suffix
+          const exactMatch = arr.find(c => c.domain === `${suggestedDomain}.com`);
+          const match = exactMatch || arr[0];
+          if (match?.domain) {
+            homepage = `https://${match.domain}`;
+            console.info("[homepage:clearbit-suggested-success]", { suggestedDomain, homepage });
+          }
+        }
+      } catch (error) {
+        console.warn("[homepage:clearbit-suggested-error]", error);
+      }
+    }
+    
+    // Google search fallback if Clearbit fails
+    if (!homepage && companyName) {
+      console.info("[homepage:google-fallback]", "Clearbit failed, trying Google search");
+      try {
+        const googleResult = await searchCompanyWebsite(companyName);
+        if (googleResult) {
+          homepage = googleResult;
+          console.info("[homepage:google-success]", { companyName, homepage });
+        } else {
+          console.info("[homepage:google-failed]", "Google search found no results");
+        }
+      } catch (error) {
+        console.warn("[homepage:google-error]", error);
+      }
+    }
 
     let companyAbout = "";
     if (homepage) {
