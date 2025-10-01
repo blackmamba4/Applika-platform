@@ -5,7 +5,7 @@ import type { CoverLetterMeta, ContentSection } from "@/types/coverLetter";
 
 interface Element {
   id: string;
-  type: 'name' | 'contact' | 'recipient' | 'company' | 'date' | 'greeting' | 'content' | 'closing' | 'signature';
+  type: 'name' | 'title' | 'contact' | 'recipient' | 'company' | 'date' | 'greeting' | 'content' | 'closing' | 'signature' | 'custom';
   x: number;
   y: number;
   width: number;
@@ -14,6 +14,7 @@ interface Element {
   fontSize: number;
   fontWeight: string;
   color: string;
+  textAlign?: 'left' | 'center' | 'right';
   visible: boolean;
 }
 
@@ -24,11 +25,10 @@ interface FreeformEditorProps {
   setContent: React.Dispatch<React.SetStateAction<string>>;
   onElementSelect?: (elementId: string | null) => void;
   contentSections?: ContentSection[];
-  headerElements?: any[];
-  setHeaderElements?: any;
   renderStructuredContent?: React.ReactNode;
-  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  onHeaderElementClick?: (elementId: string | null, currentValue?: string) => void;
   editingElementId?: string | null;
+  onElementsChange?: (elements: Element[]) => void; // Expose elements to parent
 }
 
 export const FreeformEditor = ({ 
@@ -38,141 +38,212 @@ export const FreeformEditor = ({
   setContent, 
   onElementSelect, 
   contentSections = [],
-  headerElements = [],
-  setHeaderElements,
   renderStructuredContent,
   onHeaderElementClick,
-  editingElementId
+  editingElementId,
+  onElementsChange
 }: FreeformEditorProps) => {
   
   // Initialize elements with default positions for moderngradient template
-  const getDefaultElements = (): Element[] => [
+  const getDefaultElements = (): Element[] => {
+    // Get saved states from meta
+    const savedVisibility = meta.elementVisibility || {};
+    const savedPositions = meta.elementPositions || {};
+    const savedStyles = meta.elementStyles || {};
+    
+    return [
     {
       id: 'name',
       type: 'name',
-      x: 50,
-      y: 50,
-      width: 400,
-      height: 60,
+      x: savedPositions['name']?.x ?? 50,
+      y: savedPositions['name']?.y ?? 30,
+      width: savedPositions['name']?.width ?? 400,
+      height: savedPositions['name']?.height ?? 40,
       content: meta.yourName || 'Your Name',
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: '#ffffff',
-      visible: true
+      fontSize: savedStyles['name']?.fontSize ?? 28,
+      fontWeight: savedStyles['name']?.fontWeight ?? 'bold',
+      color: savedStyles['name']?.color ?? '#ffffff',
+      textAlign: savedStyles['name']?.textAlign ?? 'left',
+      visible: savedVisibility['name'] !== undefined ? savedVisibility['name'] : true
+    },
+    {
+      id: 'title',
+      type: 'title',
+      x: savedPositions['title']?.x ?? 50,
+      y: savedPositions['title']?.y ?? 75,
+      width: savedPositions['title']?.width ?? 400,
+      height: savedPositions['title']?.height ?? 30,
+      content: meta.yourTitle || 'Your Title',
+      fontSize: savedStyles['title']?.fontSize ?? 16,
+      fontWeight: savedStyles['title']?.fontWeight ?? 'bold',
+      color: savedStyles['title']?.color ?? '#ffffff',
+      textAlign: savedStyles['title']?.textAlign ?? 'left',
+      visible: savedVisibility['title'] !== undefined ? savedVisibility['title'] : true
     },
     {
       id: 'contact',
       type: 'contact',
-      x: 50,
-      y: 140,
-      width: 600,
-      height: 40,
+      x: savedPositions['contact']?.x ?? 50,
+      y: savedPositions['contact']?.y ?? 120,
+      width: savedPositions['contact']?.width ?? 600,
+      height: savedPositions['contact']?.height ?? 60,
       content: meta.contactLine || 'Phone • Address • Email • LinkedIn',
-      fontSize: 14,
-      fontWeight: 'normal',
-      color: '#ffffff',
-      visible: meta.showContactInfo
+      fontSize: savedStyles['contact']?.fontSize ?? 14,
+      fontWeight: savedStyles['contact']?.fontWeight ?? 'normal',
+      color: savedStyles['contact']?.color ?? '#ffffff',
+      textAlign: savedStyles['contact']?.textAlign ?? 'left',
+      visible: savedVisibility['contact'] !== undefined ? savedVisibility['contact'] : true
     },
     {
       id: 'recipient',
       type: 'recipient',
-      x: 500,
-      y: 50,
-      width: 300,
-      height: 40,
-      content: meta.recipientName || 'Hiring Manager',
-      fontSize: 18,
-      fontWeight: 'semibold',
-      color: '#ffffff',
-      visible: meta.showRecipientInfo
+      x: savedPositions['recipient']?.x ?? 50,
+      y: savedPositions['recipient']?.y ?? 220,
+      width: savedPositions['recipient']?.width ?? 300,
+      height: savedPositions['recipient']?.height ?? 80,
+      content: meta.recipientName || 'Recipient Name\nRecipient Address\nRecipient Phone\nRecipient Email',
+      fontSize: savedStyles['recipient']?.fontSize ?? 14,
+      fontWeight: savedStyles['recipient']?.fontWeight ?? 'normal',
+      color: savedStyles['recipient']?.color ?? '#1e293b',
+      textAlign: savedStyles['recipient']?.textAlign ?? 'left',
+      visible: savedVisibility['recipient'] !== undefined ? savedVisibility['recipient'] : (meta.template !== 'moderngradient')
     },
     {
       id: 'company',
       type: 'company',
-      x: 500,
-      y: 100,
-      width: 300,
-      height: 40,
+      x: savedPositions['company']?.x ?? 500,
+      y: savedPositions['company']?.y ?? 50,
+      width: savedPositions['company']?.width ?? 250,
+      height: savedPositions['company']?.height ?? 40,
       content: meta.companyName || 'Company Name',
-      fontSize: 16,
-      fontWeight: 'medium',
-      color: '#ffffff',
-      visible: meta.showCompanyInfo
+      fontSize: savedStyles['company']?.fontSize ?? 16,
+      fontWeight: savedStyles['company']?.fontWeight ?? 'medium',
+      color: savedStyles['company']?.color ?? '#ffffff',
+      textAlign: savedStyles['company']?.textAlign ?? 'right',
+      visible: savedVisibility['company'] !== undefined ? savedVisibility['company'] : true
     },
     {
       id: 'date',
       type: 'date',
-      x: 50,
-      y: 220,
-      width: 200,
-      height: 30,
-      content: meta.date || new Date().toLocaleDateString(),
-      fontSize: 14,
-      fontWeight: 'normal',
-      color: '#666666',
-      visible: meta.showDate
+      x: savedPositions['date']?.x ?? 50,
+      y: savedPositions['date']?.y ?? 320,
+      width: savedPositions['date']?.width ?? 200,
+      height: savedPositions['date']?.height ?? 30,
+      content: meta.date || 'Date',
+      fontSize: savedStyles['date']?.fontSize ?? 14,
+      fontWeight: savedStyles['date']?.fontWeight ?? 'normal',
+      color: savedStyles['date']?.color ?? '#666666',
+      textAlign: savedStyles['date']?.textAlign ?? 'right',
+      visible: savedVisibility['date'] !== undefined ? savedVisibility['date'] : true
     },
     {
       id: 'greeting',
       type: 'greeting',
-      x: 50,
-      y: 270,
-      width: 694, // A4 width (794px) minus margins (50px each side)
-      height: 30,
+      x: savedPositions['greeting']?.x ?? 50,
+      y: savedPositions['greeting']?.y ?? 370,
+      width: savedPositions['greeting']?.width ?? 694, // A4 width (794px) minus margins (50px each side)
+      height: savedPositions['greeting']?.height ?? 30,
       content: meta.greeting || 'Dear Hiring Manager,',
-      fontSize: 16,
-      fontWeight: 'normal',
-      color: '#1e293b',
-      visible: true
+      fontSize: savedStyles['greeting']?.fontSize ?? 16,
+      fontWeight: savedStyles['greeting']?.fontWeight ?? 'normal',
+      color: savedStyles['greeting']?.color ?? '#1e293b',
+      textAlign: savedStyles['greeting']?.textAlign ?? 'left',
+      visible: savedVisibility['greeting'] !== undefined ? savedVisibility['greeting'] : true
     },
     {
       id: 'content',
       type: 'content',
-      x: 50,
-      y: 320,
-      width: 694, // A4 width (794px) minus margins (50px each side)
-      height: 300, // Will be calculated dynamically
+      x: savedPositions['content']?.x ?? 50,
+      y: savedPositions['content']?.y ?? 420,
+      width: savedPositions['content']?.width ?? 694, // A4 width (794px) minus margins (50px each side)
+      height: savedPositions['content']?.height ?? 300, // Will be calculated dynamically
       content: content || 'Your cover letter content goes here...',
-      fontSize: 16,
-      fontWeight: 'normal',
-      color: '#334155',
-      visible: true
+      fontSize: savedStyles['content']?.fontSize ?? 16,
+      fontWeight: savedStyles['content']?.fontWeight ?? 'normal',
+      color: savedStyles['content']?.color ?? '#334155',
+      textAlign: savedStyles['content']?.textAlign ?? 'left',
+      visible: savedVisibility['content'] !== undefined ? savedVisibility['content'] : true
     },
     {
       id: 'closing',
       type: 'closing',
-      x: 50,
-      y: 650, // Will be repositioned dynamically
-      width: 694, // A4 width (794px) minus margins (50px each side)
-      height: 30,
+      x: savedPositions['closing']?.x ?? 50,
+      y: savedPositions['closing']?.y ?? 750, // Will be repositioned dynamically
+      width: savedPositions['closing']?.width ?? 694, // A4 width (794px) minus margins (50px each side)
+      height: savedPositions['closing']?.height ?? 30,
       content: meta.closing || 'Sincerely,',
-      fontSize: 16,
-      fontWeight: 'normal',
-      color: '#1e293b',
-      visible: true
+      fontSize: savedStyles['closing']?.fontSize ?? 16,
+      fontWeight: savedStyles['closing']?.fontWeight ?? 'normal',
+      color: savedStyles['closing']?.color ?? '#1e293b',
+      textAlign: savedStyles['closing']?.textAlign ?? 'left',
+      visible: savedVisibility['closing'] !== undefined ? savedVisibility['closing'] : true
     },
     {
       id: 'signature',
       type: 'signature',
-      x: 50,
-      y: 690, // Will be repositioned dynamically
-      width: 200,
-      height: 30,
+      x: savedPositions['signature']?.x ?? 50,
+      y: savedPositions['signature']?.y ?? 790, // Will be repositioned dynamically
+      width: savedPositions['signature']?.width ?? 200,
+      height: savedPositions['signature']?.height ?? 30,
       content: meta.signatureName || 'Your Name',
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#1e293b',
-      visible: true
+      fontSize: savedStyles['signature']?.fontSize ?? 16,
+      fontWeight: savedStyles['signature']?.fontWeight ?? 'bold',
+      color: savedStyles['signature']?.color ?? '#1e293b',
+      textAlign: savedStyles['signature']?.textAlign ?? 'left',
+      visible: savedVisibility['signature'] !== undefined ? savedVisibility['signature'] : true
     }
   ];
+  };
 
   const [elements, setElements] = useState<Element[]>(getDefaultElements());
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, elementX: 0, elementY: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, elementWidth: 0, elementHeight: 0 });
+  const [dragStarted, setDragStarted] = useState(false); // Track if we started a drag operation
   const [localEditingElementId, setLocalEditingElementId] = useState<string | null>(null);
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const [customTextBoxId, setCustomTextBoxId] = useState<number>(0);
+  const [showHiddenElements, setShowHiddenElements] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Function to add a custom text box
+  const addCustomTextBox = useCallback((x: number, y: number) => {
+    const newId = `custom-${customTextBoxId}`;
+    const newElement: Element = {
+      id: newId,
+      type: 'custom',
+      x: x,
+      y: y,
+      width: 200,
+      height: 30,
+      content: 'Custom Text',
+      fontSize: 16,
+      fontWeight: 'normal',
+      color: '#1e293b',
+      visible: true
+    };
+    
+    setElements(prev => [...prev, newElement]);
+    setCustomTextBoxId(prev => prev + 1);
+    setSelectedElement(newId);
+  }, [customTextBoxId]);
+
+  // Function to remove a custom text box
+  const removeCustomTextBox = useCallback((elementId: string) => {
+    setElements(prev => prev.filter(el => el.id !== elementId));
+    if (selectedElement === elementId) {
+      setSelectedElement(null);
+    }
+  }, [selectedElement]);
+
+  // Function to show hidden elements
+  const showHiddenElement = useCallback((elementId: string) => {
+    setElements(prev => prev.map(el => 
+      el.id === elementId ? { ...el, visible: true } : el
+    ));
+  }, []);
 
   // Check if two elements overlap (with padding)
   const elementsOverlap = (element1: Element, element2: Element, padding: number = 5) => {
@@ -259,22 +330,24 @@ export const FreeformEditor = ({
     });
   }, []);
 
-  // Update elements when meta changes
+  // Update elements when meta changes (preserve visibility state)
   useEffect(() => {
     setElements(prev => prev.map(el => {
       switch (el.type) {
         case 'name':
-          return { ...el, content: meta.yourName || 'Your Name', visible: true };
+          return { ...el, content: meta.yourName || 'Your Name' };
+        case 'title':
+          return { ...el, content: meta.yourTitle || 'Your Title' };
         case 'contact':
-          return { ...el, content: meta.contactLine || 'Phone • Address • Email • LinkedIn', visible: meta.showContactInfo };
+          return { ...el, content: meta.contactLine || 'Phone • Address • Email • LinkedIn' };
         case 'recipient':
-          return { ...el, content: meta.recipientName || 'Hiring Manager', visible: meta.showRecipientInfo };
+          return { ...el, content: meta.recipientName || 'Recipient Name\nRecipient Address\nRecipient Phone\nRecipient Email' };
         case 'company':
-          return { ...el, content: meta.companyName || 'Company Name', visible: meta.showCompanyInfo };
+          return { ...el, content: meta.companyName || 'Company Name' };
         case 'date':
-          return { ...el, content: meta.date || new Date().toLocaleDateString(), visible: meta.showDate };
+          return { ...el, content: meta.date || 'Date' };
         case 'greeting':
-          return { ...el, content: meta.greeting || 'Dear Hiring Manager,', visible: true };
+          return { ...el, content: meta.greeting || 'Dear Hiring Manager,' };
         case 'content':
           // Format content as multiple paragraphs
           const formattedContent = content 
@@ -282,11 +355,11 @@ export const FreeformEditor = ({
             : 'Your cover letter content goes here...';
           // Calculate dynamic height based on content
           const dynamicHeight = calculateContentHeight(formattedContent, el.fontSize, el.width);
-          return { ...el, content: formattedContent, height: dynamicHeight, visible: true };
+          return { ...el, content: formattedContent, height: dynamicHeight };
         case 'closing':
-          return { ...el, content: meta.closing || 'Sincerely,', visible: true };
+          return { ...el, content: meta.closing || 'Sincerely,' };
         case 'signature':
-          return { ...el, content: meta.signatureName || 'Your Name', visible: true };
+          return { ...el, content: meta.signatureName || 'Your Name' };
         default:
           return el;
       }
@@ -312,17 +385,30 @@ export const FreeformEditor = ({
     meta.signatureFormatting
   ]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string) => {
-    // Don't start dragging if clicking on the text content
-    if (e.target === e.currentTarget) {
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string, isResizeHandle?: boolean) => {
     e.preventDefault();
     e.stopPropagation();
     
     setSelectedElement(elementId);
-      setIsDragging(true);
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    if (isResizeHandle) {
+      setIsResizing(true);
+      setResizeStart({
+        x: e.clientX,
+        y: e.clientY,
+        elementWidth: element.width,
+        elementHeight: element.height
+      });
+    } else {
+      // For content elements, allow dragging even if target !== currentTarget
+      // because content elements have inner text divs that can be clicked
+      const shouldStartDrag = e.target === e.currentTarget || element.type === 'content';
       
-      const element = elements.find(el => el.id === elementId);
-      if (element) {
+      if (shouldStartDrag) {
+        setIsDragging(true);
+        setDragStarted(true);
         setDragStart({
           x: e.clientX,
           y: e.clientY,
@@ -334,50 +420,65 @@ export const FreeformEditor = ({
   }, [elements]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !selectedElement) return;
+    if (!selectedElement) return;
 
+    if (isDragging) {
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
-    const newX = Math.max(0, dragStart.elementX + deltaX);
-    const newY = Math.max(0, dragStart.elementY + deltaY);
+      const newX = Math.max(0, dragStart.elementX + deltaX);
+      const newY = Math.max(0, dragStart.elementY + deltaY);
 
-    setElements(prev => {
-      const updatedElements = prev.map(el => 
-        el.id === selectedElement 
-          ? { ...el, x: newX, y: newY }
-          : el
-      );
-
-      // Check for immediate overlaps and adjust if needed
-      const draggedElement = updatedElements.find(el => el.id === selectedElement);
-      if (draggedElement) {
-        const otherElements = updatedElements.filter(el => el.id !== selectedElement && el.visible);
-        const hasOverlap = otherElements.some(otherEl => 
-          elementsOverlap(draggedElement, otherEl, 5)
+      setElements(prev => {
+        const updatedElements = prev.map(el => 
+          el.id === selectedElement 
+            ? { ...el, x: newX, y: newY }
+            : el
         );
 
-        if (hasOverlap) {
-          // Move the dragged element down slightly to show it's overlapping
-          return updatedElements.map(el => 
-        el.id === selectedElement 
-              ? { ...el, y: newY + 2 } // Slight offset to show overlap
-              : el
+        // Check for immediate overlaps and adjust if needed
+        const draggedElement = updatedElements.find(el => el.id === selectedElement);
+        if (draggedElement) {
+          const otherElements = updatedElements.filter(el => el.id !== selectedElement && el.visible);
+          const hasOverlap = otherElements.some(otherEl => 
+            elementsOverlap(draggedElement, otherEl, 5)
           );
-        }
-      }
 
-      return updatedElements;
-    });
-  }, [isDragging, selectedElement, dragStart]);
+          if (hasOverlap) {
+            // Move the dragged element down slightly to show it's overlapping
+            return updatedElements.map(el => 
+        el.id === selectedElement 
+                ? { ...el, y: newY + 2 } // Slight offset to show overlap
+          : el
+            );
+          }
+        }
+
+        return updatedElements;
+      });
+    } else if (isResizing) {
+      const deltaX = e.clientX - resizeStart.x;
+      const deltaY = e.clientY - resizeStart.y;
+      const newWidth = Math.max(50, resizeStart.elementWidth + deltaX);
+      const newHeight = Math.max(20, resizeStart.elementHeight + deltaY);
+
+      setElements(prev => prev.map(el => 
+        el.id === selectedElement 
+          ? { ...el, width: newWidth, height: newHeight }
+          : el
+      ));
+    }
+  }, [isDragging, isResizing, selectedElement, dragStart, resizeStart]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setIsResizing(false);
+    setDragStarted(false);
     // Auto-position elements immediately after dragging to prevent overlap
     autoPositionElements();
   }, [autoPositionElements]);
 
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -385,7 +486,7 @@ export const FreeformEditor = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
   const updateElementContent = useCallback((elementId: string, newContent: string) => {
     setElements(prev => prev.map(el => 
@@ -398,6 +499,9 @@ export const FreeformEditor = ({
       switch (element.type) {
         case 'name':
           setMeta(prev => ({ ...prev, yourName: newContent }));
+          break;
+        case 'title':
+          setMeta(prev => ({ ...prev, yourTitle: newContent }));
           break;
         case 'contact':
           setMeta(prev => ({ ...prev, contactLine: newContent }));
@@ -423,15 +527,42 @@ export const FreeformEditor = ({
         case 'signature':
           setMeta(prev => ({ ...prev, signatureName: newContent }));
           break;
+        case 'custom':
+          // Custom elements just update their content directly
+          setElements(prev => prev.map(el => 
+            el.id === elementId ? { ...el, content: newContent } : el
+          ));
+          break;
       }
     }
   }, [elements, setMeta, setContent]);
 
-  const updateElementStyle = useCallback((elementId: string, styleUpdates: Partial<Pick<Element, 'fontSize' | 'fontWeight' | 'color'>>) => {
+  const updateElementStyle = useCallback((elementId: string, styleUpdates: Partial<Pick<Element, 'fontSize' | 'fontWeight' | 'color' | 'textAlign'>>) => {
     setElements(prev => prev.map(el => 
       el.id === elementId ? { ...el, ...styleUpdates } : el
     ));
-  }, []);
+    
+    // Also update the meta object for persistent formatting
+    if (['name', 'title', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
+      const formattingKey = `${elementId}Formatting` as keyof typeof meta;
+      
+      // Map color to fontColor for the inline editor and preserve textAlign
+      const metaUpdates: any = { ...styleUpdates };
+      if (styleUpdates.color) {
+        metaUpdates.fontColor = styleUpdates.color;
+        delete metaUpdates.color; // Remove the color property as it's not used in meta
+      }
+      // Keep textAlign as is for meta storage
+      
+      setMeta(prev => ({
+        ...prev,
+        [formattingKey]: {
+          ...(prev[formattingKey] as any || {}),
+          ...metaUpdates
+        }
+      }));
+    }
+  }, [setMeta]);
 
   // Run auto-positioning immediately on mount to fix initial overlaps
   useEffect(() => {
@@ -444,25 +575,65 @@ export const FreeformEditor = ({
     
     // Get formatting from meta for header elements and FreeformEditor elements
     let formatting = null;
-    if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(element.id)) {
+    if (['name', 'title', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(element.id)) {
       formatting = meta[`${element.id}Formatting` as keyof typeof meta] as any;
     }
     
-    return {
-      fontSize: element.fontSize,
-      fontWeight: (section?.isBold || formatting?.isBold) ? 'bold' : element.fontWeight,
-      color: (section?.fontColor || formatting?.fontColor) || element.color,
+    // Apply formatting with proper fallbacks
+    const finalColor = formatting?.color || formatting?.fontColor || element.color;
+    const finalFontSize = formatting?.fontSize || element.fontSize;
+    const finalFontWeight = (section?.isBold || formatting?.isBold) ? 'bold' : 
+                           (formatting?.fontWeight || element.fontWeight);
+    
+    // Get text alignment from section, formatting, or element styles - prioritize formatting from meta
+    const textAlign = formatting?.textAlign || section?.textAlign || meta.elementStyles?.[element.id]?.textAlign || 'left';
+    
+    const styles = {
+      fontSize: finalFontSize,
+      fontWeight: finalFontWeight,
+      color: finalColor,
       fontStyle: (section?.isItalic || formatting?.isItalic) ? 'italic' : 'normal',
-      textDecoration: (section?.isUnderlined || formatting?.isUnderlined) ? 'underline' : 'none'
+      textDecoration: (section?.isUnderlined || formatting?.isUnderlined) ? 'underline' : 'none',
+      textAlign: textAlign as 'left' | 'center' | 'right' // Apply text alignment directly
+    };
+    
+    
+    return styles;
+  };
+
+  const getElementPositionStyle = (element: Element) => {
+    // Get formatting from contentSections for content elements
+    const section = contentSections.find(s => s.id === element.id);
+    const alignment = section?.textAlign || 'left';
+    
+    // Calculate positioning based on alignment
+    let justifyContent = 'flex-start';
+    if (alignment === 'center') {
+      justifyContent = 'center';
+    } else if (alignment === 'right') {
+      justifyContent = 'flex-end';
+    }
+    
+        return {
+      display: 'flex',
+      justifyContent,
+      alignItems: 'flex-start',
+      width: '100%',
+      height: '100%'
     };
   };
 
   const getSectionLabel = (elementId: string) => {
+    if (elementId.startsWith('custom-')) {
+      return 'Custom Text Box';
+    }
+    
     const labels: Record<string, string> = {
       name: 'Your Name',
-      contact: 'Contact Info',
-      recipient: 'Recipient Name',
-      company: 'Company Name',
+      title: 'Your Title',
+      contact: 'Contact Information',
+      recipient: 'Recipient Information',
+      company: 'Company Information',
       date: 'Date',
       greeting: 'Greeting',
       content: 'Main Content',
@@ -487,8 +658,74 @@ export const FreeformEditor = ({
           color: currentElement.color
         } : null;
       };
+      // Make addCustomTextBox available to parent component
+      (window as any).addCustomTextBox = () => {
+        // Add text box in center of current view
+        const centerX = 400;
+        const centerY = 400;
+        addCustomTextBox(centerX, centerY);
+      };
+      // Make toggleElementVisibility available to parent component
+      (window as any).toggleElementVisibility = (elementId: string) => {
+        setElements(prev => prev.map(el => 
+          el.id === elementId ? { ...el, visible: !el.visible } : el
+        ));
+      };
     }
-  }, [updateElementStyle, onHeaderElementClick, elements, editingElementId, localEditingElementId]);
+  }, [updateElementStyle, onHeaderElementClick, editingElementId, localEditingElementId, addCustomTextBox]);
+
+  // Notify parent component when elements change
+  useEffect(() => {
+    if (onElementsChange) {
+      onElementsChange(elements);
+    }
+  }, [elements, onElementsChange]);
+
+  // Update meta with element state when elements change
+  useEffect(() => {
+    const visibilityMap: Record<string, boolean> = {};
+    const positionMap: Record<string, { x: number; y: number; width: number; height: number }> = {};
+    const styleMap: Record<string, { fontSize: number; fontWeight: string; color: string }> = {};
+    
+    elements.forEach(element => {
+      visibilityMap[element.id] = element.visible;
+      positionMap[element.id] = {
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height
+      };
+      styleMap[element.id] = {
+        fontSize: element.fontSize,
+        fontWeight: element.fontWeight,
+        color: element.color,
+        textAlign: element.textAlign || 'left'
+      };
+    });
+    
+    // Only update if there's a change to avoid infinite loops
+    const hasVisibilityChange = JSON.stringify(visibilityMap) !== JSON.stringify(meta.elementVisibility);
+    const hasPositionChange = JSON.stringify(positionMap) !== JSON.stringify(meta.elementPositions);
+    const hasStyleChange = JSON.stringify(styleMap) !== JSON.stringify(meta.elementStyles);
+    
+    if (hasVisibilityChange || hasPositionChange || hasStyleChange) {
+      setMeta(prev => ({
+        ...prev,
+        elementVisibility: visibilityMap,
+        elementPositions: positionMap,
+        elementStyles: styleMap
+      }));
+    }
+  }, [elements, setMeta, meta.elementVisibility, meta.elementPositions, meta.elementStyles]);
+
+  // Notify parent component on initial load
+  useEffect(() => {
+    if (onElementsChange && elements.length > 0) {
+      onElementsChange(elements);
+    }
+  }, []); // Only run on mount
+
+  // Auto-deselect functionality removed - elements will only deselect when explicitly clicked
 
   // Calculate total height needed based on all elements
   const calculateTotalHeight = () => {
@@ -502,7 +739,34 @@ export const FreeformEditor = ({
   const totalHeight = calculateTotalHeight();
 
   return (
-    <div className="relative" style={{ width: '794px', maxWidth: '794px', height: `${totalHeight}px` }}>
+    <div className="relative">
+      {/* Hidden Elements Toggle */}
+      {elements.some(el => !el.visible && el.type !== 'custom') && (
+        <div className="absolute -top-10 left-0 z-20">
+          <button
+            onClick={() => setShowHiddenElements(!showHiddenElements)}
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded border"
+          >
+            {showHiddenElements ? 'Hide' : 'Show'} Hidden Elements
+          </button>
+        </div>
+      )}
+      
+      <div 
+        className="relative" 
+        style={{ width: '794px', maxWidth: '794px', height: `${totalHeight}px` }}
+        onClick={(e) => {
+          // Only deselect if clicking on the main container itself
+          if (e.target === e.currentTarget) {
+            e.stopPropagation();
+            setSelectedElement(null);
+            setLocalEditingElementId(null);
+            if (onElementSelect) {
+              onElementSelect(null);
+            }
+          }
+        }}
+      >
       {/* Gradient Background */}
       <div 
         className="absolute inset-0 pointer-events-none"
@@ -530,19 +794,24 @@ export const FreeformEditor = ({
         onClick={(e) => {
           // Only deselect if clicking on the container itself, not on elements
           if (e.target === e.currentTarget) {
+            e.stopPropagation();
             setSelectedElement(null);
+            setLocalEditingElementId(null);
             if (onElementSelect) {
               onElementSelect(null);
             }
           }
         }}
       >
-        {elements.filter(el => el.visible).map(element => (
+        {elements.filter(el => el.visible || (showHiddenElements && el.type !== 'custom')).map(element => (
           <div
             key={element.id}
+            data-element-id={element.id}
             className={`absolute cursor-move transition-all ${
               selectedElement === element.id ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-            } hover:ring-1 hover:ring-gray-400 hover:ring-opacity-30`}
+            } hover:ring-1 hover:ring-gray-400 hover:ring-opacity-30 ${
+              !element.visible ? 'opacity-50 bg-gray-100 border-2 border-dashed border-gray-400' : ''
+            }`}
             style={{
               left: element.x,
               top: element.y,
@@ -555,6 +824,10 @@ export const FreeformEditor = ({
             onMouseEnter={() => setHoveredElement(element.id)}
             onMouseLeave={() => setHoveredElement(null)}
             onClick={(e) => {
+              // Don't handle click if we started dragging
+              if (dragStarted) {
+                return;
+              }
               e.stopPropagation();
               setSelectedElement(element.id);
               if (onElementSelect) {
@@ -571,68 +844,60 @@ export const FreeformEditor = ({
           >
             {(editingElementId === element.id || localEditingElementId === element.id) ? (
               element.type === 'content' ? (
-                <textarea
-                  value={element.content}
-                  onChange={(e) => updateElementContent(element.id, e.target.value)}
-                  className="w-full h-full bg-white border border-blue-500 rounded px-2 py-1 outline-none resize-none"
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    lineHeight: '1.6',
-                    whiteSpace: 'pre-wrap',
-                    ...getElementStyle(element)
-                  }}
-                  autoFocus
-                  onBlur={() => {
-                    setLocalEditingElementId(null);
-                    setSelectedElement(null);
-                    if (onElementSelect) {
-                      onElementSelect(null);
-                    }
-                  }}
-                />
+                <div style={{ padding: '10px', height: '100%' }}>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="w-full h-full border border-blue-500 rounded outline-none resize-none pointer-events-auto"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap',
+                      padding: '5px',
+                      backgroundColor: 'transparent',
+                      ...getElementStyle(element)
+                    }}
+                    dangerouslySetInnerHTML={{ __html: element.content }}
+                    onInput={(e) => {
+                      const newContent = e.currentTarget.textContent || '';
+                      updateElementContent(element.id, newContent);
+                    }}
+                    // onBlur auto-close functionality removed
+                    onMouseDown={(e) => {
+                      // Stop propagation to prevent dragging when editing content
+                      e.stopPropagation();
+                    }}
+                  />
+                </div>
               ) : (
                 <input
                   type="text"
                   value={element.content}
                   onChange={(e) => updateElementContent(element.id, e.target.value)}
-                  className="w-full h-full bg-white border border-blue-500 rounded px-2 py-1 outline-none"
+                  className="w-full h-full border border-blue-500 rounded px-2 py-1 outline-none"
                   style={{
                     fontFamily: 'Inter, sans-serif',
+                    backgroundColor: 'transparent',
                     ...getElementStyle(element)
                   }}
                   autoFocus
-                  onBlur={() => {
-                    setLocalEditingElementId(null);
-                    setSelectedElement(null);
-                    if (onElementSelect) {
-                      onElementSelect(null);
-                    }
-                  }}
+                  // onBlur auto-close functionality removed
                 />
               )
             ) : (
               element.type === 'content' ? (
                 <div 
-                  className="select-none cursor-text hover:opacity-80 transition-opacity whitespace-pre-wrap"
+                  className="whitespace-pre-wrap"
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     lineHeight: '1.6',
+                    height: '100%',
+                    padding: '10px',
+                    overflow: 'hidden',
                     ...getElementStyle(element)
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLocalEditingElementId(element.id);
-                    setSelectedElement(element.id);
-                    if (onElementSelect) {
-                      onElementSelect(element.id);
-                    }
-                    if (onHeaderElementClick) {
-                      onHeaderElementClick(element.id, element.content);
-                    }
-                  }}
-                >
-                  {element.content}
-                </div>
+                  dangerouslySetInnerHTML={{ __html: element.content }}
+                />
               ) : (
                 <span 
                   className="select-none cursor-text hover:opacity-80 transition-opacity"
@@ -668,9 +933,55 @@ export const FreeformEditor = ({
                 {getSectionLabel(element.id)}
               </div>
             )}
+            
+            {/* Resize Handle */}
+            {selectedElement === element.id && (
+              <div
+                className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
+                style={{ transform: 'translate(50%, 50%)' }}
+                onMouseDown={(e) => handleMouseDown(e, element.id, true)}
+              />
+            )}
+            
+            {/* Hide/Delete Button for All Elements */}
+            {selectedElement === element.id && (
+              <div
+                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full cursor-pointer flex items-center justify-center text-xs font-bold hover:bg-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (element.type === 'custom') {
+                    // Delete custom text boxes
+                    removeCustomTextBox(element.id);
+                  } else if (!element.visible) {
+                    // Show hidden elements
+                    showHiddenElement(element.id);
+                  } else {
+                    // Hide core elements
+                    setElements(prev => prev.map(el => 
+                      el.id === element.id ? { ...el, visible: false } : el
+                    ));
+                    setSelectedElement(null);
+                    setLocalEditingElementId(null);
+                    if (onElementSelect) {
+                      onElementSelect(null);
+                    }
+                  }
+                }}
+                title={
+                  element.type === 'custom' 
+                    ? "Delete Custom Text Box" 
+                    : !element.visible 
+                      ? "Show Element" 
+                      : "Hide Element"
+                }
+              >
+                ×
+              </div>
+            )}
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };

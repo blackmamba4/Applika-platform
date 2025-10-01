@@ -30,7 +30,8 @@ export default function ModernGradientTemplate({
       fontWeight: formatting?.isBold ? 'bold' : 'normal',
       color: formatting?.fontColor || '#1e293b',
       fontStyle: formatting?.isItalic ? 'italic' : 'normal',
-      textDecoration: formatting?.isUnderlined ? 'underline' : 'none'
+      textDecoration: formatting?.isUnderlined ? 'underline' : 'none',
+      textAlign: formatting?.textAlign || 'left'
     };
   };
 

@@ -57,6 +57,7 @@ export const BaseTemplate = ({
       fontWeight: (section?.isBold || metaFormatting.isBold) ? 'bold' : 'normal',
       fontStyle: (section?.isItalic || metaFormatting.isItalic) ? 'italic' : 'normal',
       textDecoration: (section?.isUnderlined || metaFormatting.isUnderlined) ? 'underline' : 'none',
+      textAlign: `${(section?.textAlign || metaFormatting.textAlign || 'left')} !important` as any,
       paddingTop: (section?.spacingTop || metaFormatting.spacingTop) ? `${section?.spacingTop || metaFormatting.spacingTop}px` : '0',
       paddingBottom: (section?.spacingBottom || metaFormatting.spacingBottom) ? `${section?.spacingBottom || metaFormatting.spacingBottom}px` : '0',
       paddingLeft: (section?.spacingSides || metaFormatting.spacingSides) ? `${section?.spacingSides || metaFormatting.spacingSides}px` : '0',

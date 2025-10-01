@@ -19,6 +19,7 @@ export interface CoverLetterMeta {
   companyAddress: string;
   recipientName?: string; // "Hiring Manager Name"
   companyName?: string; // "Company Name"
+  yourTitle?: string; // "Your Job Title"
   date?: string; // "Date"
   // Parsed content components
   greeting?: string; // "Dear Red Sift Hiring Team,"
@@ -34,6 +35,10 @@ export interface CoverLetterMeta {
   showRecipientInfo: boolean;
   showCompanyInfo: boolean;
   showDate: boolean;
+  // FreeformEditor element state
+  elementVisibility?: Record<string, boolean>; // Map of element ID to visibility state
+  elementPositions?: Record<string, { x: number; y: number; width: number; height: number }>; // Element positions and sizes
+  elementStyles?: Record<string, { fontSize: number; fontWeight: string; color: string; textAlign?: 'left' | 'center' | 'right' }>; // Element styling including alignment
 }
 
 export interface CoverLetterEditorProps {
@@ -48,7 +53,6 @@ export interface ContentSection {
   id: string;
   label: string;
   visible: boolean;
-  order: number;
   spacing?: number; // Individual spacing for this section (0-100)
   fontColor?: string; // Individual font color
   isBold?: boolean; // Individual bold styling
@@ -56,6 +60,7 @@ export interface ContentSection {
   isUnderlined?: boolean; // Individual underline styling
   highlightedText?: string; // Text to highlight within this section
   highlightColor?: string; // Color for highlighting
+  textAlign?: 'left' | 'center' | 'right'; // Text alignment
   spacingTop?: number; // Top spacing in pixels (0-50)
   spacingBottom?: number; // Bottom spacing in pixels (0-50)
   spacingSides?: number; // Side spacing in pixels (0-50)
@@ -65,7 +70,6 @@ export interface HeaderElement {
   id: string;
   label: string;
   visible: boolean;
-  order: number;
 }
 
 // Comprehensive Color System Types

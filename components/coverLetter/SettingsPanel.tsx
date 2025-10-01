@@ -7,19 +7,16 @@ import { ColorWheel } from "./ColorWheel";
 import { FONT_OPTIONS, TEMPLATE_OPTIONS } from "@/constants/coverLetterOptions";
 import { getTemplateDefaultAccentColor } from "@/lib/color-system";
 import { setHeaderVisibilityPreference } from "@/lib/header-visibility";
-import type { CoverLetterMeta, ContentSection, HeaderElement } from "@/types/coverLetter";
+import type { CoverLetterMeta } from "@/types/coverLetter";
 
 interface SettingsPanelProps {
   meta: CoverLetterMeta;
   setMeta: React.Dispatch<React.SetStateAction<CoverLetterMeta>>;
-  contentSections: ContentSection[];
-  setContentSections: React.Dispatch<React.SetStateAction<ContentSection[]>>;
-  headerElements: HeaderElement[];
-  setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
   showSettings: boolean;
   setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
   activeTab: "design" | "layout";
   setActiveTab: React.Dispatch<React.SetStateAction<"design" | "layout">>;
+  freeformElements?: any[]; // Elements from FreeformEditor
 }
 
 // Type for header visibility keys
@@ -28,39 +25,22 @@ type HeaderVisibilityKey = 'showContactInfo' | 'showRecipientInfo' | 'showCompan
 export const SettingsPanel = ({
   meta,
   setMeta,
-  contentSections,
-  setContentSections,
-  headerElements,
-  setHeaderElements,
   showSettings,
   setShowSettings,
   activeTab,
-  setActiveTab
+  setActiveTab,
+  freeformElements = []
 }: SettingsPanelProps) => {
-  const toggleSectionVisibility = (sectionId: string) => {
-    setContentSections(prev => 
-      prev.map(section => 
-        section.id === sectionId 
-          ? { ...section, visible: !section.visible }
-          : section
-      )
-    );
-  };
-
-  const toggleHeaderVisibility = (elementId: string) => {
-    setHeaderElements(prev => 
-      prev.map(element => 
-        element.id === elementId 
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    );
-  };
-
   const toggleHeaderElementVisibility = (key: HeaderVisibilityKey) => {
     const newValue = !meta[key];
     setMeta(prev => ({ ...prev, [key]: newValue }));
     setHeaderVisibilityPreference(key, newValue);
+  };
+
+  const toggleFreeformElementVisibility = (elementId: string) => {
+    if ((window as any).toggleElementVisibility) {
+      (window as any).toggleElementVisibility(elementId);
+    }
   };
 
   if (!showSettings) return null;
@@ -187,70 +167,7 @@ export const SettingsPanel = ({
         {/* Layout Tab */}
         {activeTab === "layout" && (
           <div className="space-y-6">
-            {/* Content Sections */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Content Sections</h4>
-              <div className="space-y-2">
-                {contentSections.map((section) => (
-                  <div key={section.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                    <span className="text-sm text-gray-700">{section.label}</span>
-                    <button
-                      onClick={() => toggleSectionVisibility(section.id)}
-                      className={`p-1 rounded transition-colors ${
-                        section.visible ? "text-blue-600" : "text-gray-400"
-                      }`}
-                    >
-                      {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Header Elements */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Header Elements</h4>
-              <div className="space-y-2">
-                {headerElements.map((element) => (
-                  <div key={element.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                    <span className="text-sm text-gray-700">{element.label}</span>
-                    <button
-                      onClick={() => toggleHeaderVisibility(element.id)}
-                      className={`p-1 rounded transition-colors ${
-                        element.visible ? "text-blue-600" : "text-gray-400"
-                      }`}
-                    >
-                      {element.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Header Element Visibility */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Header Elements</h4>
-              <div className="space-y-2">
-                {[
-                  { key: 'showContactInfo' as const, label: 'Contact Information', value: meta.showContactInfo },
-                  { key: 'showRecipientInfo' as const, label: 'Recipient Name', value: meta.showRecipientInfo },
-                  { key: 'showCompanyInfo' as const, label: 'Company Information', value: meta.showCompanyInfo },
-                  { key: 'showDate' as const, label: 'Date', value: meta.showDate }
-                ].map(({ key, label, value }) => (
-                  <div key={key} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                    <span className="text-sm text-gray-700">{label}</span>
-                    <button
-                      onClick={() => toggleHeaderElementVisibility(key)}
-                      className={`p-1 rounded transition-colors ${
-                        value ? "text-blue-600" : "text-gray-400"
-                      }`}
-                    >
-                      {value ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Personal Information */}
             <div>
@@ -288,6 +205,50 @@ export const SettingsPanel = ({
                 </div>
               </div>
             </div>
+
+            {/* Template Elements */}
+            {freeformElements.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Template Elements</h4>
+                <div className="space-y-2">
+                  {freeformElements.map((element) => {
+                    const getElementLabel = (elementId: string, elementType: string) => {
+                      if (elementType === 'custom') {
+                        return 'Custom Text Box';
+                      }
+                      
+                      const labels: Record<string, string> = {
+                        name: 'Your Name',
+                        title: 'Your Title',
+                        contact: 'Contact Information',
+                        recipient: 'Recipient Information',
+                        company: 'Company Information',
+                        date: 'Date',
+                        greeting: 'Greeting',
+                        content: 'Main Content',
+                        closing: 'Closing',
+                        signature: 'Signature'
+                      };
+                      return labels[elementId] || elementId;
+                    };
+                    
+                    return (
+                      <div key={element.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
+                        <span className="text-sm text-gray-700">{getElementLabel(element.id, element.type)}</span>
+                        <button
+                          onClick={() => toggleFreeformElementVisibility(element.id)}
+                          className={`p-1 rounded transition-colors ${
+                            element.visible ? "text-blue-600" : "text-gray-400"
+                          }`}
+                        >
+                          {element.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

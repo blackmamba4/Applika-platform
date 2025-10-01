@@ -62,6 +62,7 @@ export const ContentEditor = ({
         isItalic: formatting.isItalic || false,
         isUnderlined: formatting.isUnderlined || false,
         fontColor: formatting.fontColor || '#000000',
+        textAlign: formatting.textAlign || 'left',
         spacingTop: formatting.spacingTop || 0,
         spacingBottom: formatting.spacingBottom || 0,
         spacingSides: formatting.spacingSides || 0,
@@ -81,6 +82,7 @@ export const ContentEditor = ({
       isItalic: false,
       isUnderlined: false,
       fontColor: '#000000',
+      textAlign: 'left',
       spacingTop: 0,
       spacingBottom: 0,
       spacingSides: 0,
@@ -138,10 +140,14 @@ export const ContentEditor = ({
         case 'date':
           setMeta(prev => ({ ...prev, date: value }));
           break;
+        default:
+          // If we don't recognize the element, don't close editing mode
+          return;
       }
+      // Only close editing mode if we actually processed a valid element
+      setEditingElementId(null);
+      setIsEditing(false);
     }
-    setEditingElementId(null);
-    setIsEditing(false);
   }, [editingElementId, setMeta, setIsEditing]);
 
   // Simple cancel function
@@ -194,6 +200,7 @@ export const ContentEditor = ({
       fontWeight: section?.isBold ? 'bold' : 'normal',
       fontStyle: section?.isItalic ? 'italic' : 'normal',
       textDecoration: section?.isUnderlined ? 'underline' : 'none',
+      textAlign: section?.textAlign || 'left',
       paddingTop: section?.spacingTop ? `${section.spacingTop}px` : '0',
       paddingBottom: section?.spacingBottom ? `${section.spacingBottom}px` : '0',
       paddingLeft: section?.spacingSides ? `${section.spacingSides}px` : '0',

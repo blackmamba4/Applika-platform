@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bold, Italic, Underline, Palette, Type, X } from "lucide-react";
+import { Bold, Italic, Underline, Palette, X, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import type { ContentSection } from "@/types/coverLetter";
 import { useColorSystem } from "@/lib/hooks/useColorSystem";
 
@@ -127,44 +127,45 @@ export const InlineEditingPanel = ({
             {/* Separator */}
             <div className="w-px h-6 bg-gray-300"></div>
 
-            {/* Spacing Controls */}
+            {/* Text Alignment */}
             <div className="flex items-center gap-1 sm:gap-2">
-              <Type className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 hidden sm:inline">Top:</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={section.spacingTop || 0}
-                  onChange={(e) => onUpdateSection({ spacingTop: parseInt(e.target.value) })}
-                  className="w-12 sm:w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-xs text-gray-500 w-6 sm:w-8">{section.spacingTop || 0}px</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 hidden sm:inline">Bot:</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={section.spacingBottom || 0}
-                  onChange={(e) => onUpdateSection({ spacingBottom: parseInt(e.target.value) })}
-                  className="w-12 sm:w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-xs text-gray-500 w-6 sm:w-8">{section.spacingBottom || 0}px</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 hidden sm:inline">Sides:</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={section.spacingSides || 0}
-                  onChange={(e) => onUpdateSection({ spacingSides: parseInt(e.target.value) })}
-                  className="w-12 sm:w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-xs text-gray-500 w-6 sm:w-8">{section.spacingSides || 0}px</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateSection({ textAlign: 'left' });
+                  }}
+                  className={`p-1.5 sm:p-2 rounded hover:bg-gray-100 transition-colors ${
+                    (section.textAlign || 'left') === 'left' ? "bg-blue-100 text-blue-700" : "text-gray-600"
+                  }`}
+                  title="Align Left"
+                >
+                  <AlignLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateSection({ textAlign: 'center' });
+                  }}
+                  className={`p-1.5 sm:p-2 rounded hover:bg-gray-100 transition-colors ${
+                    section.textAlign === 'center' ? "bg-blue-100 text-blue-700" : "text-gray-600"
+                  }`}
+                  title="Align Center"
+                >
+                  <AlignCenter className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateSection({ textAlign: 'right' });
+                  }}
+                  className={`p-1.5 sm:p-2 rounded hover:bg-gray-100 transition-colors ${
+                    section.textAlign === 'right' ? "bg-blue-100 text-blue-700" : "text-gray-600"
+                  }`}
+                  title="Align Right"
+                >
+                  <AlignRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
               </div>
             </div>
 

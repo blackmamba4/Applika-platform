@@ -33,7 +33,6 @@ export default function CanvaCoverLetterEditor({
       id: 'greeting', 
       label: 'Greeting', 
       visible: true, 
-      order: 0,
       isBold: false,
       isItalic: false,
       isUnderlined: false,
@@ -48,7 +47,6 @@ export default function CanvaCoverLetterEditor({
       id: 'body', 
       label: 'Body Content', 
       visible: true, 
-      order: 1,
       isBold: false,
       isItalic: false,
       isUnderlined: false,
@@ -63,7 +61,6 @@ export default function CanvaCoverLetterEditor({
       id: 'closing', 
       label: 'Closing', 
       visible: true, 
-      order: 2,
       isBold: false,
       isItalic: false,
       isUnderlined: false,
@@ -78,7 +75,6 @@ export default function CanvaCoverLetterEditor({
       id: 'signature', 
       label: 'Signature', 
       visible: true, 
-      order: 3,
       isBold: false,
       isItalic: false,
       isUnderlined: false,
@@ -93,21 +89,21 @@ export default function CanvaCoverLetterEditor({
 
   // Header elements management
   const [headerElements, setHeaderElements] = useState<HeaderElement[]>([
-    { id: 'name', label: 'Your Name', visible: true, order: 0 },
-    { id: 'contact', label: 'Contact Info', visible: true, order: 1 },
-    { id: 'recipient', label: 'Recipient', visible: true, order: 2 },
-    { id: 'company', label: 'Company Info', visible: true, order: 3 },
-    { id: 'date', label: 'Date', visible: true, order: 4 }
+    { id: 'name', label: 'Your Name', visible: true },
+    { id: 'contact', label: 'Contact Info', visible: true },
+    { id: 'recipient', label: 'Recipient', visible: true },
+    { id: 'company', label: 'Company Info', visible: true },
+    { id: 'date', label: 'Date', visible: true }
   ]);
   
   const [meta, setMeta] = useState<CoverLetterMeta>(() => {
     const defaultMeta = {
-      template: "modernGradient",
+      template: "modernGradient" as const,
       accent: "#10B981",
-      font: "inter",
-      density: "normal",
-      headerStyle: "centered",
-      footerStyle: "none",
+      font: "inter" as const,
+      density: "normal" as const,
+      headerStyle: "centered" as const,
+      footerStyle: "none" as const,
       showDivider: true,
       signatureUrl: "",
       yourInitials: "",
@@ -191,21 +187,22 @@ export default function CanvaCoverLetterEditor({
     // For header elements and FreeformEditor elements, get from meta
     if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
       const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as Partial<ContentSection> || {};
-      return {
+      const sectionData = {
         id: elementId,
         label: elementId,
         visible: true,
-        order: 0,
         isBold: formatting.isBold || false,
         isItalic: formatting.isItalic || false,
         isUnderlined: formatting.isUnderlined || false,
         fontColor: formatting.fontColor || '', // Empty string allows template defaults to work
+        textAlign: formatting.textAlign || 'left', // Add textAlign to section data
         spacingTop: formatting.spacingTop || 0,
         spacingBottom: formatting.spacingBottom || 0,
         spacingSides: formatting.spacingSides || 0,
         highlightedText: formatting.highlightedText || '',
         highlightColor: formatting.highlightColor || '#ffff00'
       };
+      return sectionData;
     }
     
     // For content sections, get from contentSections
@@ -214,11 +211,11 @@ export default function CanvaCoverLetterEditor({
       id: elementId,
       label: elementId,
       visible: true,
-      order: 0,
       isBold: false,
       isItalic: false,
       isUnderlined: false,
       fontColor: '', // Empty string allows template defaults to work
+      textAlign: 'left',
       spacingTop: 0,
       spacingBottom: 0,
       spacingSides: 0,
@@ -242,13 +239,25 @@ export default function CanvaCoverLetterEditor({
     }
     // For header elements and FreeformEditor elements, store formatting in meta
     else if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
-      setMeta(prev => ({
-        ...prev,
-        [`${editingElementId}Formatting`]: {
+      setMeta(prev => {
+        const newFormatting = {
           ...(prev[`${editingElementId}Formatting` as keyof typeof prev] as any || {}),
           ...updates
+        };
+        
+        // Also trigger the FreeformEditor's updateElementStyle function
+        if ((window as any).updateElementStyle) {
+          // Use setTimeout to ensure meta update happens first
+          setTimeout(() => {
+            (window as any).updateElementStyle(editingElementId, updates);
+          }, 0);
         }
-      }));
+        
+        return {
+          ...prev,
+          [`${editingElementId}Formatting`]: newFormatting
+        };
+      });
     }
   }, [editingElementId, setContentSections, setMeta]);
 
@@ -294,10 +303,12 @@ export default function CanvaCoverLetterEditor({
   }, [setEditingElementId, setIsEditing]);
 
   // Handle header element clicks for inline editing
-  const handleHeaderElementClick = useCallback((elementId: string, currentValue: string) => {
-    // Always switch to the clicked element - don't prevent any clicks
-    setEditingElementId(elementId);
-    setIsEditing(true);
+  const handleHeaderElementClick = useCallback((elementId: string | null, currentValue?: string) => {
+    if (elementId) {
+      // Always switch to the clicked element - don't prevent any clicks
+      setEditingElementId(elementId);
+      setIsEditing(true);
+    }
   }, [editingElementId]);
 
   const exportToPDF = useCallback(async () => {
@@ -420,8 +431,6 @@ export default function CanvaCoverLetterEditor({
                   <TemplateRenderer
                     meta={meta}
                     setMeta={setMeta}
-                    headerElements={headerElements}
-                    setHeaderElements={setHeaderElements}
                     contentSections={contentSections}
                     onHeaderElementClick={handleHeaderElementClick}
                     editingElementId={editingElementId}
@@ -452,10 +461,6 @@ export default function CanvaCoverLetterEditor({
         <SettingsPanel
           meta={meta}
           setMeta={setMeta}
-          contentSections={contentSections}
-          setContentSections={setContentSections}
-          headerElements={headerElements}
-          setHeaderElements={setHeaderElements}
           showSettings={showSettings}
           setShowSettings={setShowSettings}
           activeTab={activeTab}
