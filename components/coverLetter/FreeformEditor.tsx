@@ -333,36 +333,84 @@ export const FreeformEditor = ({
   // Update elements when meta changes (preserve visibility state)
   useEffect(() => {
     setElements(prev => prev.map(el => {
+      // Get template-specific properties
+      const getTemplateColor = () => {
+        if (meta.template === 'modernGradient') return '#ffffff';
+        if (meta.template === 'professionalAccent') return '#000000';
+        return '#1e293b';
+      };
+      
+      const getTemplatePosition = (elementId: string) => {
+        if (meta.template === 'professionalAccent') {
+          switch (elementId) {
+            case 'contact': return { x: 500, y: 25, width: 250 };
+            case 'company': return { x: 50, y: 100, width: 250 };
+            default: return null;
+          }
+        }
+        return null;
+      };
+      
+      // Check if user has custom formatting
+      const hasCustomFormatting = meta[`${el.id}Formatting` as keyof typeof meta];
+      
+      const updatedEl = { ...el };
+      
+      // Update content
       switch (el.type) {
         case 'name':
-          return { ...el, content: meta.yourName || 'Your Name' };
+          updatedEl.content = meta.yourName || 'Your Name';
+          break;
         case 'title':
-          return { ...el, content: meta.yourTitle || 'Your Title' };
+          updatedEl.content = meta.yourTitle || 'Your Title';
+          break;
         case 'contact':
-          return { ...el, content: meta.contactLine || 'Phone • Address • Email • LinkedIn' };
+          updatedEl.content = meta.contactLine || 'Phone • Address • Email • LinkedIn';
+          break;
         case 'recipient':
-          return { ...el, content: meta.recipientName || 'Recipient Name\nRecipient Address\nRecipient Phone\nRecipient Email' };
+          updatedEl.content = meta.recipientName || 'Recipient Name\nRecipient Address\nRecipient Phone\nRecipient Email';
+          break;
         case 'company':
-          return { ...el, content: meta.companyName || 'Company Name' };
+          updatedEl.content = meta.companyName || 'Company Name';
+          break;
         case 'date':
-          return { ...el, content: meta.date || 'Date' };
+          updatedEl.content = meta.date || 'Date';
+          break;
         case 'greeting':
-          return { ...el, content: meta.greeting || 'Dear Hiring Manager,' };
+          updatedEl.content = meta.greeting || 'Dear Hiring Manager,';
+          break;
         case 'content':
           // Format content as multiple paragraphs
           const formattedContent = content 
             ? content.split('\n\n').filter(para => para.trim()).join('\n\n')
             : 'Your cover letter content goes here...';
+          updatedEl.content = formattedContent;
           // Calculate dynamic height based on content
           const dynamicHeight = calculateContentHeight(formattedContent, el.fontSize, el.width);
-          return { ...el, content: formattedContent, height: dynamicHeight };
+          updatedEl.height = dynamicHeight;
+          break;
         case 'closing':
-          return { ...el, content: meta.closing || 'Sincerely,' };
+          updatedEl.content = meta.closing || 'Sincerely,';
+          break;
         case 'signature':
-          return { ...el, content: meta.signatureName || 'Your Name' };
-        default:
-          return el;
+          updatedEl.content = meta.signatureName || 'Your Name';
+          break;
       }
+      
+      // Update template-specific properties if no custom formatting
+      if (!hasCustomFormatting && ['name', 'title', 'contact'].includes(el.id)) {
+        updatedEl.color = getTemplateColor();
+      }
+      
+      // Update positions for specific templates
+      const templatePos = getTemplatePosition(el.id);
+      if (templatePos && !meta.elementPositions?.[el.id]) {
+        updatedEl.x = templatePos.x;
+        updatedEl.y = templatePos.y;
+        updatedEl.width = templatePos.width;
+      }
+      
+      return updatedEl;
     }));
     
     // Auto-position elements immediately after updating content
@@ -767,24 +815,65 @@ export const FreeformEditor = ({
           }
         }}
       >
-      {/* Gradient Background */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(90deg, #ec4899 0%, #f97316 100%)',
-          height: '200px'
-        }}
-      />
-      
-      {/* White Body Background */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: '#ffffff',
-          top: '200px',
-          height: `${totalHeight - 200}px`
-        }}
-      />
+        {/* Template-specific Backgrounds */}
+        {meta.template === 'modernGradient' && (
+          <>
+            {/* Gradient Background */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(90deg, #ec4899 0%, #f97316 100%)',
+                height: '200px'
+              }}
+            />
+            
+            {/* White Body Background */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: '#ffffff',
+                top: '200px',
+                height: `${totalHeight - 200}px`
+              }}
+            />
+          </>
+        )}
+
+        {meta.template === 'professionalAccent' && (
+          <>
+            {/* White Background */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: '#ffffff',
+                height: `${totalHeight}px`
+              }}
+            />
+            
+            {/* Teal Shape */}
+            <div 
+              className="absolute pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                width: '400px',
+                height: '220px',
+                top: '0px',
+                right: '0px',
+                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 23% 59%)'
+              }}
+            />
+          </>
+        )}
+
+        {meta.template !== 'modernGradient' && meta.template !== 'professionalAccent' && (
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: '#ffffff',
+              height: `${totalHeight}px`
+            }}
+          />
+        )}
       
       {/* Draggable Elements */}
       <div 

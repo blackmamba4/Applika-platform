@@ -175,6 +175,7 @@ export default function CanvaCoverLetterEditor({
       case 'recipient': return meta.recipientName || '';
       case 'company': return meta.companyName || '';
       case 'date': return meta.date || '';
+      case 'subject': return meta.subject || '';
       case 'greeting': return meta.greeting || '';
       case 'body': return content || '';
       case 'closing': return meta.closing || '';
@@ -185,7 +186,7 @@ export default function CanvaCoverLetterEditor({
 
   const getSectionData = useCallback((elementId: string) => {
     // For header elements and FreeformEditor elements, get from meta
-    if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
+    if (['name', 'contact', 'recipient', 'company', 'date', 'subject', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
       const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as Partial<ContentSection> || {};
       const sectionData = {
         id: elementId,
@@ -238,7 +239,7 @@ export default function CanvaCoverLetterEditor({
       );
     }
     // For header elements and FreeformEditor elements, store formatting in meta
-    else if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
+    else if (['name', 'contact', 'recipient', 'company', 'date', 'subject', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
       setMeta(prev => {
         const newFormatting = {
           ...(prev[`${editingElementId}Formatting` as keyof typeof prev] as any || {}),
@@ -278,6 +279,9 @@ export default function CanvaCoverLetterEditor({
           break;
         case 'date':
           setMeta(prev => ({ ...prev, date: value }));
+          break;
+        case 'subject':
+          setMeta(prev => ({ ...prev, subject: value }));
           break;
         case 'greeting':
           setMeta(prev => ({ ...prev, greeting: value }));

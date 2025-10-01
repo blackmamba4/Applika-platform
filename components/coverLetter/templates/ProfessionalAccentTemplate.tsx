@@ -1,155 +1,234 @@
-// components/coverLetter/templates/ProfessionalAccentTemplate.tsx
-"use client";
-
-import { BaseTemplate } from "./BaseTemplate";
-import type { CoverLetterMeta, HeaderElement, ContentSection } from "@/types/coverLetter";
+import React from 'react';
+import { CoverLetterMeta, CoverLetterContent } from '@/types/coverLetter';
 
 interface ProfessionalAccentTemplateProps {
   meta: CoverLetterMeta;
-  setMeta: React.Dispatch<React.SetStateAction<CoverLetterMeta>>;
-  headerElements: HeaderElement[];
-  setHeaderElements: React.Dispatch<React.SetStateAction<HeaderElement[]>>;
-  contentSections?: ContentSection[];
-  renderStructuredContent: React.ReactNode;
-  onHeaderElementClick?: (elementId: string, currentValue: string) => void;
+  content: CoverLetterContent;
+  onElementSelect?: (elementId: string, content: string) => void;
+  selectedElement?: string | null;
   editingElementId?: string | null;
 }
 
-export const ProfessionalAccentTemplate = ({
+export default function ProfessionalAccentTemplate({
   meta,
-  setMeta,
-  headerElements,
-  setHeaderElements,
-  contentSections = [],
-  renderStructuredContent,
-  onHeaderElementClick,
+  content,
+  onElementSelect,
+  selectedElement,
   editingElementId
-}: ProfessionalAccentTemplateProps) => {
-  const { renderDraggableHeaderElement, DensityWrapper, getHeaderElementFormatting } = BaseTemplate({
-    meta,
-    setMeta,
-    headerElements,
-    setHeaderElements,
-    contentSections,
-    renderStructuredContent,
-    onHeaderElementClick,
-    editingElementId
-  });
+}: ProfessionalAccentTemplateProps) {
+  
+  const handleElementClick = (elementId: string, elementContent: string) => {
+    if (onElementSelect) {
+      onElementSelect(elementId, elementContent);
+    }
+  };
+
+  const getElementStyle = (elementId: string) => {
+    const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as any;
+    return {
+      fontSize: formatting?.fontSize || 16,
+      fontWeight: formatting?.isBold ? 'bold' : 'normal',
+      color: formatting?.fontColor || '#1e293b',
+      fontStyle: formatting?.isItalic ? 'italic' : 'normal',
+      textDecoration: formatting?.isUnderlined ? 'underline' : 'none',
+      textAlign: formatting?.textAlign || 'left'
+    };
+  };
+
+  const formatContent = (text: string) => {
+    if (!text) return '';
+    return text.split('\n\n').filter(para => para.trim()).join('\n\n');
+  };
 
   return (
-    <DensityWrapper className="pt-0">
-      {/* Header with Flipped Diagonal Shape */}
-      <div className="relative h-64 mb-8 overflow-hidden">
-        {/* Flipped Diagonal Background */}
-        <div 
-          className="absolute bottom-0 left-0 w-full h-full transform -rotate-12 origin-bottom-left"
-          style={{ 
-            background: `linear-gradient(135deg, ${meta.accent}, ${meta.accent}cc)`,
-            clipPath: 'polygon(0% 0%, 70% 0%, 100% 100%, 0% 100%)'
+    <div className="relative bg-white shadow-lg" style={{ width: '794px', maxWidth: '794px' }}>
+      {/* Top Right Gradient Background */}
+      <div 
+        className="absolute top-0 right-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          width: '300px',
+          height: '200px',
+          clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)'
+        }}
+      />
+      
+      {/* Header Elements */}
+      {meta.showContactInfo && (
+        <div
+          className="absolute cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            right: '30px',
+            top: '30px',
+            color: '#ffffff',
+            fontSize: '14px',
+            fontWeight: 'normal',
+            ...getElementStyle('contact')
           }}
-        />
+          onClick={() => handleElementClick('contact', meta.contactLine || '')}
+        >
+          {meta.contactLine || 'Phone • Email • LinkedIn'}
+        </div>
+      )}
+
+      {/* Main Name */}
+      <div
+        className="absolute cursor-pointer hover:opacity-80 transition-opacity"
+        style={{
+          left: '50px',
+          top: '30px',
+          color: '#1e293b',
+          fontSize: '28px',
+          fontWeight: 'bold',
+          ...getElementStyle('name')
+        }}
+        onClick={() => handleElementClick('name', meta.yourName || '')}
+      >
+        {meta.yourName || 'Your Name'}
+      </div>
+
+      {/* Recipient Info */}
+      {meta.showRecipientInfo && (
+        <div
+          className="absolute cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            left: '50px',
+            top: '80px',
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'normal',
+            ...getElementStyle('recipient')
+          }}
+          onClick={() => handleElementClick('recipient', meta.recipientName || '')}
+        >
+          {meta.recipientName || 'Hiring Manager'}
+        </div>
+      )}
+
+      {meta.showCompanyInfo && (
+        <div
+          className="absolute cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            left: '50px',
+            top: '110px',
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'normal',
+            ...getElementStyle('company')
+          }}
+          onClick={() => handleElementClick('company', meta.companyName || '')}
+        >
+          {meta.companyName || 'Company Name'}
+        </div>
+      )}
+
+      {/* Date */}
+      {meta.showDate && (
+        <div
+          className="absolute cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            left: '50px',
+            top: '150px',
+            color: '#1e293b',
+            fontSize: '14px',
+            fontWeight: 'normal',
+            ...getElementStyle('date')
+          }}
+          onClick={() => handleElementClick('date', meta.date || '')}
+        >
+          {meta.date || new Date().toLocaleDateString()}
+        </div>
+      )}
+
+      {/* Body Content */}
+      <div className="relative" style={{ marginTop: '200px', padding: '0 50px' }}>
         
-        {/* Content Overlay */}
-        <div className="relative z-10 h-full flex items-center justify-center px-4 pr-8 mx-auto">
-          {/* Left Side - Name */}
-          <div className="flex-1 max-w-md">
-            {renderDraggableHeaderElement('name',
-              <div>
-                <input
-                  type="text"
-                  value={meta.yourName}
-                  onChange={(e) => setMeta(prev => ({ ...prev, yourName: e.target.value }))}
-                  className="text-4xl font-bold bg-transparent border-none outline-none cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors w-full"
-                  style={getHeaderElementFormatting('name')}
-                  placeholder="Your Name"
-                />
-              </div>
-            )}
-          </div>
-          
-          {/* Right Side - Contact Info */}
-          {meta.showContactInfo && (
-            <div className="text-right max-w-sm">
-              {renderDraggableHeaderElement('contact',
-                <div className="space-y-1">
-                  <input
-                    type="text"
-                    value={meta.contactLine}
-                    onChange={(e) => setMeta(prev => ({ ...prev, contactLine: e.target.value }))}
-                    className="text-sm font-medium bg-transparent border-none outline-none text-right w-full cursor-text hover:bg-white/10 rounded px-2 py-1 transition-colors"
-                    style={getHeaderElementFormatting('contact')}
-                    placeholder="Contact Information"
-                  />
-                </div>
-              )}
-            </div>
-          )}
+        {/* Subject/Title */}
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity mb-6"
+          style={{
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            ...getElementStyle('subject')
+          }}
+          onClick={() => handleElementClick('subject', meta.subject || '')}
+        >
+          {meta.subject || 'Application for the position of [Job Title]'}
+        </div>
+
+        {/* Greeting */}
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity mb-6"
+          style={{
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'normal',
+            ...getElementStyle('greeting')
+          }}
+          onClick={() => handleElementClick('greeting', meta.greeting || '')}
+        >
+          {meta.greeting || 'Dear Hiring Manager,'}
+        </div>
+
+        {/* Main Content */}
+        <div
+          className="absolute cursor-move hover:opacity-80 transition-opacity"
+          style={{
+            left: '50px',
+            top: '320px',
+            width: '694px',
+            color: '#334155',
+            fontSize: '16px',
+            fontWeight: 'normal',
+            lineHeight: '1.6',
+            whiteSpace: 'pre-wrap' as const,
+            border: selectedElement === 'content' ? '2px dashed #3b82f6' : 'none',
+            padding: selectedElement === 'content' ? '8px' : '0',
+            borderRadius: selectedElement === 'content' ? '4px' : '0',
+            ...getElementStyle('content')
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleElementClick('content', content.mainContent || '');
+          }}
+          onMouseDown={(e) => {
+            // Make it draggable
+            e.preventDefault();
+            // You could add drag logic here if needed
+          }}
+        >
+          {content.mainContent || 'Your cover letter content goes here...'}
+        </div>
+
+        {/* Closing */}
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity mb-4"
+          style={{
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'normal',
+            ...getElementStyle('closing')
+          }}
+          onClick={() => handleElementClick('closing', meta.closing || '')}
+        >
+          {meta.closing || 'Sincerely,'}
+        </div>
+
+        {/* Signature */}
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            color: '#1e293b',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            ...getElementStyle('signature')
+          }}
+          onClick={() => handleElementClick('signature', meta.signatureName || '')}
+        >
+          {meta.signatureName || 'Your Name'}
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="px-4 pr-8 pb-8 mx-auto">
-        {/* Recipient Info */}
-        {(meta.showRecipientInfo || meta.showCompanyInfo || meta.showDate) && (
-          <div className="mb-8 space-y-4">
-            {meta.showRecipientInfo && renderDraggableHeaderElement('recipient',
-              <div>
-                <div className="text-sm mb-2" style={{ color: '#6b7280' }}>To:</div>
-                <input
-                  type="text"
-                  value={meta.recipientName || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, recipientName: e.target.value }))}
-                  className="text-lg font-semibold bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={getHeaderElementFormatting('recipient')}
-                  placeholder="Hiring Manager Name"
-                />
-              </div>
-            )}
-            
-            {meta.showCompanyInfo && renderDraggableHeaderElement('company',
-              <div className="space-y-2 block">
-                <div className="block">
-                  <input
-                    type="text"
-                    value={meta.companyName || ''}
-                    onChange={(e) => setMeta(prev => ({ ...prev, companyName: e.target.value }))}
-                    className="text-base font-medium bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors w-full"
-                    style={getHeaderElementFormatting('company')}
-                    placeholder="Company Name"
-                  />
-                </div>
-                <div className="block">
-                  <textarea
-                    value={meta.companyAddress || ''}
-                    onChange={(e) => setMeta(prev => ({ ...prev, companyAddress: e.target.value }))}
-                    className="text-sm bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors resize-none text-left w-full"
-                    rows={2}
-                    placeholder="Company Address"
-                  />
-                </div>
-              </div>
-            )}
-            
-            {meta.showDate && renderDraggableHeaderElement('date',
-              <div>
-                <input
-                  type="text"
-                  value={meta.date || ''}
-                  onChange={(e) => setMeta(prev => ({ ...prev, date: e.target.value }))}
-                  className="text-sm font-medium bg-transparent border-none outline-none cursor-text hover:bg-gray-50 rounded px-2 py-1 transition-colors"
-                  style={getHeaderElementFormatting('date')}
-                  placeholder="Date"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Structured Content */}
-        <div className="prose prose-lg max-w-none">
-          {renderStructuredContent}
-        </div>
-      </div>
-    </DensityWrapper>
+    </div>
   );
-};
+}

@@ -22,6 +22,7 @@ export interface CoverLetterMeta {
   yourTitle?: string; // "Your Job Title"
   date?: string; // "Date"
   // Parsed content components
+  subject?: string; // "Application for the position of [Job Title]"
   greeting?: string; // "Dear Red Sift Hiring Team,"
   closing?: string; // "Warm regards,"
   signatureName?: string; // "James"
@@ -39,6 +40,18 @@ export interface CoverLetterMeta {
   elementVisibility?: Record<string, boolean>; // Map of element ID to visibility state
   elementPositions?: Record<string, { x: number; y: number; width: number; height: number }>; // Element positions and sizes
   elementStyles?: Record<string, { fontSize: number; fontWeight: string; color: string; textAlign?: 'left' | 'center' | 'right' }>; // Element styling including alignment
+  // Element formatting properties
+  nameFormatting?: Partial<ContentSection>;
+  titleFormatting?: Partial<ContentSection>;
+  contactFormatting?: Partial<ContentSection>;
+  recipientFormatting?: Partial<ContentSection>;
+  companyFormatting?: Partial<ContentSection>;
+  dateFormatting?: Partial<ContentSection>;
+  subjectFormatting?: Partial<ContentSection>;
+  greetingFormatting?: Partial<ContentSection>;
+  contentFormatting?: Partial<ContentSection>;
+  closingFormatting?: Partial<ContentSection>;
+  signatureFormatting?: Partial<ContentSection>;
 }
 
 export interface CoverLetterEditorProps {
