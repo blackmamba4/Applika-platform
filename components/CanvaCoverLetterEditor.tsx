@@ -128,7 +128,7 @@ export default function CanvaCoverLetterEditor({
       showContactInfo: false,
       showRecipientInfo: false,
       showCompanyInfo: false,
-      showDate: false,
+      showDate: true,
       ...initialMeta,
     };
     
@@ -188,8 +188,8 @@ export default function CanvaCoverLetterEditor({
   }, [meta, content]);
 
   const getSectionData = useCallback((elementId: string) => {
-    // For header elements, get from meta
-    if (['name', 'contact', 'recipient', 'company', 'date'].includes(elementId)) {
+    // For header elements and FreeformEditor elements, get from meta
+    if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
       const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as Partial<ContentSection> || {};
       return {
         id: elementId,
@@ -240,8 +240,8 @@ export default function CanvaCoverLetterEditor({
         )
       );
     }
-    // For header elements, store formatting in meta
-    else if (['name', 'contact', 'recipient', 'company', 'date'].includes(editingElementId)) {
+    // For header elements and FreeformEditor elements, store formatting in meta
+    else if (['name', 'contact', 'recipient', 'company', 'date', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
       setMeta(prev => ({
         ...prev,
         [`${editingElementId}Formatting`]: {
@@ -425,6 +425,8 @@ export default function CanvaCoverLetterEditor({
                     contentSections={contentSections}
                     onHeaderElementClick={handleHeaderElementClick}
                     editingElementId={editingElementId}
+                    content={content}
+                    setContent={setContent}
                     renderStructuredContent={
                       <ContentEditor
                         content={content}

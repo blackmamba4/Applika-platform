@@ -1,16 +1,7 @@
-// components/coverLetter/TemplateRenderer.tsx
 "use client";
 
-import { 
-  ModernGradientTemplate,
-  ProfessionalAccentTemplate,
-  MinimalElegantTemplate,
-  SidebarProfileTemplate,
-  DefaultTemplate,
-  CreativeLayoutTemplate,
-  CorporateTemplate,
-  SplitLayoutTemplate
-} from './templates';
+import { FreeformEditor } from './FreeformEditor';
+import ModernGradientTemplate from './templates/ModernGradientTemplate';
 import type { CoverLetterMeta, HeaderElement, ContentSection } from "@/types/coverLetter";
 
 interface TemplateRendererProps {
@@ -22,6 +13,8 @@ interface TemplateRendererProps {
   renderStructuredContent: React.ReactNode;
   onHeaderElementClick?: (elementId: string, currentValue: string) => void;
   editingElementId?: string | null;
+  content?: string;
+  setContent?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const TemplateRenderer = ({
@@ -32,54 +25,23 @@ export const TemplateRenderer = ({
   contentSections = [],
   renderStructuredContent,
   onHeaderElementClick,
-  editingElementId
+  editingElementId,
+  content = "",
+  setContent = () => {}
 }: TemplateRendererProps) => {
-  const templateProps = {
-    meta,
-    setMeta,
-    headerElements,
-    setHeaderElements,
-    contentSections,
-    renderStructuredContent,
-    onHeaderElementClick,
-    editingElementId
-  };
-
-  // Modern Gradient Template - Diagonal teal shape
-  if (meta.template === 'modernGradient') {
-    return <ModernGradientTemplate {...templateProps} />;
-  }
-
-  // Professional Accent Template - Colorful gradient header
-  if (meta.template === 'professionalAccent') {
-    return <ProfessionalAccentTemplate {...templateProps} />;
-  }
-
-  // Sidebar Profile Template - Purple sidebar with profile
-  if (meta.template === 'sidebarProfile') {
-    return <SidebarProfileTemplate {...templateProps} />;
-  }
-
-  // Minimal Elegant Template - Clean, sophisticated design
-  if (meta.template === 'minimalElegant') {
-    return <MinimalElegantTemplate {...templateProps} />;
-  }
-
-  // Creative Layout Template - Bold, modern with patterns
-  if (meta.template === 'creativeLayout') {
-    return <CreativeLayoutTemplate {...templateProps} />;
-  }
-
-  // Corporate Template - Dark header, professional
-  if (meta.template === 'corporate') {
-    return <CorporateTemplate {...templateProps} />;
-  }
-
-  // Split Layout Template - Diagonal color split
-  if (meta.template === 'splitLayout') {
-    return <SplitLayoutTemplate {...templateProps} />;
-  }
-
-  // Default fallback template
-  return <DefaultTemplate {...templateProps} />;
+  // Use FreeformEditor for all templates (including moderngradient for draggable functionality)
+  return (
+    <FreeformEditor
+      meta={meta}
+      setMeta={setMeta}
+      content={content}
+      setContent={setContent}
+      contentSections={contentSections}
+      headerElements={headerElements}
+      setHeaderElements={setHeaderElements}
+      renderStructuredContent={renderStructuredContent}
+      onHeaderElementClick={onHeaderElementClick}
+      editingElementId={editingElementId}
+    />
+  );
 };
