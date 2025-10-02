@@ -6,7 +6,7 @@ export interface CoverLetterMeta {
   density: "compact" | "normal" | "roomy";
   logoUrl?: string;
   dateLine: string;
-  template: "modernGradient" | "professionalAccent" | "sidebarProfile" | "minimalElegant" | "corporateClassic" | "executiveBold" | "bankingFormal" | "consultingSharp" | "designCreative" | "marketingDynamic" | "startupVibrant" | "techModern" | "healthcareClean" | "educationWarm" | "nonprofitHeart" | "salesEnergetic";
+  template: "modernGradient" | "professionalAccent" | "defaultBasic";
   yourName: string;
   recipient: string;
   contactLine: string;

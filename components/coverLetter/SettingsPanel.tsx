@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { Palette, Layout, Eye, EyeOff } from "lucide-react";
 import { ColorWheel } from "./ColorWheel";
 import { FONT_OPTIONS, TEMPLATE_OPTIONS } from "@/constants/coverLetterOptions";
-import { getTemplateDefaultAccentColor } from "@/lib/color-system";
+import { getTemplateDefaultAccentColor, getTemplateDefaultGradientColors } from "@/lib/color-system";
+import { getTemplateConfig } from "@/lib/template-configs";
 import { setHeaderVisibilityPreference } from "@/lib/header-visibility";
 import type { CoverLetterMeta } from "@/types/coverLetter";
 
@@ -114,8 +115,8 @@ export const SettingsPanel = ({
               </div>
             </div>
 
-            {/* Accent Color - Hide for modernGradient template */}
-            {meta.template !== 'modernGradient' && (
+            {/* Accent Color - Hide for modernGradient and defaultBasic templates */}
+            {meta.template !== 'modernGradient' && meta.template !== 'defaultBasic' && (
               <div>
                 <h4 className="font-medium text-gray-900 mb-3">Accent Color</h4>
                 <ColorWheel
@@ -131,7 +132,7 @@ export const SettingsPanel = ({
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Gradient Color 1</h4>
                   <ColorWheel
-                    selectedColor={meta.gradientColor1 || '#ff6b6b'}
+                    selectedColor={meta.gradientColor1 || getTemplateDefaultGradientColors(meta.template).gradientColor1}
                     onColorChange={(color) => setMeta(prev => ({ ...prev, gradientColor1: color }))}
                   />
                 </div>
@@ -139,7 +140,7 @@ export const SettingsPanel = ({
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Gradient Color 2</h4>
                   <ColorWheel
-                    selectedColor={meta.gradientColor2 || '#feca57'}
+                    selectedColor={meta.gradientColor2 || getTemplateDefaultGradientColors(meta.template).gradientColor2}
                     onColorChange={(color) => setMeta(prev => ({ ...prev, gradientColor2: color }))}
                   />
                 </div>

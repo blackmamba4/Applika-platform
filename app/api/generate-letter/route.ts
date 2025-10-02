@@ -29,7 +29,7 @@ type Payload = {
 };
 
 type Meta = {
-  template: "letterhead" | "sidebar" | "minimalPro" | "creative" | "modernGradient" | "professionalAccent" | "sidebarProfile" | "minimalElegant" | "corporateClassic" | "executiveBold" | "bankingFormal" | "consultingSharp" | "designCreative" | "marketingDynamic" | "startupVibrant" | "techModern" | "healthcareClean" | "educationWarm" | "nonprofitHeart" | "salesEnergetic";
+  template: "modernGradient" | "professionalAccent" | "defaultBasic";
   accent: string;
   font: "inter" | "georgia" | "serif" | "system" | "poppins" | "montserrat" | "playfair";
   density: "compact" | "normal" | "roomy";
@@ -349,8 +349,8 @@ async function buildDefaultMeta(opts: {
 
   return {
     // tasteful defaults for the UI look & feel
-    template: "modernGradient",
-    accent: getTemplateDefaultAccentColor("modernGradient"), // Use template-specific default
+    template: "defaultBasic",
+    accent: getTemplateDefaultAccentColor("defaultBasic"), // Use template-specific default
     font: "inter",
     density: "normal",
     headerStyle: "centered",

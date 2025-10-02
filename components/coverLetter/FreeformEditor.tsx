@@ -133,7 +133,7 @@ export const FreeformEditor = ({
       fontSize: savedStyles['date']?.fontSize ?? 14,
       fontWeight: savedStyles['date']?.fontWeight ?? 'normal',
       color: savedStyles['date']?.color ?? '#666666',
-      textAlign: savedStyles['date']?.textAlign ?? 'right',
+      textAlign: savedStyles['date']?.textAlign ?? 'left',
       visible: savedVisibility['date'] !== undefined ? savedVisibility['date'] : true
     },
     {

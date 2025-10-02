@@ -98,8 +98,8 @@ export default function CanvaCoverLetterEditor({
   
   const [meta, setMeta] = useState<CoverLetterMeta>(() => {
     const defaultMeta = {
-      template: "modernGradient" as const,
-      accent: "#10B981",
+      template: "defaultBasic" as const,
+      accent: "#2563EB", // Default blue for defaultBasic template
       font: "inter" as const,
       density: "normal" as const,
       headerStyle: "centered" as const,

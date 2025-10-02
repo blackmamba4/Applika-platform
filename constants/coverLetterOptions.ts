@@ -9,15 +9,10 @@ export const FONT_OPTIONS = [
 ];
 
 export const TEMPLATE_OPTIONS = [
-  // Stunning Professional Templates
-  { id: "modernGradient", name: "Modern Gradient", description: "Diagonal teal shape with modern typography", icon: "🌈", category: "Modern" },
-  { id: "professionalAccent", name: "Professional Accent", description: "Colorful gradient header with wave patterns", icon: "💼", category: "Professional" },
-  { id: "sidebarProfile", name: "Sidebar Profile", description: "Purple sidebar with profile picture", icon: "👤", category: "Layout" },
-  { id: "minimalElegant", name: "Minimal Elegant", description: "Sophisticated design with serif typography", icon: "✨", category: "Minimal" },
-  { id: "creativeLayout", name: "Creative Layout", description: "Bold design with dot patterns and modern styling", icon: "🎨", category: "Creative" },
-  { id: "corporate", name: "Corporate", description: "Dark header with professional corporate styling", icon: "🏢", category: "Corporate" },
-  { id: "splitLayout", name: "Split Layout", description: "Diagonal color split with glassmorphism cards", icon: "📐", category: "Layout" },
-  { id: "default", name: "Default", description: "Clean, professional fallback template", icon: "📄", category: "Professional" },
+  // Template Options
+  { id: "modernGradient", name: "Modern Gradient", description: "Dynamic gradient design with contemporary styling", icon: "🌈", category: "Modern" },
+  { id: "professionalAccent" , name: "Professional Accent", description: "Clean professional design with accent color highlights", icon: "💼", category: "Professional" },
+  { id: "defaultBasic", name: "Default Basic", description: "Simple, clean template perfect for any industry", icon: "📄", category: "Standard" },
 ];
 
 export const DENSITY_OPTIONS = [

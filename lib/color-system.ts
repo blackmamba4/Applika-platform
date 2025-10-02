@@ -15,94 +15,42 @@ export const TEMPLATE_COLOR_MAP: Record<string, Record<string, ElementColorConfi
     signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
   },
   professionalAccent: {
-    name: { inheritFrom: 'default', color: '#ffffff' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#ffffff' }, // Independent editable color
+    name: { inheritFrom: 'accent', color: '#ffffff' }, // Name uses accent color
+    contact: { inheritFrom: 'default', color: '#666666' }, // Contact info in muted color
     recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
     company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
     date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
     greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
     body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
     closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
+    signature: { inheritFrom: 'accent', color: '#000000' } // Signature uses accent color
   },
-  sidebarProfile: {
-    name: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#ffffff' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
-  },
-  corporateClassic: {
-    name: { inheritFrom: 'default', color: '#ffffff' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#ffffff' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
-  },
-  minimalElegant: {
-    name: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
-  },
-  default: {
-    name: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
-  },
-  creativeLayout: {
-    name: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
-  },
-  splitLayout: {
-    name: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    contact: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    recipient: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    company: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    date: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    greeting: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    body: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    closing: { inheritFrom: 'default', color: '#000000' }, // Independent editable color
-    signature: { inheritFrom: 'default', color: '#000000' } // Independent editable color
+  defaultBasic: {
+    name: { inheritFrom: 'default', color: '#000000' }, // Simple black for basic template
+    contact: { inheritFrom: 'default', color: '#666666' }, // Muted contact info
+    recipient: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    company: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    date: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    greeting: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    body: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    closing: { inheritFrom: 'default', color: '#000000' }, // Standard black
+    signature: { inheritFrom: 'default', color: '#000000' } // Standard black
   }
 };
 
 // Template-specific default accent colors - complementary to each template's design
 export const TEMPLATE_DEFAULT_ACCENT_COLORS: Record<string, string> = {
-  modernGradient: '#4F46E5',      // Indigo - complements gradient backgrounds
+  modernGradient: '#4F46E5',      // Indigo - complements gradient backgrounds (not used for gradient)
   professionalAccent: '#DC2626',  // Red - professional and bold
-  sidebarProfile: '#059669',      // Emerald - fresh and modern
-  corporateClassic: '#1F2937',    // Dark gray - corporate and sophisticated
-  minimalElegant: '#7C3AED',      // Purple - elegant and refined
-  default: '#2563EB',             // Blue - classic and trustworthy
-  creativeLayout: '#EA580C',      // Orange - creative and energetic
-  splitLayout: '#0891B2'          // Cyan - modern and clean
+  defaultBasic: '#2563EB'         // Blue - classic and trustworthy
+};
+
+// Template-specific default gradient colors for templates that use gradients
+export const TEMPLATE_DEFAULT_GRADIENT_COLORS: Record<string, { gradientColor1: string; gradientColor2: string }> = {
+  modernGradient: {
+    gradientColor1: '#ff6b6b',  // Original coral red
+    gradientColor2: '#feca57'   // Original warm yellow
+  }
 };
 
 // Extract template colors from meta
@@ -126,7 +74,7 @@ export const resolveElementColor = (
   contentSections: ContentSection[]
 ): ColorInheritance => {
   // Get element configuration from template map
-  const templateConfig = TEMPLATE_COLOR_MAP[templateType] || TEMPLATE_COLOR_MAP.default;
+  const templateConfig = TEMPLATE_COLOR_MAP[templateType] || TEMPLATE_COLOR_MAP.defaultBasic;
   const elementConfig = templateConfig[elementId] || { inheritFrom: 'default', color: '#000000' };
   
   // Check if there's a custom color from contentSections
@@ -171,14 +119,15 @@ export const resolveElementColor = (
 
 // Check if element uses accent colors (for UI indicators)
 export const isAccentColorElement = (elementId: string, templateType: string): boolean => {
-  // Since all text elements are now independent, accent color is only used for backgrounds
-  // This function now returns false for all text elements since they're all editable
-  return false;
+  const templateConfig = TEMPLATE_COLOR_MAP[templateType] || TEMPLATE_COLOR_MAP.defaultBasic;
+  const elementConfig = templateConfig[elementId];
+  
+  return elementConfig?.inheritFrom === 'accent' || false;
 };
 
 // Get default color for element (when no custom color is set)
 export const getDefaultElementColor = (elementId: string, templateType: string): string => {
-  const templateConfig = TEMPLATE_COLOR_MAP[templateType] || TEMPLATE_COLOR_MAP.default;
+  const templateConfig = TEMPLATE_COLOR_MAP[templateType] || TEMPLATE_COLOR_MAP.defaultBasic;
   const elementConfig = templateConfig[elementId];
   
   return elementConfig?.color || '#000000';
@@ -187,4 +136,12 @@ export const getDefaultElementColor = (elementId: string, templateType: string):
 // Get template-specific default accent color
 export const getTemplateDefaultAccentColor = (templateType: string): string => {
   return TEMPLATE_DEFAULT_ACCENT_COLORS[templateType] || '#000000';
+};
+
+// Get template-specific default gradient colors
+export const getTemplateDefaultGradientColors = (templateType: string): { gradientColor1: string; gradientColor2: string } => {
+  return TEMPLATE_DEFAULT_GRADIENT_COLORS[templateType] || {
+    gradientColor1: '#ff6b6b',
+    gradientColor2: '#feca57'
+  };
 };
