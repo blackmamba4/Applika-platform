@@ -188,6 +188,7 @@ export default function CanvaCoverLetterEditor({
     // For header elements and FreeformEditor elements, get from meta
     if (['name', 'contact', 'recipient', 'company', 'date', 'subject', 'greeting', 'closing', 'signature', 'content'].includes(elementId)) {
       const formatting = meta[`${elementId}Formatting` as keyof typeof meta] as Partial<ContentSection> || {};
+      
       const sectionData = {
         id: elementId,
         label: elementId,
@@ -203,6 +204,7 @@ export default function CanvaCoverLetterEditor({
         highlightedText: formatting.highlightedText || '',
         highlightColor: formatting.highlightColor || '#ffff00'
       };
+      
       return sectionData;
     }
     
@@ -229,7 +231,7 @@ export default function CanvaCoverLetterEditor({
     if (!editingElementId) return;
     
     // For content sections, update the contentSections array
-    if (['greeting', 'body', 'closing', 'signature'].includes(editingElementId)) {
+    if (['body'].includes(editingElementId)) {
       setContentSections(prev => 
         prev.map(section => 
           section.id === editingElementId 
@@ -239,7 +241,7 @@ export default function CanvaCoverLetterEditor({
       );
     }
     // For header elements and FreeformEditor elements, store formatting in meta
-    else if (['name', 'contact', 'recipient', 'company', 'date', 'subject', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
+    else if (['name', 'title', 'contact', 'recipient', 'company', 'date', 'subject', 'greeting', 'closing', 'signature', 'content'].includes(editingElementId)) {
       setMeta(prev => {
         const newFormatting = {
           ...(prev[`${editingElementId}Formatting` as keyof typeof prev] as any || {}),

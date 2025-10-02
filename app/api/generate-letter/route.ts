@@ -349,8 +349,8 @@ async function buildDefaultMeta(opts: {
 
   return {
     // tasteful defaults for the UI look & feel
-    template: "defaultBasic",
-    accent: getTemplateDefaultAccentColor("defaultBasic"), // Use template-specific default
+    template: "modernGradient",
+    accent: getTemplateDefaultAccentColor("modernGradient"), // Use template-specific default
     font: "inter",
     density: "normal",
     headerStyle: "centered",

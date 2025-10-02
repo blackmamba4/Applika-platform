@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { CoverLetterMeta, ContentSection } from "@/types/coverLetter";
+import { getElementConfig } from "@/lib/template-configs";
 
 interface Element {
   id: string;
@@ -106,7 +107,7 @@ export const FreeformEditor = ({
       fontWeight: savedStyles['recipient']?.fontWeight ?? 'normal',
       color: savedStyles['recipient']?.color ?? '#1e293b',
       textAlign: savedStyles['recipient']?.textAlign ?? 'left',
-      visible: savedVisibility['recipient'] !== undefined ? savedVisibility['recipient'] : (meta.template !== 'moderngradient')
+      visible: savedVisibility['recipient'] !== undefined ? savedVisibility['recipient'] : getElementConfig(meta.template, 'recipient').visible
     },
     {
       id: 'company',
@@ -271,7 +272,7 @@ export const FreeformEditor = ({
     
     // Add some padding and return reasonable bounds
     const calculatedHeight = totalLines * fontSize * 1.5; // Line height of 1.5
-    return Math.max(100, Math.min(800, calculatedHeight)); // Between 100px and 800px
+    return Math.max(100, calculatedHeight); // Minimum 100px, but no maximum limit
   };
 
   // Auto-position elements to prevent overlap
@@ -356,50 +357,60 @@ export const FreeformEditor = ({
       
       const updatedEl = { ...el };
       
-      // Update content
+      // Update content - only if there's actual content in meta, preserve current element content otherwise
       switch (el.type) {
         case 'name':
-          updatedEl.content = meta.yourName || 'Your Name';
+          updatedEl.content = meta.yourName !== undefined && meta.yourName !== null ? meta.yourName : el.content;
           break;
         case 'title':
-          updatedEl.content = meta.yourTitle || 'Your Title';
+          updatedEl.content = meta.yourTitle !== undefined && meta.yourTitle !== null ? meta.yourTitle : el.content;
           break;
         case 'contact':
-          updatedEl.content = meta.contactLine || 'Phone • Address • Email • LinkedIn';
+          updatedEl.content = meta.contactLine !== undefined && meta.contactLine !== null ? meta.contactLine : el.content;
           break;
         case 'recipient':
-          updatedEl.content = meta.recipientName || 'Recipient Name\nRecipient Address\nRecipient Phone\nRecipient Email';
+          updatedEl.content = meta.recipientName !== undefined && meta.recipientName !== null ? meta.recipientName : el.content;
           break;
         case 'company':
-          updatedEl.content = meta.companyName || 'Company Name';
+          updatedEl.content = meta.companyName !== undefined && meta.companyName !== null ? meta.companyName : el.content;
           break;
         case 'date':
-          updatedEl.content = meta.date || 'Date';
+          updatedEl.content = meta.date !== undefined && meta.date !== null ? meta.date : el.content;
           break;
         case 'greeting':
-          updatedEl.content = meta.greeting || 'Dear Hiring Manager,';
+          updatedEl.content = meta.greeting !== undefined && meta.greeting !== null ? meta.greeting : el.content;
           break;
         case 'content':
           // Format content as multiple paragraphs
-          const formattedContent = content 
-            ? content.split('\n\n').filter(para => para.trim()).join('\n\n')
-            : 'Your cover letter content goes here...';
+          const formattedContent = content || '';
           updatedEl.content = formattedContent;
           // Calculate dynamic height based on content
           const dynamicHeight = calculateContentHeight(formattedContent, el.fontSize, el.width);
           updatedEl.height = dynamicHeight;
           break;
         case 'closing':
-          updatedEl.content = meta.closing || 'Sincerely,';
+          updatedEl.content = meta.closing !== undefined && meta.closing !== null ? meta.closing : el.content;
           break;
         case 'signature':
-          updatedEl.content = meta.signatureName || 'Your Name';
+          updatedEl.content = meta.signatureName !== undefined && meta.signatureName !== null ? meta.signatureName : el.content;
           break;
       }
       
       // Update template-specific properties if no custom formatting
-      if (!hasCustomFormatting && ['name', 'title', 'contact'].includes(el.id)) {
-        updatedEl.color = getTemplateColor();
+      // Don't override user's custom colors/styling
+      if (!hasCustomFormatting) {
+        // Apply template default colors only for certain elements
+        if (['name', 'title', 'contact'].includes(el.id)) {
+          updatedEl.color = getTemplateColor();
+        }
+        // Apply template alignment for all elements
+        const elementConfig = getElementConfig(meta.template, el.id);
+        if (elementConfig.color && elementConfig.color !== updatedEl.color) {
+          updatedEl.color = elementConfig.color;
+        }
+        if (elementConfig.textAlign) {
+          updatedEl.textAlign = elementConfig.textAlign;
+        }
       }
       
       // Update positions for specific templates
@@ -634,7 +645,7 @@ export const FreeformEditor = ({
                            (formatting?.fontWeight || element.fontWeight);
     
     // Get text alignment from section, formatting, or element styles - prioritize formatting from meta
-    const textAlign = formatting?.textAlign || section?.textAlign || meta.elementStyles?.[element.id]?.textAlign || 'left';
+    const textAlign = formatting?.textAlign || section ?.textAlign || meta.elementStyles?.[element.id]?.textAlign || 'left';
     
     const styles = {
       fontSize: finalFontSize,
@@ -644,7 +655,6 @@ export const FreeformEditor = ({
       textDecoration: (section?.isUnderlined || formatting?.isUnderlined) ? 'underline' : 'none',
       textAlign: textAlign as 'left' | 'center' | 'right' // Apply text alignment directly
     };
-    
     
     return styles;
   };
@@ -733,7 +743,7 @@ export const FreeformEditor = ({
   useEffect(() => {
     const visibilityMap: Record<string, boolean> = {};
     const positionMap: Record<string, { x: number; y: number; width: number; height: number }> = {};
-    const styleMap: Record<string, { fontSize: number; fontWeight: string; color: string }> = {};
+    const styleMap: Record<string, { fontSize: number; fontWeight: string; color: string; textAlign?: 'left' | 'center' | 'right' }> = {};
     
     elements.forEach(element => {
       visibilityMap[element.id] = element.visible;
@@ -781,7 +791,9 @@ export const FreeformEditor = ({
     if (visibleElements.length === 0) return 900; // Default fallback
     
     const maxBottom = Math.max(...visibleElements.map(el => el.y + el.height));
-    return Math.max(900, maxBottom + 100); // Add 100px padding at bottom
+    // Dynamic padding: more padding for larger content, less for smaller content
+    const padding = Math.max(50, Math.min(300, maxBottom * 0.1)); // 10% of content height, between 50-300px
+    return maxBottom + padding;
   };
 
   const totalHeight = calculateTotalHeight();
